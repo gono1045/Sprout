@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>予定の編集</title>
+<link rel="stylesheet" th:href="@{css/style.css}">
+</head>
+<body>
+	<h1>予定の編集</h1>
+	
+	<form th:action="@{/update}" th:object="${scheduleItem}" method="post">
+		<input type="hidden" th:field="*{id}" />
+		
+		<label>日付：</label>
+		<input type="date" th:field="*{date}" required><br>
+		
+		<label>内容：</label>
+		<input type="text" th:field="*{task}" required><br>
+		
+		<label>締切日時：</label>
+		<input type="datetime-local" th:field="*{deadline}" required>
+		<div th:if="${#fields.hasErrors('deadline')}" th:errors="*{deadline}" style="color:red"></div>
+		<br>
+		
+		<button type="submit">更新</button>
+	</form>
+	
+	<a href="/">戻る</a>
+</body>
+</html>
