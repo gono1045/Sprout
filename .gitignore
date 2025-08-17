@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# exeファイルを無視
+*.exe
+
