@@ -2,228 +2,168 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="ja" class="">
 
 <head>
-	<meta charset="UTF-8" />
-	<title>予定一覧</title>
-	<link href="https://fonts.googleapis.com/css2?family=Merienda&display=swap" rel="stylesheet">
-	<link rel="stylesheet" th:href="@{/css/output.css}">
-	<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-	<script th:src="@{/js/script.js}"></script>
+  <meta charset="UTF-8" />
+  <title>予定一覧</title>
+  <link href="https://fonts.googleapis.com/css2?family=Merienda&display=swap" rel="stylesheet">
+  <!-- flatpickr CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <!-- flatpickr JS -->
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <!-- 日本語ローカライズ -->
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ja.js"></script>
+  <link rel="stylesheet" th:href="@{/css/output.css}">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script th:src="@{/js/script.js}"></script>
 </head>
 
 <body class="font-body min-h-screen p-10 dark:bg-gray-900 dark:text-blue-300">
-	<!-- タイトル -->
-	<h1 class="font-title text-blue-900 dark:text-blue-400 text-5xl font-bold mt-8 mb-15 mx-auto w-64 text-center"
-		style="font-family: 'Merienda', cursive;">Task List</h1>
+  <!-- タイトル -->
+  <h1 class="font-title text-blue-900 dark:text-blue-400 text-5xl font-bold mt-8 mb-15 mx-auto w-64 text-center"
+    style="font-family: 'Merienda', cursive;">Sprout</h1>
 
-	<!-- モーダル全体 -->
-	<div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-		<!-- モーダル内容 -->
-		<div class="bg-white p-6 rounded shadow-lg max-w-3xl w-full dark:bg-gray-800">
-			<button id="closeModalBtn" class="float-right text-gray-500 hover:text-gray-800">✖</button>
-			<!-- 予定追加フォーム -->
-			<form th:action="@{/add}" th:object="${scheduleItem}" method="post"
-				class="space-y-4 bg-white p-10 pb-0 rounded shadow dark:bg-gray-800">
-				<!-- タイトル -->
-				<div class="flex items-center gap-2">
-					<label for="title" class="text-right w-20 block flex items-center h-full font-medium">タイトル：</label>
-					<input type="text" id="title" th:field="*{title}" autocomplete="off" required
-						class="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-200" />
-					<div th:if="${#fields.hasErrors('title')}" th:errors="*{title}"
-						class="text-red-600 text-sm mt-1 dark:text-red-400"></div>
-				</div>
-				<!-- タグ -->
-				<div class="flex items-center gap-2">
-					<label for="tag" class="text-right w-20 block flex items-center h-full font-medium">タグ：</label>
-					<input type="text" id="tag" name="tag" th:field="*{tag}"
-						class="flex-1 border border-gray-300 rounded px-3 py-2
-						focus:outline-none focus:ring-2 focus:ring-blue-400
-						dark:bg-gray-900 dark:border-gray-600 dark:text-gray-200"
-						autocomlete="off" />
-					<datalist id="tag-list">
-						<option th:each="t : ${tagCandidates}" th:value="${t}"></option>
-					</datalist>
-				</div>
-				<!-- ステータス -->
-				<div class="flex items-center gap-2">
-					<label class="w-20 block text-sm font-medium">ステータス：</label>
-					<select name="status"
-						class="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-200">
-						<option value="未着手">未着手</option>
-						<option value="進行中">進行中</option>
-						<option value="完了">完了</option>
-					</select>
-				</div>
-				<!-- 優先度 -->
-				<div class="flex items-center gap-2">
-					<label class="w-20 block text-sm font-medium">優先度：</label>
-					<select name="priority"
-						class="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-200">
-						<option value="高">高</option>
-						<option value="中">中</option>
-						<option value="低">低</option>
-					</select>
-				</div>
-				<!-- 作成日 -->
-				<div class="flex items-center gap-2">
-					<label for="createdAt" class="text-right w-20 block flex items-center h-full font-medium">作成日：</label>
-					<input type="date" id="createdAt" th:field="*{createdAt}"
-						class="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-200" />
-					<div th:if="${#fields.hasErrors('createdAt')}" th:errors="*{createdAt}"
-						class="text-red-600 text-sm mt-1 dark:text-red-400"></div>
-				</div>
-				<!-- 締切 -->
-				<div class="flex items-center gap-2">
-					<label for="deadline" class="w-20 text-right block flex items-center h-full font-medium">締切：</label>
-					<input type="date" id="deadline" th:field="*{deadline}"
-						class=" flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-200" />
-					<div th:if="${#fields.hasErrors('deadline')}" th:errors="*{deadline}"
-						class="text-red-600 text-sm mt-1 dark:text-red-400"></div>
-				</div>
-				<!-- 詳細 -->
-				<div class="flex items-start gap-2">
-					<label for="detail" class="text-right w-20 block flex items-start font-medium">詳細：</label>
-					<textarea type="detail" id="detail" th:field="*{detail}" autocomplete="off"
-						class="h-40 resize-y flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-200" ></textarea>
-					<div th:if="${#fields.hasErrors('detail')}" th:errors="*{detail}"
-						class="text-red-600 text-sm mt-1 dark:text-red-400"></div>
-				</div>
+    <div th:replace="modal :: sproutModal(@{/add}, ${sproutForm})"></div>
+  <!-- メイン画面 -->
+  <div class="flex items-center justify-between mb-3">
 
-				<hr class="my-8 border-gray-300 dark:border-gray-700" />
-				<div class="mt-8 flex justify-between">
-					<!-- キャンセル -->
-					<button type="button" id="cancelBtn"
-						class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400">
-						キャンセル
-					</button>
+    <form method="get" action="/" class="flex mb-2">
+      <!-- 新規登録ボタン-->
+      <button id="openNewModalBtn" type="button"
+        class="mr-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+        新規
+      </button>
+      <!-- 完了済み表示切替ボタン -->
+      <input type="hidden" name="showCompleted" th:value="${!showCompleted}" />
+      <button type="submit" th:text="${showCompleted} ? '完了済みを隠す' : '完了済みを表示'"
+        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-blue-500 dark:hover:bg-blue-300 dark:focus:ring-blue-300">
+      </button>
+    </form>
+    <!-- 検索フォーム -->
+    <form method="get" th:action="@{/}" class="mb-2 flex gap-2 max-w-3xl">
+      <input type="text" name="keyword" th:value="${keyword}" placeholder="内容で検索" autocomplete="off"
+        class="w-80 flex-grow px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-200" />
+      <input type="hidden" name="showCompleted" th:value="${showCompleted}" />
+      <button type="submit"
+        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-blue-500 dark:hover:bg-blue-300 dark:focus:ring-blue-300">
+        検索
+      </button>
+      <select name="tag" class="border border-gray-300 rounded px-2 py-1">
+              <option value="">全てのタグ</option>
+              <option th:each="tag : ${tagCandidates}" th:value="${tag}" th:text="${tag}"
+                  th:selected="${tag == selectedTag}"></option>
+      </select>
+      <button type="submit" class="bg-blue-500 text-white px-3 py-1 rounded">絞り込み</button>
+    </form>
+  </div>
 
-					<!-- 追加 -->
-					<button type="submit"
-						class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400">
-						追加
-					</button>
-				</div>
-			</form>
-		</div>
-	</div>
-	<!-- モーダルここまで -->
+  <!-- 予定一覧テーブル -->
+  <div class="overflow-x-auto">
+    <table class="text-center min-w-full border border-blue-300 bg-white shadow rounded-lg dark:bg-gray-800">
+      <thead class="bg-gray-100 border-b border-blue-300 dark:bg-gray-700 dark:border-gray-600">
+        <tr>
+          <th class="w-80 border-r py-3 px-4 text-center text-gray-600 border-b border-blue-300 dark:text-gray-300">タイトル</th>
+          <th class="border-r py-3 px-4 text-center text-gray-600 border-b border-blue-300 dark:text-gray-300">タグ</th>
+          <th class="border-r py-3 px-4 text-center text-gray-600 border-b border-blue-300 dark:text-gray-300">ステータス</th>
+          <th class="border-r py-3 px-4 text-center text-gray-600 border-b border-blue-300 dark:text-gray-300">優先度</th>
+          <th class="border-r py-3 px-4 text-center text-gray-600 border-b border-blue-300 dark:text-gray-300">
+            <a th:href="@{/?sort=createdAt&dir=__${dir == 'asc' and sort == 'date' ? 'desc' : 'asc'}__}"
+              class="hover:underline text-gray-700 dark:text-gray-200 flex items-center justify-center gap-1"
+              style="text-decoration:none;">
+              作成日
+              <span th:if="${sort == 'date'}" th:text="${dir == 'asc' ? '▲' : '▼'}"></span>
+            </a>
+          </th>
+          <th class="border-r py-3 px-4 text-center text-gray-600 border-b border-blue-300 dark:text-gray-300">締切</th>
+          <th class="w-80 border-r py-3 px-4 text-center text-gray-600 border-b border-blue-300 dark:text-gray-300">詳細</th>
+          <th class="border-r py-3 px-4 text-center text-gray-600 border-b border-blue-300 dark:text-gray-300">削除</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr th:if="${#lists.isEmpty(sprouts)}">
+          <td colspan="9" class="border-r border-b border-blue-300 text-center py-4 text-gray-500 italic dark:text-gray-400">予定が登録されていません</td>
+        </tr>
+        <tr th:each="item : ${sprouts}"
+          class="border-r border-b border-blue-300 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700"
+          th:classappend="${item.done} ? 'opacity-50 line-through' : ''">
 
-	<!-- メイン画面 -->
-	<div class="flex items-center justify-between mb-3">
+          <td class="w-80 border-r border-b border-blue-300 py-2 px-4 relative flex items-center" data-field="title">
+            <!-- タイトル -->
+            <span th:text="${item.title}" class="editable title flex-1 text-center overflow-hidden whitespace-nowrap text-ellipsis"></span>
+            </span>
+            <!-- アイコン -->
+            <button data-id="${item.id}"
+                    data-title="${item.title}"
+                    data-tag="${item.tag}"
+                    data-status="${item.status}"
+                    data-priority="${item.priority}"
+                    data-createdat="${#temporals.format(item.createdAt, 'yyy-MM-dd')}"
+                    data-deadline="${item.deadline != null ? #temporals.format(item.deadline, 'yyy-MM-dd') : ''}"
+                    data-detail="${item.detail}"
+              type="button" class="openEditModalBtn ml-2 shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                   stroke="currentColor" class="w-5 h-5 text-gray-600 dark:text-blue-300 hover:text-blue-500">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15.232 5.232l3.536 3.536M16.5 4.5l3 3L7.5 19.5H4.5v-3L16.5 4.5z" />
+              </svg>
+            </button>
+          </td>
 
-		<form method="get" action="/" class="flex mb-2">
-			<!-- 新規登録ボタン-->
-			<button id="openModalBtn" type="button"
-				class="mr-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-				新規
-			</button>
-			<!-- 完了済み表示切替フォーム -->
-			<input type="hidden" name="showCompleted" th:value="${!showCompleted}" />
-			<button type="submit" th:text="${showCompleted} ? '完了済みを隠す' : '完了済みを表示'"
-				class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-blue-500 dark:hover:bg-blue-300 dark:focus:ring-blue-300">
-			</button>
-		</form>
-		<!-- 検索フォーム -->
-		<form method="get" th:action="@{/}" class="mb-2 flex gap-2 max-w-3xl">
-			<input type="text" name="keyword" th:value="${keyword}" placeholder="内容で検索" autocomplete="off"
-				class="w-80 flex-grow px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-200" />
-			<input type="hidden" name="showCompleted" th:value="${showCompleted}" />
-			<button type="submit"
-				class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-blue-500 dark:hover:bg-blue-300 dark:focus:ring-blue-300">
-				検索
-			</button>
-			<select name="tag" class="border border-gray-300 rounded px-2 py-1">
-			        <option value="">全てのタグ</option>
-			        <option th:each="tag : ${tagCandidates}" th:value="${tag}" th:text="${tag}" 
-			            th:selected="${tag == selectedTag}"></option>
-			</select>
-			<button type="submit" class="bg-blue-500 text-white px-3 py-1 rounded">絞り込み</button>
-		</form>
-	</div>
+          <!-- タグ -->
+          <td class="border-r border-b border-blue-300 py-2 px-4 text-center tag" th:text="${item.tag}" data-field="tag">
+            <input type="text" class="editable tag-input" value="[[${item.tag}]]">
+          </td>
 
-	<!-- 予定一覧テーブル -->
-	<div class="overflow-x-auto">
-		<table class="text-center min-w-full border border-blue-300 bg-white shadow rounded-lg dark:bg-gray-800">
-			<thead class="bg-gray-100 border-b border-blue-300 dark:bg-gray-700 dark:border-gray-600">
-				<tr>
-					<th class="border-r py-3 px-4 text-center text-gray-600 border-b border-blue-300 dark:text-gray-300">完了</th>
-					<th class="border-r py-3 px-4 text-center text-gray-600 border-b border-blue-300 dark:text-gray-300">タイトル</th>
-					<th class="border-r py-3 px-4 text-center text-gray-600 border-b border-blue-300 dark:text-gray-300">タグ</th>
-					<th class="border-r py-3 px-4 text-center text-gray-600 border-b border-blue-300 dark:text-gray-300">ステータス</th>
-					<th class="border-r py-3 px-4 text-center text-gray-600 border-b border-blue-300 dark:text-gray-300">優先度</th>
-					<th class="border-r py-3 px-4 text-center text-gray-600 border-b border-blue-300 dark:text-gray-300">
-						<a th:href="@{/?sort=createdAt&dir=__${dir == 'asc' and sort == 'date' ? 'desc' : 'asc'}__}"
-							class="hover:underline text-gray-700 dark:text-gray-200 flex items-center justify-center gap-1"
-							style="text-decoration:none;">
-							作成日
-							<span th:if="${sort == 'date'}" th:text="${dir == 'asc' ? '▲' : '▼'}"></span>
-						</a>
-					</th>
-					<th class="border-r py-3 px-4 text-center text-gray-600 border-b border-blue-300 dark:text-gray-300">締切</th>
-					<th class="border-r py-3 px-4 text-center text-gray-600 border-b border-blue-300 dark:text-gray-300">詳細</th>
-					<th class="border-r py-3 px-4 text-center text-gray-600 border-b border-blue-300 dark:text-gray-300">削除</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr th:if="${#lists.isEmpty(schedules)}">
-					<td colspan="9" class="border-r border-b border-blue-300 text-center py-4 text-gray-500 italic dark:text-gray-400">予定が登録されていません</td>
-				</tr>
-				<tr th:each="item : ${schedules}"
-					class="border-r border-b border-blue-300 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700"
-					th:classappend="${item.done} ? 'opacity-50 line-through' : ''">
+          <!-- ステータス -->
+          <td class="border-r border-b border-blue-300 py-2 px-4 text-center status" th:text="${item.status}" data-field="status">
+            <select class="editable status-select">
+                <option value="未着手" th:selected="${item.status == '未着手'}">未着手</option>
+                <option value="進行中" th:selected="${item.status == '進行中'}">進行中</option>
+                <option value="完了" th:selected="${item.status == '完了'}">完了</option>
+            </select>
+          </td>
 
-					<!-- 完了チェック -->
-					<td class="border-r border-b border-blue-300 py-2 px-4">
-						<form th:action="@{/toggle/{id}(id=${item.id})}" method="post" style="display:inline">
-							<input type="checkbox" name="done" onchange="this.form.submit()" th:checked="${item.done}"
-								class="border-r border-b border-gray-300 w-5 h-5 text-blue-600 rounded focus:ring-blue-400 dark:bg-gray-900" />
-						</form>
-					</td>
+          <!-- 優先度 -->
+          <td class="border-r border-b border-blue-300 py-2 px-4 text-center priority" th:text="${item.priority}" data-field="priority">
+            <select class="editable priority-select">
+                <option value="高" th:selected="${item.priority == '高'}">高</option>
+                <option value="中" th:selected="${item.priority == '中'}">中</option>
+                <option value="低" th:selected="${item.priority == '低'}">低</option>
+            </select>
+          </td>
 
-					<!-- タイトル -->
-					<td class="border-r border-b border-blue-300 py-2 px-4 text-center" th:text="${item.title}"></td>
+          <!-- 作成日 -->
+          <td class="border-r border-b border-blue-300 py-2 px-4 text-gray-600 dark:text-white createdAt"
+            th:text="${#temporals.format(item.createdAt, 'yyyy/MM/dd')}" data-field="createdAt">
+          </td>
 
-					<!-- タグ -->
-					<td class="border-r border-b border-blue-300 py-2 px-4 text-center" th:text="${item.tag}"></td>
-
-					<!-- ステータス -->
-					<td class="border-r border-b border-blue-300 py-2 px-4 text-center" th:text="${item.status}"></td>
-
-					<!-- 優先度 -->
-					<td class="border-r border-b border-blue-300 py-2 px-4 text-center" th:text="${item.priority}"></td>
-					
-					<!-- 作成日 -->
-					<td class="border-r border-b border-blue-300 py-2 px-4 text-gray-600 dark:text-white" th:text="${#temporals.format(item.createdAt, 'yyyy/MM/dd')}"></td>
-
-					<!-- 締切 -->
-					<td class="border-r border-b border-blue-300 py-2 px-4 text-center">
-					    <div th:text="${#temporals.format(item.deadline, 'yyyy/MM/dd')}"></div>
-					    <div class="text-xs text-gray-600 mt-1 dark:text-gray-400">
-					        (あと 
-					        <span th:text="${item.deadline != null} ? ${T(java.time.temporal.ChronoUnit).DAYS.between(T(java.time.LocalDate).now(), item.deadline)} : '期限未設定'"></span>日)
-					    </div>
-					</td>
+          <!-- 締切 -->
+          <td class="border-r border-b border-blue-300 py-2 px-4 text-center deadline" data-field="deadline">
+              <div th:text="${#temporals.format(item.deadline, 'yyyy/MM/dd')}"></div>
+              <div class="text-xs text-gray-600 mt-1 dark:text-gray-400">
+                  (あと
+                  <span th:text="${item.deadline != null} ? ${T(java.time.temporal.ChronoUnit).DAYS.between(T(java.time.LocalDate).now(), item.deadline)} : '期限未設定'"></span>日)
+              </div>
+          </td>
 
 
-					<!-- 詳細 -->
-					<td class="border-r border-b border-blue-300 py-2 px-4 text-left" th:text="${item.detail}"></td>
+          <!-- 詳細 -->
+          <td contenteditable="true" class="editable detail w-80 border-r border-b border-blue-300 py-2 px-4 text-left"
+            th:text="${item.detail}" data-field="detail">
+          </td>
 
-					<!-- 操作 -->
-					<td class="border-r border-b border-blue-300 py-2 px-4">
-						<form th:action="@{/delete/{id}(id=${item.id})}" method="post" style="display:inline;">
-							<button type="submit"
-								class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400 dark:bg-red-500 dark:hover:bg-red-600 dark:focus:ring-red-300 text-sm">
-								削除
-							</button>
-						</form>
-					</td>
+          <!-- 操作 -->
+          <td class="border-r border-b border-blue-300 py-2 px-4">
+            <form th:action="@{/delete/{id}(id=${item.id})}" method="post" style="display:inline;">
+              <button type="submit"
+                class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400 dark:bg-red-500 dark:hover:bg-red-600 dark:focus:ring-red-300 text-sm">
+                削除
+              </button>
+            </form>
+          </td>
 
-				</tr>
-			</tbody>
-		</table>
-	</div>
-
-	<hr class="my-8 border-gray-300 dark:border-gray-700" />
-
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <hr class="my-8 border-gray-300 dark:border-gray-700" />
 </body>
-
 </html>

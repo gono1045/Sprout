@@ -1,4 +1,4 @@
-package com.example.schedule;
+package com.example.sproutTest;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
