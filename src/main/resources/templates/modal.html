@@ -1,0 +1,127 @@
+<!-- modal.html -->
+<!-- モーダル全体 -->
+<div th:fragment="sproutModal (formAction, sproutForm)">
+    <div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <!-- モーダル内容 -->
+      <div class="bg-white p-6 rounded shadow-lg max-w-3xl w-full dark:bg-gray-800">
+        <button id="closeModalBtn" class="float-right text-gray-500 cursor-pointer hover:text-gray-800">✖</button>
+        <!-- 予定追加フォーム -->
+        <form th:action="@{/add}" th:object="${sproutForm}" method="post" id="sproutForm"
+          class="space-y-4 bg-white p-10 pb-0 rounded shadow dark:bg-gray-800">
+          <input type="hidden" id="sproutId" name="id">
+          <!-- タイトル -->
+          <div class="flex items-center gap-2">
+            <label for="title" class="text-right w-20 block flex items-center h-full font-medium">タイトル：</label>
+            <input type="text" id="title" th:field="*{title}" autocomplete="off" required
+              class="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-200" />
+            <div th:if="${#fields.hasErrors('title')}" th:errors="*{title}"
+              class="text-red-600 text-sm mt-1 dark:text-red-400"></div>
+          </div>
+          <!-- タグ -->
+          <div class="flex items-center gap-2">
+            <label for="tag" class="text-right w-20 block flex items-center h-full font-medium">タグ：</label>
+            <input type="text" id="tag" name="tag" th:field="*{tag}"
+              class="flex-1 border border-gray-300 rounded px-3 py-2
+              focus:outline-none focus:ring-2 focus:ring-blue-400
+              dark:bg-gray-900 dark:border-gray-600 dark:text-gray-200"
+              autocomlete="off" />
+            <datalist id="tag-list">
+              <option th:each="t : ${tagCandidates}" th:value="${t}"></option>
+            </datalist>
+          </div>
+          <!-- ステータス -->
+          <div class="flex items-center gap-2">
+            <label class="w-20 block text-sm font-medium">ステータス：</label>
+            <select name="status"
+              class="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-200">
+              <option value="未着手">未着手</option>
+              <option value="進行中">進行中</option>
+              <option value="完了">完了</option>
+            </select>
+          </div>
+          <!-- 優先度 -->
+          <div class="flex items-center gap-2">
+            <label class="w-20 block text-sm font-medium">優先度：</label>
+            <select name="priority"
+              class="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-200">
+              <option value="高">高</option>
+              <option value="中">中</option>
+              <option value="低">低</option>
+            </select>
+          </div>
+          <!-- 作成日 -->
+          <div class="flex items-center gap-2">
+            <label for="createdAt" class="text-right w-20 block flex items-center h-full font-medium">作成日：</label>
+            <div class="relative flex-1">
+              <input type="date" id="createdAt" name="createdAt" th:field="*{createdAt}"
+                class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-200" />
+              <!-- カレンダーアイコン -->
+              <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer hover:text-blue-600" id="createdAtIcon">
+                <!-- Heroicons -->
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     fill="none"
+                     viewBox="0 0 24 24"
+                     stroke="currentColor"
+                     class="w-5 h-5">
+                  <path stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M8 7V3m8 4V3m-9 8h10m-11 8h12a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </button>
+            </div>
+            <div th:if="${#fields.hasErrors('createdAt')}" th:errors="*{createdAt}"
+              class="text-red-600 text-sm mt-1 dark:text-red-400"></div>
+            </div>
+          <!-- 締切 -->
+          <div class="flex items-center gap-2">
+            <label for="deadline" class="w-20 text-right block flex items-center h-full font-medium">締切：</label>
+            <div class="relative flex-1">
+              <input  type="text" id="deadline" name="deadline" th:value="${sproutForm.deadline != null} ? ${#temporals.format(sproutForm.deadline, 'yyyy-MM-dd')} : ''"
+                class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-200" />
+              <!-- カレンダーアイコン -->
+              <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer hover:text-blue-600" id="deadlineIcon">
+                <!-- Heroicons -->
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     fill="none"
+                     viewBox="0 0 24 24"
+                     stroke="currentColor"
+                     class="w-5 h-5">
+                  <path stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M8 7V3m8 4V3m-9 8h10m-11 8h12a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </button>
+            </div>
+            <div th:if="${#fields.hasErrors('deadline')}" th:errors="*{deadline}"
+              class="text-red-600 text-sm mt-1 dark:text-red-400"></div>
+          </div>
+          <!-- 詳細 -->
+          <div class="flex items-start gap-2">
+            <label for="detail" class="text-right w-20 block flex items-start font-medium">詳細：</label>
+            <textarea type="detail" id="detail" th:field="*{detail}" autocomplete="off"
+              class="h-40 resize-y flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-200" ></textarea>
+            <div th:if="${#fields.hasErrors('detail')}" th:errors="*{detail}"
+              class="text-red-600 text-sm mt-1 dark:text-red-400"></div>
+          </div>
+
+          <hr class="my-8 border-gray-300 dark:border-gray-700" />
+          <div class="mt-8 flex justify-between">
+            <!-- キャンセル -->
+            <button type="button" id="cancelBtn"
+              class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400">
+              キャンセル
+            </button>
+
+            <!-- 追加 -->
+            <button type="submit" id="submitBtn"
+              class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400">
+              追加
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+</div>
+<!-- モーダルここまで -->
