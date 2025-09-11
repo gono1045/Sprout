@@ -41,6 +41,12 @@ $(function() {
     $("#sproutForm").attr("action", "/add");
     $("#submitBtn").text("追加");
     $("#modal").removeClass("hidden");
+
+    $(document).on("keydown", function(e) {
+        if (e.key === "Escape" && !$("#modal").hasClass("hidden")) {
+            closeModal();
+        }
+    });
   });
 
   /*** ===== 行生成関数 ===== ***/
