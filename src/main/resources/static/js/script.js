@@ -1,177 +1,166 @@
-
 $(function() {
 
-    //作成日を日本時間で取得
-    function getToday() {
-        const d = new Date();
-        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    }
+  /*** ===== 共通ユーティリティ ===== ***/
 
-    //flatpickr初期化
-    function initDatePicker(selector, iconId, defaultDate = null) {
-        const picker = flatpickr(selector, {
-            dateFormat: "Y-m-d",
-            locale: "ja",
-            defaultDate: defaultDate,
-            allowInput: true
-        });
-        $(`#${iconId}`).on("click", () => picker.open());
-        return picker;
-    }
+  // 作成日を日本時間で取得
+  function getToday() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
 
-    const deadlinePicker = initDatePicker("#deadline", "deadlineIcon");
-    const createdAtPicker =initDatePicker("#createdAt", "createdAtIcon", getToday());
+  /*** ===== flatpickr 初期化 ===== ***/
+  function initDatePicker(selector, iconId, defaultDate = null) {
+    const picker = flatpickr(selector, {
+      dateFormat: "Y-m-d",
+      locale: "ja",
+      defaultDate: defaultDate,
+      allowInput: true
+    });
+    $(`#${iconId}`).on("click", () => picker.open());
+    return picker;
+  }
 
-    //モーダルを閉じる
-    function closeModal() {
-        $("#modal").addClass("hidden");
-    }
+  const deadlinePicker = initDatePicker("#deadline", "deadlineIcon");
+  const createdAtPicker = initDatePicker("#createdAt", "createdAtIcon", getToday());
 
-    $("#closeModalBtn, #cancelBtn").on("click", closeModal);
-    $("#modal").on("click", e => { if ($(e.target).is("#modal")) closeModal(); });
+  /*** ===== モーダル操作 ===== ***/
 
-        //新規登録モーダルを開く
-    $("#openNewModalBtn").on("click", function() {
-        $("#createdAt").val(getToday());
-        $("#deadline").val("");
+  function closeModal() {
+    $("#modal").addClass("hidden");
+  }
 
-        //フォームをリセット
-        $("#sproutForm")[0].reset();
-        $("#sproutId").val("");
-        $("#sproutForm").attr("action", "/add");
-        $("#submitBtn").text("追加");
+  $("#closeModalBtn, #cancelBtn, #modal").on("click", function(e) {
+    if (e.target === this) closeModal();
+  });
 
-        $("#modal").removeClass("hidden");
+  $("#openNewModalBtn").on("click", function() {
+    $("#sproutForm")[0].reset();
+    $("#sproutId").val("");
+    $("#createdAt").val(getToday());
+    $("#deadline").val("");
+    $("#sproutForm").attr("action", "/add");
+    $("#submitBtn").text("追加");
+    $("#modal").removeClass("hidden");
+  });
+
+  /*** ===== 行生成関数 ===== ***/
+  function formatDeadlineCell(val) {
+    if (!val) return "(期限未設定)";
+    const diffDays = Math.ceil((new Date(val) - new Date())/(1000*60*60*24));
+    return `${val} <div class="text-xs text-gray-600 mt-1 dark:text-gray-400">(あと ${diffDays}日)</div>`;
+  }
+
+  function createRow(item) {
+    const deadlineHtml = item.deadline ? formatDeadlineCell(item.deadline) : "(期限未設定)";
+    const doneClass = item.done ? "opacity-50 line-through" : "";
+
+    return $(`
+      <tr class="border-r border-b border-blue-300 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700 ${doneClass}">
+        <td class="w-80 border-r py-2 px-4 text-center title flex items-center" data-field="title">
+          <span class="editable flex-1 text-center overflow-hidden whitespace-nowrap text-ellipsis">${item.title}</span>
+          <button data-id="${item.id}" class="openEditModalBtn ml-2 shrink-0">編集</button>
+        </td>
+        <td class="border-r py-2 px-4 text-center tag" data-field="tag">${item.tag}</td>
+        <td class="border-r py-2 px-4 text-center status" data-field="status">${item.status}</td>
+        <td class="border-r py-2 px-4 text-center priority" data-field="priority">${item.priority}</td>
+        <td class="border-r py-2 px-4 text-gray-600 dark:text-white createdAt" data-field="createdAt">${item.createdAt}</td>
+        <td class="border-r py-2 px-4 text-center deadline" data-field="deadline">${deadlineHtml}</td>
+        <td class="editable detail w-80 border-r py-2 px-4 text-left" data-field="detail">${item.detail}</td>
+        <td class="border-r py-2 px-4">
+          <form action="/delete/${item.id}" method="post" style="display:inline;">
+            <button type="submit" class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">削除</button>
+          </form>
+        </td>
+      </tr>
+    `);
+  }
+
+  /*** ===== 編集モーダル ===== ***/
+  $(document).on("click", ".openEditModalBtn", function() {
+    const row = $(this).closest("tr");
+    const itemId = $(this).data("id");
+
+    $("#sproutId").val(itemId);
+    $("#title").val(row.find(".title span.editable").text().trim());
+    $("#tag").val(row.find(".tag").text().trim());
+    $("#status").val(row.find(".status").text().trim());
+    $("#priority").val(row.find(".priority").text().trim());
+    $("#createdAt").val(row.find(".createdAt").text().trim().replace(/\//g, "-"));
+    $("#deadline").val(row.find(".deadline").text().trim().replace(/\//g, "-"));
+    $("#detail").val(row.find(".detail").text().trim());
+
+    $("#submitBtn").text("更新");
+    $("#sproutForm").attr("action", "/update");
+    $("#modal").removeClass("hidden");
+  });
+
+  /*** ===== 新規登録・更新 Ajax ===== ***/
+  $("#sproutForm").on("submit", function(e) {
+    e.preventDefault();
+    const formData = $(this).serialize();
+    const actionUrl = $(this).attr("action");
+
+    $.post(actionUrl, formData, function(newItem) {
+      if (!newItem) return;
+      const newRow = createRow(newItem);
+
+      if ($("#sproutId").val()) {
+        const row = $(`button[data-id='${newItem.id}']`).closest("tr");
+        row.replaceWith(newRow);
+      } else {
+        $("table tbody").prepend(newRow);
+      }
+
+      closeModal();
+      $("#sproutForm")[0].reset();
+    });
+  });
+
+  /*** ===== インライン編集（タイトル） ===== ***/
+  $(document).on("click", "td.title span.editable", function() {
+    const span = $(this);
+    const td = span.closest("td");
+    const original = span.text().trim();
+
+    if (td.find("textarea").length > 0) return;
+
+    const textarea = $(`<textarea class="border rounded px-1 w-full resize-none mr-2"></textarea>`).val(original);
+    span.hide();
+    td.prepend(textarea);
+    textarea.focus();
+
+    textarea.on("blur", function() {
+      const newVal = $(this).val().trim();
+      span.text(newVal).show();
+      $(this).remove();
+
+      // Ajaxで保存
+      const row = td.closest("tr");
+      const id = row.find(".openEditModalBtn").data("id");
+      $.post("/update", { id, title: newVal });
     });
 
-    //背景クリックでも閉じる
-    $("#modal").on("click", function(e) {
-        if ($(e.target).is("#modal")) {
-            $("#modal").addClass("hidden");
-        }
+    textarea.on("keydown", function(e) {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        $(this).blur();
+      }
     });
+  });
 
-    //編集用モーダル
-    $(document).on("click", ".openEditModalBtn", function() {
-        const itemId = $(this).data("id");
-        const row = $(this).closest("tr");
+  /*** ===== 他セル即時反映 ===== ***/
+  $(document).on("blur change", ".editable:not(.title)", function() {
+    const cell = $(this);
+    const row = cell.closest("tr");
+    const id = row.find(".openEditModalBtn").data("id");
+    const field = cell.data("field");
+    const value = cell.is("select") ? cell.val() : cell.text().trim();
 
-        $("#sproutId").val(itemId);
-
-        //各値を取得してセット
-        $("#title").val(row.find(".title").text().trim());
-        $("#tag").val(row.find(".tag").text().trim());
-        $("#status").val(row.find(".status").text().trim());
-        $("#priority").val(row.find(".priority").text().trim());
-        $("#createdAt").val(row.find(".createdAt").text().trim().replace(/\//g, "-"));
-        $("#deadline").val(row.find(".deadline").text().trim().replace(/\//g, "-"));
-        $("#detail").val(row.find(".detail").text().trim());
-
-        $("#submitBtn").text("更新");
-        $("#sproutForm").attr("action", "/update");
-        $("#modal").removeClass("hidden");
-
+    $.post("/update", { id, [field]: value }, function() {
+      if (field === "deadline") {
+        row.find(".deadline").html(formatDeadlineCell(value));
+      }
     });
+  });
 
-    $("#sproutForm").on("submit", function(e) {
-        e.preventDefault(); //通常送信を止める
-
-        const formData = $(this).serialize();
-
-        $.post($(this).attr("action"), formData, function() {
-            //更新成功時
-
-            const id = $("#sproutId").val();
-            const row = $(`button[data-id='${id}']`).closest("tr");
-
-            //各セルを更新
-            const fields = ["title", "tag", "status", "priority", "createdAt", "deadline", "detail"];
-            fields.forEach(field => {
-                if (field === "deadline") {
-                    row.find(".deadline").html(formatDeadlineCell($(`#${field}`).val()));
-                    } else {
-                        row.find(`.${field}`).text($(`#${field}`).val());
-                    }
-            });
-
-            //モーダルを閉じる
-            $("#modal").addClass("hidden");
-        });
-    });
-
-    function formatDeadlineCell(val) {
-        if (!val) return "(期限未設定)";
-        const deadlineDate = new Date(val);
-        const today = new Date();
-        const diffDays = Math.ceil((deadlineDate - today) / (1000 * 60 * 60 *24));
-        return `${val} <div class="text-xs text-gray-600 mt-1 dark:text-gray-400">(あと ${diffDays}日)</div>`;
-    }
-
-    //フォーカスアウトで更新
-    $(document).on("blur change", ".editable", function() {
-        const cell = $(this);
-        const row = cell.closest("tr");
-        const id = row.find(".openEditModalBtn").data("id");
-
-        const updateData = { id };
-            row.find(".editable").each(function() {
-                const field = $(this).data("field");
-                if ($(this).is("select")) {
-                    updateData[field] = $(this).val();
-                }else {
-                    updateData[field] =$(this).text().trim();
-                }
-            });
-
-        //保存先を反映
-        $.post("/update", updateData, function() {
-            console.log("更新完了");
-            //残日数を再計算して表示更新
-            const deadlineVal = updateData.deadline;
-            row.find(".deadline").html(formatDeadlineCell(deadlineVal));
-        });
-    });
-
-    $(document).on("click", "td.title", function() {
-        let td = $(this);
-
-        //既にinputがある場合は何もしない
-        if (td.find("textarea").length > 0) return;
-
-        let original = td.text().trim();
-        td.empty();
-
-        let textarea = $(`<textarea class="border rounded px-1 w-full resize-none"></textarea>`)
-        .val(original)
-        .appendTo(td)
-        .focus();
-
-        //Shift+Enterで改行、Enterで保存
-        textarea.on("keydown", function(e) {
-            if (e.key === "Enter") {
-                if (e.shiftKey) {
-                    //改行
-                    let val = $(this).val();
-                    let pos = this.selectionStart;
-                    $(this).val(val.slice(0, pos) + "\n" + val.slice(pos));
-                    this.selectionStart = this.selectionEnd = pos + 1;
-                    e.preventDefault();
-                } else {
-                    //保存
-                    e.preventDefault();
-                    $(this).blur();
-                }
-            }
-        });
-
-        td.empty().append(textarea);
-        textarea.focus();
-
-        //フォーカスアウトしたら保存
-        textarea.on("blur", function() {
-            let newValue = $(this).val().trim();
-            td.text(newValue);
-            //ここでAjax保存処理を追加予定
-        });
-    });
 });

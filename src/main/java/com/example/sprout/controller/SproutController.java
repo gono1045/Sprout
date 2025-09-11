@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.example.sprout.dao.SproutDao;
 import com.example.sprout.form.SproutForm;
@@ -37,7 +38,8 @@ public class SproutController {
 
   //新規作成
   @PostMapping("/add")
-  public String addTask(@Valid @ModelAttribute SproutForm form, BindingResult result) {
+  @ResponseBody //AjaxでJSON返却
+  public SproutItem addTask(@Valid @ModelAttribute SproutForm form, BindingResult result) {
     if (!result.hasErrors()) {
       SproutItem item = new SproutItem();
       item.setTitle(form.getTitle());
@@ -49,9 +51,10 @@ public class SproutController {
       item.setDetail(form.getDetail());
       item.setDone(false);
 
-      sproutDao.insert(item);
+      sproutDao.insert(item); //DB登録
+      return item; //登録したタスクを返す
     }
-    return "redirect:/";
+    return null; //エラー時はnull返却
 
   }
 
