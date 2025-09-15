@@ -58,24 +58,53 @@ public class SproutController {
 
   }
 
-  //編集
+  //更新
   @PostMapping("/update")
-  public String updateTask(@ModelAttribute SproutForm form) {
-    SproutItem item = sproutDao.findById(form.getId());
-    if (item != null) {
-      item.setTitle(form.getTitle());
-      item.setTag(form.getTag());
-      item.setStatus(form.getStatus());
-      item.setPriority(form.getPriority());
-      item.setCreatedAt(form.getCreatedAt());
-      item.setDeadline(form.getDeadline());
-      item.setDetail(form.getDetail());
-      item.setDone(form.getDone() != null ? form.getDone() : false);
+  @ResponseBody
+  public SproutItem updateTask(@Valid @ModelAttribute SproutForm form, BindingResult result) {
+    if (!result.hasErrors()) {
+      SproutItem item = sproutDao.findById(form.getId());
+      if (item != null) {
+        item.setTitle(form.getTitle());
+        item.setTag(form.getTag());
+        item.setStatus(form.getStatus());
+        item.setPriority(form.getPriority());
+        item.setCreatedAt(form.getCreatedAt());
+        item.setDeadline(form.getDeadline());
+        item.setDetail(form.getDetail());
+        item.setDone(form.getDone() != null ? form.getDone() : false);
 
-      sproutDao.update(item);
+        sproutDao.update(item); //DB更新
+        return item; //更新したタスクを返す
+      }
+
     }
-    return "redirect:/";
+    return null;
 
+  }
+
+  //編集モーダル
+  @GetMapping("edit/{id}")
+  public String editTask(@PathVariable Long id, Model model) {
+    SproutItem item = sproutDao.findById(id);
+    if (item == null) {
+      return "redirect:/"; //データがない場合は一覧に戻る
+    }
+
+    SproutForm form = new SproutForm();
+    form.setId(item.getId());
+    form.setTitle(item.getTitle());
+    form.setTag(item.getTag());
+    form.setStatus(item.getStatus());
+    form.setPriority(item.getPriority());
+    form.setCreatedAt(item.getCreatedAt());
+    form.setDeadline(item.getDeadline());
+    form.setDetail(item.getDetail());
+    form.setDone(item.getDone());
+
+    model.addAttribute("sproutForm", form);
+    model.addAttribute("editMode", true); //編集用フラグ
+    return "index"; //一覧画面でモーダルを開く
   }
 
   //削除
