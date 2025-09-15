@@ -12,7 +12,7 @@
           <!-- タイトル -->
           <div class="flex items-center gap-2">
             <label for="title" class="whitespace-nowrap text-right w-20 block flex items-center h-full font-medium">タイトル：</label>
-            <input type="text" id="title" th:field="*{title}" autocomplete="off" required
+            <input type="text" id="title" name="title" th:field="*{title}" autocomplete="off" required
               class="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-200" />
             <div th:if="${#fields.hasErrors('title')}" th:errors="*{title}"
               class="text-red-600 text-sm mt-1 dark:text-red-400"></div>
@@ -32,7 +32,7 @@
           <!-- ステータス -->
           <div class="flex items-center gap-2">
             <label class="whitespace-nowrap w-20 block text-sm font-medium">ステータス：</label>
-            <select name="status"
+            <select name="status" id="status"
               class="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-200">
               <option value="未着手">未着手</option>
               <option value="進行中">進行中</option>
@@ -42,7 +42,7 @@
           <!-- 優先度 -->
           <div class="flex items-center gap-2">
             <label class="whitespace-nowrap w-20 block text-sm font-medium">優先度：</label>
-            <select name="priority"
+            <select name="priority" id="priority    "
               class="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-200">
               <option value="高">高</option>
               <option value="中">中</option>

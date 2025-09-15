@@ -85,36 +85,37 @@
           class="border-r border-b border-blue-300 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700"
           th:classappend="${item.done} ? 'opacity-50 line-through' : ''">
 
-          <td class="w-80 border-r border-b border-blue-300 py-2 px-4 relative flex items-center" data-field="title">
-            <!-- タイトル -->
-            <span th:text="${item.title}" class="editable title flex-1 text-center overflow-hidden whitespace-nowrap text-ellipsis"></span>
-            </span>
-            <!-- アイコン -->
-            <button data-id="${item.id}"
-                    data-title="${item.title}"
-                    data-tag="${item.tag}"
-                    data-status="${item.status}"
-                    data-priority="${item.priority}"
-                    data-createdat="${#temporals.format(item.createdAt, 'yyy-MM-dd')}"
-                    data-deadline="${item.deadline != null ? #temporals.format(item.deadline, 'yyy-MM-dd') : ''}"
-                    data-detail="${item.detail}"
-              type="button" class="openEditModalBtn ml-2 shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                   stroke="currentColor" class="w-5 h-5 text-gray-600 dark:text-blue-300 hover:text-blue-500">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M15.232 5.232l3.536 3.536M16.5 4.5l3 3L7.5 19.5H4.5v-3L16.5 4.5z" />
-              </svg>
-            </button>
+          <!-- タイトル -->
+          <td class="editable w-80 border-r border-b border-blue-300 py-2 px-4 relative" data-field="title">
+            <div class="cell-wrapper flex items-center justify-center">
+                <span th:text="${item.title}" class="cell-text title flex-1 text-center overflow-hidden whitespace-nowrap text-ellipsis"></span>
+                <!-- アイコン -->
+                <button type="button" class="openEditModalBtn absolute right-2 shrink-0"
+                        th:data-id="${item.id}"
+                        th:data-title="${item.title}"
+                        th:data-tag="${item.tag}"
+                        th:data-status="${item.status}"
+                        th:data-priority="${item.priority}"
+                        th:data-createdat="${#temporals.format(item.createdAt, 'yyy-MM-dd')}"
+                        th:data-deadline="${item.deadline != null ? #temporals.format(item.deadline, 'yyy-MM-dd') : ''}"
+                        th:data-detail="${item.detail}">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                       stroke="currentColor" class="w-5 h-5 text-gray-600 dark:text-blue-300 hover:text-blue-500">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M15.232 5.232l3.536 3.536M16.5 4.5l3 3L7.5 19.5H4.5v-3L16.5 4.5z" />
+                  </svg>
+                </button>
+            </div>
           </td>
 
           <!-- タグ -->
-          <td class="border-r border-b border-blue-300 py-2 px-4 text-center tag" th:text="${item.tag}" data-field="tag">
-            <input type="text" class="editable tag-input" value="[[${item.tag}]]">
+          <td class="editable border-r border-b border-blue-300 py-2 px-4 text-center tag" th:text="${item.tag}" data-field="tag">
+            <input type="text" class="tag-input" value="[[${item.tag}]]">
           </td>
 
           <!-- ステータス -->
-          <td class="border-r border-b border-blue-300 py-2 px-4 text-center status" th:text="${item.status}" data-field="status">
-            <select class="editable status-select">
+          <td class="editable border-r border-b border-blue-300 py-2 px-4 text-center status" th:text="${item.status}" data-field="status">
+            <select class="status-select">
                 <option value="未着手" th:selected="${item.status == '未着手'}">未着手</option>
                 <option value="進行中" th:selected="${item.status == '進行中'}">進行中</option>
                 <option value="完了" th:selected="${item.status == '完了'}">完了</option>
@@ -122,8 +123,8 @@
           </td>
 
           <!-- 優先度 -->
-          <td class="border-r border-b border-blue-300 py-2 px-4 text-center priority" th:text="${item.priority}" data-field="priority">
-            <select class="editable priority-select">
+          <td class="editable border-r border-b border-blue-300 py-2 px-4 text-center priority" th:text="${item.priority}" data-field="priority">
+            <select class="priority-select">
                 <option value="高" th:selected="${item.priority == '高'}">高</option>
                 <option value="中" th:selected="${item.priority == '中'}">中</option>
                 <option value="低" th:selected="${item.priority == '低'}">低</option>
@@ -131,13 +132,13 @@
           </td>
 
           <!-- 作成日 -->
-          <td class="border-r border-b border-blue-300 py-2 px-4 text-gray-600 dark:text-white createdAt"
-            th:text="${#temporals.format(item.createdAt, 'yyyy/MM/dd')}" data-field="createdAt">
+          <td class="editable border-r border-b border-blue-300 py-2 px-4 text-gray-600 dark:text-white createdAt"
+            th:text="${#temporals.format(item.createdAt, 'yyyy-MM-dd')}" data-field="createdAt">
           </td>
 
           <!-- 締切 -->
-          <td class="border-r border-b border-blue-300 py-2 px-4 text-center deadline" data-field="deadline">
-              <div th:text="${#temporals.format(item.deadline, 'yyyy/MM/dd')}"></div>
+          <td class="editable border-r border-b border-blue-300 py-2 px-4 text-center deadline" data-field="deadline">
+              <div th:text="${#temporals.format(item.deadline, 'yyyy-MM-dd')}"></div>
               <div class="text-xs text-gray-600 mt-1 dark:text-gray-400">
                   (あと
                   <span th:text="${item.deadline != null} ? ${T(java.time.temporal.ChronoUnit).DAYS.between(T(java.time.LocalDate).now(), item.deadline)} : '期限未設定'"></span>日)
