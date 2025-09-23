@@ -1,9 +1,15 @@
 package com.example.sprout.controller;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import jakarta.validation.Valid;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -11,6 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.example.sprout.dao.SproutDao;
@@ -30,9 +37,18 @@ public class SproutController {
   @GetMapping("/")
   public String index(Model model) {
     List<SproutItem> items = sproutDao.findAll();
+
+    //既存タグ一覧を抽出(重複除去)
+    Set<String> tagCandidates = items.stream()
+        .map(SproutItem::getTag)
+        .filter(Objects::nonNull)
+        .filter(tag -> !tag.isBlank())
+        .collect(Collectors.toCollection(TreeSet::new));//ソート機能
+
     model.addAttribute("sprouts", items);
     model.addAttribute("sproutForm", new SproutForm());
     model.addAttribute("showCompleted", false);
+    model.addAttribute("tagCandidates", tagCandidates);
     return "index";
   }
 
@@ -58,29 +74,36 @@ public class SproutController {
 
   }
 
-  //更新
-  @PostMapping("/update")
+  @PostMapping(value = "/update", produces = "application/json")
   @ResponseBody
-  public SproutItem updateTask(@Valid @ModelAttribute SproutForm form, BindingResult result) {
-    if (!result.hasErrors()) {
-      SproutItem item = sproutDao.findById(form.getId());
-      if (item != null) {
-        item.setTitle(form.getTitle());
-        item.setTag(form.getTag());
-        item.setStatus(form.getStatus());
-        item.setPriority(form.getPriority());
-        item.setCreatedAt(form.getCreatedAt());
-        item.setDeadline(form.getDeadline());
-        item.setDetail(form.getDetail());
-        item.setDone(form.getDone() != null ? form.getDone() : false);
+  public SproutItem updateTask(@RequestParam Long id,
+      @RequestParam(required = false) String title,
+      @RequestParam(required = false) String tag,
+      @RequestParam(required = false) String status,
+      @RequestParam(required = false) String priority,
+      @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate createdAt,
+      @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate deadline,
+      @RequestParam(required = false) String detail) {
+    SproutItem item = sproutDao.findById(id);
+    if (item != null) {
+      if (title != null)
+        item.setTitle(title);
+      if (tag != null)
+        item.setTag(tag);
+      if (status != null)
+        item.setStatus(status);
+      if (priority != null)
+        item.setPriority(priority);
+      if (createdAt != null)
+        item.setCreatedAt(createdAt);
+      if (deadline != null)
+        item.setDeadline(deadline);
+      if (detail != null)
+        item.setDetail(detail);
 
-        sproutDao.update(item); //DB更新
-        return item; //更新したタスクを返す
-      }
-
+      sproutDao.update(item);
     }
-    return null;
-
+    return item;
   }
 
   //編集モーダル

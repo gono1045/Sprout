@@ -13,13 +13,19 @@
   <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ja.js"></script>
   <link rel="stylesheet" th:href="@{/css/output.css}">
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-jeditable.js/2.0.15/jquery.jeditable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.16.0/Sortable.min.js"></script>
   <script th:src="@{/js/script.js}"></script>
+  <link rel="icon" type="image/png" th:href="@{/img/favicon.ico}">
 </head>
 
-<body class="font-body min-h-screen p-10 dark:bg-gray-900 dark:text-blue-300">
+<body class="font-body min-h-screen p-10 dark:bg-gray-900 dark:text-blue-300"
+      th:style="|background-image: url('@{/img/IMG_1152.JPG}'); background-size: cover; background-position: center; background-repeat: no-repeat;|">
+
   <!-- タイトル -->
-  <h1 class="font-title text-blue-700 dark:text-blue-300 text-5xl font-bold mt-8 mb-15 mx-auto w-64 text-center"
-    style="font-family: 'Merienda', cursive;">Sprout</h1>
+  <h1 class="mx-auto w-64">
+    <img th:src="@{/img/sprout-logo.png}" alt="Sprout" class="w-full h-auto">
+  </h1>
 
     <div th:replace="modal :: sproutModal(@{/add}, ${sproutForm})"></div>
   <!-- メイン画面 -->
@@ -57,7 +63,7 @@
 
   <!-- 予定一覧テーブル -->
   <div class="overflow-x-auto">
-    <table class="text-center min-w-full border border-blue-300 bg-white shadow rounded-lg dark:bg-gray-800">
+    <table class="table-fixed  border-collapse text-center min-w-full border border-blue-300 bg-white shadow rounded-lg dark:bg-gray-800">
       <thead class="bg-gray-100 border-b border-blue-300 dark:bg-gray-700 dark:border-gray-600">
         <tr>
           <th class="w-80 border-r py-3 px-4 text-center text-gray-600 border-b border-blue-300 dark:text-gray-300">タイトル</th>
@@ -83,12 +89,16 @@
         </tr>
         <tr th:each="item : ${sprouts}"
           class="border-r border-b border-blue-300 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700"
-          th:classappend="${item.done} ? 'opacity-50 line-through' : ''">
+          th:classappend="${item.done} ? 'opacity-50 line-through' : ''"
+          th:attr="data-id=${item.id}">
 
           <!-- タイトル -->
           <td class="editable w-80 border-r border-b border-blue-300 py-2 px-4 relative" data-field="title">
             <div class="cell-wrapper flex items-center justify-center">
+                <!-- 表示用span -->
                 <span th:text="${item.title}" class="cell-text title flex-1 text-center overflow-hidden whitespace-nowrap text-ellipsis"></span>
+                <!-- 編集用input -->
+                <input type="text" name="title" class="hidden-input absolute inset-0 w-full h-full px-2 text-center border rounded hidden">
                 <!-- アイコン -->
                 <button type="button" class="openEditModalBtn absolute right-2 shrink-0"
                         th:data-id="${item.id}"
@@ -109,8 +119,26 @@
           </td>
 
           <!-- タグ -->
-          <td class="editable border-r border-b border-blue-300 py-2 px-4 text-center tag" th:text="${item.tag}" data-field="tag">
-            <input type="text" class="tag-input" value="[[${item.tag}]]">
+          <td class="editable relative w-60 border-r border-b border-blue-300 text-center tag" data-field="tag">
+            <!-- 表示用 -->
+            <span class="cell-text block w-full py-2 px-4">
+              <div class="tag-list flex flex-wrap gap-1 justify-center">
+              </div>
+            </span>
+            <!-- 編集モード（初期は hidden） -->
+            <div class="hidden edit-area w-full h-full">
+              <div class="tag-edit-wrapper flex items-center flex-wrap gap-1 w-full h-full border border-blue-400 rounded px-2 py-1 min-h-[2.5rem]">
+                <!-- 選択済みタグを表示するコンテナ -->
+                <div class="current-tags flex flex-wrap items-center gap-1 w-full h-full"></div>
+                <!-- 入力欄（タグの後ろに来る） -->
+                <input type="text"
+                       class="tag-input flex-grow min-w-[4rem] bg-transparent outline-none w-full h-full"
+                       placeholder="タグを追加または選択"
+                       list="tag-list-datalist">
+              </div>
+              <!-- 候補リスト -->
+              <div class="tag-suggestions hidden absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow max-h-40 overflow-y-auto z-10" id="tagSuggestions"></div>
+            </div>
           </td>
 
           <!-- ステータス -->
@@ -165,6 +193,5 @@
       </tbody>
     </table>
   </div>
-  <hr class="my-8 border-gray-300 dark:border-gray-700" />
 </body>
 </html>
