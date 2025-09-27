@@ -614,6 +614,9 @@
   .bg-gray-200 {
     background-color: var(--color-gray-200);
   }
+  .bg-green-400 {
+    background-color: var(--color-green-400);
+  }
   .bg-green-600 {
     background-color: var(--color-green-600);
   }
@@ -637,6 +640,9 @@
   }
   .p-1 {
     padding: calc(var(--spacing) * 1);
+  }
+  .p-2 {
+    padding: calc(var(--spacing) * 2);
   }
   .p-6 {
     padding: calc(var(--spacing) * 6);
