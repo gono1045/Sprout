@@ -376,6 +376,87 @@ $(function() {
         ).join("")
       );
 
+      //タグのアクションリスト
+      let actionList = $(".tag-action-list");
+      if (actionList.length === 0) {
+        actionList = $(`
+            <div class="tag-action-list absolute hidden bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded p-2 z-50">
+              <button class="delete-tag-btn text-white bg-red-400 px-2 py-1 rounded mb-1 w-full">削除</button>
+              <button class="change-bg-btn text-white bg-green-400 px-2 py-1 rounded w-full">色変更</button>
+            </div>
+          `);
+          $("body").append(actionList);
+      }
+
+      let currentTag = null;
+
+      //歯車アイコンクリック
+      $(document).on("click", ".tag-settings", function(e) {
+        e.stopPropagation();
+        const tagItem = $(this).closest(".tag-suggestion");
+
+        if (currentTag && currentTag.is(tagItem)) {
+            //同じアイコンクリック
+            actionList.toggleClass("hidden");
+        } else {
+            //別のアイコンクリック
+            actionList.removeClass("hidden");
+            //現在のタグの右に表示
+            const offset = tagItem.offset();
+            actionList.css({
+                top: offset.top,
+                left: offset.left + tagItem.outerWidth() + 4 //右に少し余白
+            }).removeClass("hidden");
+        }
+        currentTag = tagItem;
+      });
+
+      //背景クリックで閉じる
+      $(document).on("click", function() {
+        actionList.addClass("hidden");
+        // タグセル（td）を探して入力欄にフォーカス
+        const td = currentTag.closest("td[data-field='tag']");
+        const input = td.find(".tag-input");
+
+        // 編集モードが閉じていない場合 → 単純にフォーカス
+        if (!td.find(".edit-area").hasClass("hidden")) {
+            input.focus();
+        } else {
+            // 閉じていたら再度編集モードを開く
+            td.find(".cell-text").addClas("hidden");
+            rd.find(".edit-area").removeClass("hidden");
+            input.focus();
+        }
+
+        currentTag = null;
+      });
+
+      // ESCキーで閉じる
+      $(document).on("keydown", function(e) {
+        if (e.key === "Escape") {
+          if (currentTag) {
+            actionList.addClass("hidden");
+
+            // タグセル（td）を探して入力欄にフォーカス
+            const td = currentTag.closest("td[data-field='tag']");
+            const input = td.find(".tag-input");
+
+            // 編集モードが閉じていない場合 → 単純にフォーカス
+            if (!td.find(".edit-area").hasClass("hidden")) {
+              input.focus();
+            } else {
+              // 閉じていたら再度編集モードを開く
+              td.find(".cell-text").addClass("hidden");
+              td.find(".edit-area").removeClass("hidden");
+              input.focus();
+            }
+
+            currentTag = null;
+          }
+        }
+      });
+
+
       // 候補クリック（タグ名のみ）
       td.find(".tag-suggestions").off("click").on("click", ".tag-name", function(e) {
         e.stopPropagation();
@@ -417,6 +498,13 @@ $(function() {
                   exitEdit();
               }
           }, 0);
+      });
+
+      input.off("keydown.exit").on("keydown.exit", function(e) {
+        if (e.key === "Escape") {
+            e.preventDefault();
+            exitEdit();
+        }
       });
 
       // タグを追加する関数
