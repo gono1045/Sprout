@@ -101,7 +101,8 @@ $(function() {
             </svg>
           </button>
         </td>
-        <td class="border-r py-2 px-4 text-center tag relative" data-field="tag">
+        <td class="border-r py-2 px-4 text-center tag relative" data-field="tag"
+            data-tags='${JSON.stringify(item.tag ? item.tag.split(",").map(t => ({name: t.trim(), color:"bg-blue-400"})) : [])}'>
         <span class="cell-text block w-full text-center">
           <div class="tag-list flex flex-wrap gap-1 justify-center">
             ${(item.tag || "").split(",").map(t =>
@@ -294,7 +295,10 @@ $(function() {
 
         const newTag = $(`
           <div class="tag-item inline-flex max-w-max gap-2 p-1 rounded bg-blue-400 text-white" data-tag="${value}">
-            <span class="drag-handle cursor-move">≡</span>
+            <div class="tag-sort-wrapper gap-1">
+              <button class="tag-sort-up cursor-pointer border rounded bg-blue-400 text-white w-6 h-6">↑</button>
+              <button class="tag-sort-down cursor-pointer border rounded bg-blue-400 text-white w-6 h-6">↓</button>
+            </div>
             <span class="tag-name">${value}</span>
             <button class="tag-settings p-1 hover:bg-gray-200 rounded">⚙️</button>
           </div>
@@ -369,7 +373,10 @@ $(function() {
       suggestions.removeClass("hidden").html(
         availableTags.map(tag =>
           `<div class="tag-suggestion flex items-center justify-between px-2 py-1 hover:bg-gray-200 cursor-pointer">
-              <span class="drag-handle cursor-move text-xl ml-2 mr-2">≡</span>
+              <div class="tag-sort-wrapper gap-1">
+                <button class="tag-sort-up cursor-pointer border rounded bg-blue-400 text-white w-6 h-6">↑</button>
+                <button class="tag-sort-down cursor-pointer border rounded bg-blue-400 text-white w-6 h-6">↓</button>
+              </div>
               <span class="tag-name text-center px-2 py-1 rounded bg-red-400 text-white">${tag}</span>
               <button class="tag-settings p-1 hover:bg-gray-300 rounded ml-2">⚙️</button>
           </div>`
@@ -423,8 +430,8 @@ $(function() {
             input.focus();
         } else {
             // 閉じていたら再度編集モードを開く
-            td.find(".cell-text").addClas("hidden");
-            rd.find(".edit-area").removeClass("hidden");
+            td.find(".cell-text").addClass("hidden");
+            td.find(".edit-area").removeClass("hidden");
             input.focus();
         }
 
@@ -539,6 +546,32 @@ $(function() {
       }
     });
   }
+
+  //上ボタンクリック
+  $(document).on("click", ".tag-sort-up", function() {
+    const tagItem = $(this).closest(".tag-item");
+    const parent = tagItem.parent();
+    const prev = tagItem.prev(".tag-item");
+    if (prev.length) {
+        tagItem.insertBefore(prev);
+    } else {
+        //最初なら最後に移動
+        tagItem.appendTo(parent);
+    }
+  });
+
+  //下ボタンクリック
+  $(document).on("click", ".tag-sort-down", function() {
+    const tagItem = $(this).closest(".tag-item");
+    const parent = tagItem.parent();
+    const next = tagItem.next(".tag-item");
+    if (next.length) {
+        tagItem.insertAfter(next);
+    } else {
+        //最初なら最後に移動
+        tagItem.appendTo(parent);
+    }
+  });
 
   // 有効化
   enableTagInlineEdit("td[data-field='tag']");
