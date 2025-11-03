@@ -1,11 +1,15 @@
 package com.example.sprout.model;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -16,13 +20,16 @@ public class SproutItem {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
   private String title;
-  private String tag;
   private String status;
   private String priority;
   private LocalDate createdAt;
   private LocalDate deadline;
   private String detail;
   private Boolean done;
+
+  @ManyToMany
+  @JoinTable(name = "sprout_item_tag", joinColumns = @JoinColumn(name = "item_id"), inverseJoinColumns = @JoinColumn(name = "tag_id"))
+  private List<SproutTag> tags;
 
   /**
    * @return id
@@ -50,20 +57,6 @@ public class SproutItem {
    */
   public void setTitle(String title) {
     this.title = title;
-  }
-
-  /**
-   * @return tag
-   */
-  public String getTag() {
-    return tag;
-  }
-
-  /**
-   * @param tag セットする tag
-   */
-  public void setTag(String tag) {
-    this.tag = tag;
   }
 
   /**
@@ -148,6 +141,14 @@ public class SproutItem {
    */
   public void setDone(Boolean done) {
     this.done = done;
+  }
+
+  public List<SproutTag> getTags() {
+    return tags;
+  }
+
+  public void setTags(List<SproutTag> tags) {
+    this.tags = tags;
   }
 
 }

@@ -13,7 +13,6 @@
   <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ja.js"></script>
   <link rel="stylesheet" th:href="@{/css/output.css}">
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-jeditable.js/2.0.15/jquery.jeditable.min.js"></script>
   <script th:src="@{/js/script.js}"></script>
   <link rel="icon" type="image/png" th:href="@{/img/favicon.ico}">
 </head>
@@ -26,7 +25,7 @@
     <img th:src="@{/img/sprout-logo.png}" alt="Sprout" class="w-full h-auto">
   </h1>
 
-    <div th:replace="modal :: sproutModal(@{/add}, ${sproutForm})"></div>
+    <div th:insert="~{modal :: sproutModal(@{/add}, ${sproutForm})}"></div>
   <!-- メイン画面 -->
   <div class="flex items-center justify-between mb-3">
 
@@ -51,14 +50,11 @@
         class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-blue-500 dark:hover:bg-blue-300 dark:focus:ring-blue-300">
         検索
       </button>
-      <select name="tag" class="border border-gray-300 rounded px-2 py-1">
-              <option value="">全てのタグ</option>
-              <option th:each="tag : ${tagCandidates}" th:value="${tag}" th:text="${tag}"
-                  th:selected="${tag == selectedTag}"></option>
-      </select>
-      <button type="submit" class="bg-blue-500 text-white px-3 py-1 rounded">絞り込み</button>
     </form>
   </div>
+
+  <!-- 隠し項目 -->
+  <input type="hidden" name="tagIds" id="tags-hidden">
 
   <!-- 予定一覧テーブル -->
   <div class="overflow-x-auto">
@@ -79,7 +75,7 @@
           </th>
           <th class="border-r py-3 px-4 text-center text-gray-600 border-b border-blue-300 dark:text-gray-300">締切</th>
           <th class="w-80 border-r py-3 px-4 text-center text-gray-600 border-b border-blue-300 dark:text-gray-300">詳細</th>
-          <th class="border-r py-3 px-4 text-center text-gray-600 border-b border-blue-300 dark:text-gray-300">削除</th>
+          <th class="border-r py-3 px-4 text-center text-gray-600 border-b border-blue-300 dark:text-gray-300">操作</th>
         </tr>
       </thead>
       <tbody>
@@ -94,20 +90,12 @@
           <!-- タイトル -->
           <td class="editable w-80 border-r border-b border-blue-300 py-2 px-4 relative" data-field="title">
             <div class="cell-wrapper flex items-center justify-center">
-                <!-- 表示用span -->
-                <span th:text="${item.title}" class="cell-text title flex-1 text-center overflow-hidden whitespace-nowrap text-ellipsis"></span>
-                <!-- 編集用input -->
-                <input type="text" name="title" class="hidden-input absolute inset-0 w-full h-full px-2 text-center border rounded hidden">
-                <!-- アイコン -->
+                <span class="cell-text title flex-1 text-center overflow-hidden whitespace-nowrap text-ellipsis">
+                    <span th:text="${item.title}"></span>
+                </span>
+                <!-- 編集モーダル起動ボタン -->
                 <button type="button" class="openEditModalBtn absolute right-2 shrink-0"
-                        th:data-id="${item.id}"
-                        th:data-title="${item.title}"
-                        th:data-tag="${item.tag}"
-                        th:data-status="${item.status}"
-                        th:data-priority="${item.priority}"
-                        th:data-createdat="${#temporals.format(item.createdAt, 'yyy-MM-dd')}"
-                        th:data-deadline="${item.deadline != null ? #temporals.format(item.deadline, 'yyy-MM-dd') : ''}"
-                        th:data-detail="${item.detail}">
+                        th:data-item="${item}">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                        stroke="currentColor" class="w-5 h-5 text-gray-600 dark:text-blue-300 hover:text-blue-500">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -141,53 +129,55 @@
           </td>
 
           <!-- ステータス -->
-          <td class="editable border-r border-b border-blue-300 py-2 px-4 text-center status" th:text="${item.status}" data-field="status">
-            <select class="status-select">
-                <option value="未着手" th:selected="${item.status == '未着手'}">未着手</option>
-                <option value="進行中" th:selected="${item.status == '進行中'}">進行中</option>
-                <option value="完了" th:selected="${item.status == '完了'}">完了</option>
-            </select>
+          <td class="editable border-r border-b border-blue-300 py-2 px-4 text-center" data-field="status">
+            <div class="cell-wrapper flex items-center justify-center">
+              <span class="cell-text status flex-1 text-center" th:text="${item.status}"></span>
+            </div>
           </td>
 
           <!-- 優先度 -->
-          <td class="editable border-r border-b border-blue-300 py-2 px-4 text-center priority" th:text="${item.priority}" data-field="priority">
-            <select class="priority-select">
-                <option value="高" th:selected="${item.priority == '高'}">高</option>
-                <option value="中" th:selected="${item.priority == '中'}">中</option>
-                <option value="低" th:selected="${item.priority == '低'}">低</option>
-            </select>
+          <td class="editable border-r border-b border-blue-300 py-2 px-4 text-center" data-field="priority">
+            <div class="cell-wrapper flex items-center justify-center">
+              <span class="cell-text priority flex-1 text-center" th:text="${item.priority}"></span>
+            </div>
           </td>
 
           <!-- 作成日 -->
           <td class="editable border-r border-b border-blue-300 py-2 px-4 text-gray-600 dark:text-white createdAt"
-            th:text="${#temporals.format(item.createdAt, 'yyyy-MM-dd')}" data-field="createdAt">
+            th:text="${#temporals.format(item.createdAt, 'yyyy/MM/dd')}" data-field="createdAt">
           </td>
 
           <!-- 締切 -->
-          <td class="editable border-r border-b border-blue-300 py-2 px-4 text-center deadline" data-field="deadline">
-              <div th:text="${#temporals.format(item.deadline, 'yyyy-MM-dd')}"></div>
-              <div class="text-xs text-gray-600 mt-1 dark:text-gray-400">
-                  (あと
-                  <span th:text="${item.deadline != null} ? ${T(java.time.temporal.ChronoUnit).DAYS.between(T(java.time.LocalDate).now(), item.deadline)} : '期限未設定'"></span>日)
-              </div>
+          <td class="editable w-60 border-r border-b border-blue-300 py-2 px-4 text-center deadline" data-field="deadline">
+            <div class="cell-wrapper text-xs text-gray-600 mt-1 dark:text-gray-400">
+                <span class="cell-text text-center" th:utext="${item.deadlineHtml}"></span>
+            </div>
           </td>
 
-
           <!-- 詳細 -->
-          <td contenteditable="true" class="editable detail w-80 border-r border-b border-blue-300 py-2 px-4 text-left"
-            th:text="${item.detail}" data-field="detail">
+          <td class="editable detail w-80 border-r border-b border-blue-300 py-2 px-4 text-left" data-field="detail">
+            <div class="cell-wrapper relative w-full h-full">
+              <span class="cell-text block overflow-hidden whitespace-pre-wrap text-ellipsis break-words" th:text="${item.detail}"></span>
+            </div>
           </td>
 
           <!-- 操作 -->
-          <td class="border-r border-b border-blue-300 py-2 px-4">
+          <td class="w-50 border-r border-b border-blue-300 py-2 px-4">
             <form th:action="@{/delete/{id}(id=${item.id})}" method="post" style="display:inline;">
+              <button type="button"
+                class="bg-blue-600 px-3 py-1 rounded hover:bg-blue-700 focus:outline-noe focus:ring-2 focus:ring-blue-400 dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-blue-300">
+                ⏲️
+              </button>
+              <button type="button"
+                class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400 dark:bg-green-500 dark:hover:bg-green-600 dark:focus:ring-green-300 text-sm">
+                複製
+              </button>
               <button type="submit"
                 class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400 dark:bg-red-500 dark:hover:bg-red-600 dark:focus:ring-red-300 text-sm">
                 削除
               </button>
             </form>
           </td>
-
         </tr>
       </tbody>
     </table>

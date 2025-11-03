@@ -1,7 +1,6 @@
 
 $(function() {
-
-    const availableTags = ["仕事", "勉強", "趣味"];
+    let availableTags = [];
 
     const style = document.createElement('style');
     style.textContent = `
@@ -60,29 +59,64 @@ $(function() {
 
   });
 
-  // 行生成関数
-  function formatDeadlineCell(val) {
-    if (!val) return "(期限未設定)";
-    const diffDays = Math.ceil((new Date(val) - new Date())/(1000*60*60*24));
-    return `${val} <div class="text-xs text-gray-600 mt-1 dark:text-gray-400">(あと ${diffDays}日)</div>`;
+  // 締切セルの日付フォーマット
+  function formatDeadlineCell(dateStr) {
+  if (!dateStr) return "(期限未設定)";
+  const date = new Date(dateStr.replace(/-/g, '/'));
+  if (isNaN(date)) return "(期限未設定)";
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const diffDays = Math.floor((date - today) / (1000 * 60 * 60 * 24));
+  // ★ タイトル等と同じTailwindクラスを日付部分に付与
+  const dateClass = "text-base text-gray-900 dark:text-blue-300 font-normal"; // 例: タイトルと同じ
+  const formatted = `<span class="${dateClass}">${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}</span>`;
+
+  let colorClass = "";
+  let dayText = "";
+
+  if (diffDays < 0) {
+    colorClass = "text-red-500 font-bold";
+    dayText = `(期限切れ ${Math.abs(diffDays)}日)`;
+  } else if (diffDays === 0) {
+    colorClass = "text-orange-500 font-bold";
+    dayText = `(今日まで)`;
+  } else if (diffDays === 1) {
+    colorClass = "text-orange-500";
+    dayText = `(あと1日)`;
+  } else {
+    colorClass = "text-gray-700 dark:text-gray-300";
+    dayText = `(あと${diffDays}日)`;
   }
 
+  // ★ 日付部分と残日数部分を分けて返す
+  return `
+    <div class="flex flex-col items-center">
+      ${formatted}
+      <span class="text-xs ${colorClass} mt-1">${dayText}</span>
+    </div>
+  `;
+}
+
+  // 行生成関数
   function createRow(item) {
     // タグを複数に分割して div に変換
-    const tagHtml = item.tag
-        ? item.tag.split(',').map(t => `<div class="tag-item px-2 py-1 rounded bg-blue-400 text-white">${t.trim()}</div>`).join('')
-        : '';
+    const tagHtml = (item.tags || []).map(t =>
+        `<div class="tag-item px-2 py-1 rounded ${t.color || 'bg-blue-400'} text-white" data-tag="${t.name}">${t.name}</div>`
+    ).join('');
 
-    const deadlineHtml = item.deadline ? formatDeadlineCell(item.deadline) : "(期限未設定)";
+    const deadlineHtml = formatDeadlineCell(item.deadline || "");
     const doneClass = item.done ? "opacity-50 line-through" : "";
-    if(item.tag && !availableTags.includes(item.tag)) availableTags.push(item.tag);
+    if(item.tag && !availableTags.some(t => t.name === item.tag)) {
+        availableTags.push({ tagId: null, name: item.tag, color: 'bg-blue-400' });
+    }
 
     return $(`
       <tr class="border-r border-b border-blue-300 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700 ${doneClass}" data-id="${item.id}">
         <td class="w-80 border-r py-2 px-4 text-center title flex items-center" data-field="title">
           <span class="editable flex-1 text-center overflow-hidden whitespace-nowrap text-ellipsis">${item.title}</span>
           <input type="text" class="hidden-input hidden absolute inset-0 w-full h-full px-2 border border-blue-400 rounded text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-white z-20">
-
           <button
               type="button"
               class="openEditModalBtn ml-2 shrink-0"
@@ -101,26 +135,43 @@ $(function() {
             </svg>
           </button>
         </td>
-        <td class="border-r py-2 px-4 text-center tag relative" data-field="tag"
-            data-tags='${JSON.stringify(item.tag ? item.tag.split(",").map(t => ({name: t.trim(), color:"bg-blue-400"})) : [])}'>
-        <span class="cell-text block w-full text-center">
-          <div class="tag-list flex flex-wrap gap-1 justify-center">
-            ${(item.tag || "").split(",").map(t =>
-              `<div class="tag-item px-2 py-1 rounded bg-blue-400 text-white" data-tag="${t.trim()}">${t.trim()}</div>`
-            ).join("")}
+
+        <!-- ✅ ここから独立した別セルに -->
+        <td class="editable relative w-60 border-r border-b border-blue-300 text-center tag" data-field="tag">
+          <span class="cell-text block w-full py-2 px-4">
+            <div class="tag-list flex flex-wrap gap-1 justify-center">
+              ${(item.tags || []).map(tag =>
+                `<div class="tag-item px-2 py-1 rounded ${tag.color || 'bg-blue-400'} text-white" data-tag="${tag.name}">${tag.name}</div>`
+              ).join("")}
+            </div>
+          </span>
+          <div class="hidden edit-area w-full h-full">
+            <div class="tag-edit-wrapper flex items-center flex-wrap gap-1 w-full h-full border border-blue-400 rounded px-2 py-1 min-h-[2.5rem]">
+              <div class="current-tags flex flex-wrap items-center gap-1 w-full h-full">
+                ${(item.tags || []).map(tag =>
+                  `<div class="tag-item px-2 py-1 rounded bg-blue-400 text-white flex items-center gap-1" data-tag="${tag.name}">
+                     ${tag.name}
+                   </div>`
+                ).join("")}
+              </div>
+              <input type="text"
+                     class="tag-input flex-grow min-w-[4rem] bg-transparent outline-none w-full h-full"
+                     placeholder="タグを追加または選択"
+                     list="tag-list-datalist">
+            </div>
+            <div class="tag-suggestions hidden absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow max-h-40 overflow-y-auto z-10" id="tagSuggestions"></div>
           </div>
-        </span>
-        <div class="edit-area hidden absolute inset-0 w-full h-full z-20">
-            <div class="current-tags flex flex-wrap gap-1 mb-1"></div>
-            <input type="text"
-                   class="tag-input hidden absolute inset-0 w-full h-full px-2 border border-blue-400 rounded text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-white z-20"
-                   list="tag-list">
-                   <div class="tag-suggestions hidden absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow max-h-40 overflow-y-auto z-10"></div>        </div>
         </td>
+
+        <!-- 残りのセル -->
         <td class="border-r py-2 px-4 text-center status" data-field="status">${item.status}</td>
         <td class="border-r py-2 px-4 text-center priority" data-field="priority">${item.priority}</td>
         <td class="border-r py-2 px-4 text-gray-600 dark:text-white createdAt" data-field="createdAt">${item.createdAt}</td>
-        <td class="border-r py-2 px-4 text-center deadline" data-field="deadline">${deadlineHtml}</td>
+        <td class="border-r py-2 px-4 text-center deadline" data-field="deadline">
+          <div class="cell-wrapper text-xs text-gray-600 mt-1 dark:text-gray-400
+            <span class="cell-text text-center">${deadlineHtml}</span>
+          </div>
+        </td>
         <td class="editable detail w-80 border-r py-2 px-4 text-left" data-field="detail">${item.detail}</td>
         <td class="border-r py-2 px-4">
           <form action="/delete/${item.id}" method="post" style="display:inline;">
@@ -129,7 +180,32 @@ $(function() {
         </td>
       </tr>
     `);
-  }
+    }
+
+/* ToDo 新規行作成ボタン実装時にcreateRowと差し替える
+  function createNewRow(data = {}) {
+      const row = $("#rowTemplate").clone();
+      row.removeAttr("id").removeClass("hidden");
+
+      // data-fieldごとの初期値マップ
+      const fieldInitMap = {
+          title: "",
+          tag: "",
+          status: "",
+          priority: "",
+          createdAt: getToday(),
+          deadline: "",
+          detail: ""
+      };
+
+      row.find("[data-field]").each(function() {
+          const field = $(this).data("field");
+          const value = fieldInitMap[field] ?? ""; // マップに無ければ空
+          $(this).html(value);
+      });
+
+      return row;
+  } */
 
   //編集モーダルの設定
   $(function() {
@@ -192,94 +268,270 @@ $(function() {
     $("#modal").removeClass("hidden"); //モーダル表示
   });
 
-  //インライン編集セルごとの設定
-  $(function() {
+  /**
+   * 共通インライン編集機能
+   * tdSelector: 編集対象のセルセレクタ
+   * fieldName: 保存時のフィールド名
+   * options: セル固有の追加設定（必須、モーダルボタン、select かどうか など）
+   */
+  function enableInlineEdit(tdSelector, fieldName, options = {}) {
+    $(document).on("click", tdSelector, function() {
+      const td = $(this);
+      const span = td.find(".cell-text");
+      const row = td.closest("tr");
+      const icon = options.modalBtnSelector ? td.find(options.modalBtnSelector) : null;
+      const originalValue = span.text().trim();
 
-    /**
-     * セルをクリックしたら hidden 切り替えで編集モードにする共通関数
-     * @param tdSelector : 編集対象のtdセレクタ
-     * @param fieldName  : Ajax送信時のフィールド名
-     */
-    function enableInlineEdit(tdSelector, fieldName, inputClass = ".hidden-input") {
-      $(document).on("click", tdSelector + " .cell-text", function(e) {
-        const td = $(this).closest("td");
-        const span = $(this);                     // 表示用のspan
-        const input = td.find(".hidden-input");   // 編集用input
-        const icon = td.find(".openEditModalBtn"); // 編集モード中は非表示
+      //既に編集中ならスキップ
+      if (td.find(".edit-input, .edit-select, .edit-textarea").length > 0) return;
+      // 編集用editorを生成
+      const editHTML = createEditCellHTMLMap(fieldName, originalValue);
+      const $editor = $(editHTML)
+        .addClass("absolute left-0 top-0 w-full h-full pl-2 pr-2 box-border");
 
-        // ---------- 編集モードに切り替え ----------
-        span.hide();          // 表示用テキストを隠す
-        icon.hide();          // アイコンを隠す
-        input.val(span.text()) // 現在の値を input にセット
-             .removeClass("hidden")
-             .focus();
+      td.addClass("relative");
+      td.append($editor);
+      span.addClass("hidden");
+      if (icon) icon.hide();
 
-        // ---------- キーボード操作 ----------
-        input.off("keydown").on("keydown", function(ev) {
-          if (ev.key === "Enter") save();   // Enterで保存
-          else if (ev.key === "Escape") cancel(); // Escでキャンセル
-        });
+      //title,detailはカーソルを末尾にセット
+      if ($editor.is("input, textarea")) {
+        const el = $editor[0]
+        $editor.focus();
+        const length = el.value.length;
+        el.setSelectionRange(length, length);
+      } else {
+        $editor.focus();
+      }
 
-        // ---------- フォーカスアウトでも保存 ----------
-        input.off("blur").on("blur", save);
-
-        // ---------- 保存処理 ----------
-        function save() {
-          const value = input.val();
-          const row = td.closest("tr");
-          const itemId = row.data("id");
-
-          if (value) {
-            span.text(value).show();
-            if (fieldName === "tag" && !availableTags.includes(value)) {
-                availableTags.push(value);
-                console.log("新しいタグの追加：", value);
+      // deadlineの設定
+      if (fieldName === "deadline") {
+        const fp = flatpickr($editor[0], {
+          dateFormat: "Y-m-d",
+          locale: "ja",
+          allowInput: true,
+          defaultDate: originalValue || null,
+          closeOnSelect: false,
+          clickOpens: true,
+          onValueUpdate: function(selectedDates, dateStr) {
+            if (dateStr) {
+            // yyyy/MM/dd形式に変換
+              const formatted = dateStr.replace(/-/g, "/").replace(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/,
+              (m, y, mth, d) => `${y}/${mth.padStart(2, '0')}/${d.padStart(2, '0')}`);
+              $editor.val(formatted);
+              // 日付のみをセルに表示
+              span.html(`<span class="text-base text-blue-300 font-normal">${formatted}</span>`);
+              span.removeClass("hidden");
             }
-          } else {
-            span.text("").show();
+          },
+          onClose: function(selectedDates, dateStr) {
+            $editor.trigger("blur");
+              $editor.remove();
+              span.html(formatDeadlineCell(dateStr));
+              span.removeClass("hidden");
           }
+        });
+        fp.open();
+      }
 
-          const payload = { id: itemId };
-           if (value !== "") {
-             payload[fieldName] = value;
-           }
+      //保存処理
+      function save() {
+        const newValue = $editor.val().trim();
 
-           $.ajax({
-             url: "/update",
-             type: "POST",
-             data: payload,
-             dataType: "json",   // ← これ必須
-             success: function(updatedItem) {
-               span.text(updatedItem[fieldName] || "");
-             },
-             error: function(xhr) {
-               console.error("更新失敗:", xhr.status, xhr.responseText);
-               alert("更新に失敗しました");
-             },
-             complete: function() {
-               exitEdit();
-             }
-          });
+        // 必須チェック
+        if (options.required && !newValue) {
+          alert("必須項目です");
+          $editor.remove();
+          span.removeClass("hidden");
+          if (icon) icon.show();
+          return;
         }
 
-        // キャンセル処理
-        function cancel() {
-          exitEdit();
+        // 値が変わらなければ終了
+        if (newValue === originalValue) {
+          $editor.remove();
+          span.removeClass("hidden");
+          if (icon) icon.show();
+          return;
         }
 
-        // 編集終了時の共通処理
-        function exitEdit() {
-          input.addClass("hidden"); // 編集用 input を非表示
-          span.show();              // 表示用 span を再表示
-          td.find(".openEditModalBtn").show();
-          icon.show();              // アイコンを戻す
+        // Ajaxで保存
+        $.ajax({
+          url: "/update",
+          type: "POST",
+          data: { id: row.data("id"), [fieldName]: newValue },
+          dataType: "json",
+          success: function(updatedItem) {
+            console.log("✅ 更新結果:", updatedItem);
+            if (fieldName === "deadline") {
+                const newDeadline = updatedItem.deadline || newValue || null;
+                span.html(newDeadline ? formatDeadlineCell(newDeadline) : "(期限未設定)");
+            } else if (fieldName === "title" || fieldName === "detail" || fieldName === "status" || fieldName === "priority") {
+                span.text(newValue);
+            }
+          },
+          error: function(xhr) {
+            alert("更新に失敗しました");
+            span.text(originalValue);
+          },
+          complete: function() {
+            if (fieldName === "deadline") {
+                const updatedDate = $editor.val().trim();
+                if (updatedDate) {
+                    span.html(formatDeadlineCell(updatedDate));
+                }
+            }
+            $editor.remove();
+            span.removeClass("hidden");
+            if (icon) icon.show();
+          }
+        });
+      }
+
+      let isComposing = false;
+      $editor.on("compositionstart", () => { isComposing = true; });
+      $editor.on("compositionend", () => { isComposing = false; });
+
+      $editor.off("keydown").on("keydown", function(e) {
+        // detailセル専用：Shift+Enterで改行
+        if (fieldName === "detail" && e.key === "Enter" && e.shiftKey) {
+          e.preventDefault();
+          const textarea = this;
+          const start = textarea.selectionStart;
+          const end = textarea.selectionEnd;
+          const value = textarea.value;
+          textarea.value = value.substring(0, start) + "\n" + value.substring(end);
+          textarea.selectionStart = textarea.selectionEnd = start + 1;
+          return; // 改行だけ行って終了（保存処理に進まない）
+        }
+
+        // Enterキーで保存（Shift押下時はスキップされる）
+        if (e.key === "Enter" && !e.shiftKey && !isComposing) {
+          e.preventDefault();
+          save();
+        }
+
+        // Escキーでキャンセル
+        if (e.key === "Escape") {
+          e.preventDefault();
+          // cancel logic here...
         }
       });
-    }
 
-    // セルに適用
-    enableInlineEdit("td[data-field='title']", "title");
+      $editor.off("blur").on("blur", function(e) {
+        e.preventDefault();
+        save();
+      });
+    });
+  }
+
+  // 各セルに有効化
+  enableInlineEdit("td[data-field='title']", "title", {
+    modalBtnSelector: ".openEditModalBtn",
+    required: true,
   });
+  enableInlineEdit("td[data-field='status']", "status");
+  enableInlineEdit("td[data-field='priority']", "priority");
+  enableInlineEdit("td[data-field='deadline']", "deadline");
+  enableInlineEdit("td[data-field='detail']", "detail");
+
+  /**
+   * 編集用HTML生成マップ
+   */
+  function createEditCellHTMLMap(field, value = "") {
+      const fieldMap = {
+          title: val => `<input type="text" class="edit-input w-full text-center px-2 py-1 box-border border border-transparent focus:border-blue-500 rounded focus:outline-none" value="${val}">`,
+          status: val => `
+              <select class="edit-select w-full text-center px-2 py-1 box-border border border-transparent focus:border-blue-500 focus:outline-none rounded">
+                  <option value="">選択してください</option>
+                  <option value="未着手" ${val==="未着手"?"selected":""}>未着手</option>
+                  <option value="進行中" ${val==="進行中"?"selected":""}>進行中</option>
+                  <option value="完了" ${val==="完了"?"selected":""}>完了</option>
+              </select>
+          `,
+          priority: val => `
+              <select class="edit-select w-full text-center px-2 py-1 box-border border border-transparent focus:border-blue-500 focus:outline-none rounded">
+                  <option value="">選択してください</option>
+                  <option value="高" ${val==="高"?"selected":""}>高</option>
+                  <option value="中" ${val==="中"?"selected":""}>中</option>
+                  <option value="低" ${val==="低"?"selected":""}>低</option>
+              </select>
+          `,
+          deadline: val => `<input type="text" class="edit-date w-full text-center px-2 py-1 box-border border border-transparent focus:border-blue-500 rounded focus:outline-none text-blue-300" value="${val || ''}" placeholder="">`,
+          detail: val => `<textarea class="edit-textarea w-full focus:border-blue-500 rounded focus:outline-none">${val}</textarea>`
+      };
+
+      return (fieldMap[field] || (v => `<input type="text" class="edit-input w-full" value="${v}">`))(value);
+  }
+
+  //ここ以降は未リファイン
+  // 編集モード終了で反映
+  function saveTags(td) {
+      const currentTags = td.data("tags") || [];
+
+      const payload = {
+          itemId: td.closest("tr").data("id"),
+          selectedTagIds: currentTags.filter(t => t.tagId).map(t => t.tagId),   // 既存タグID
+          newTags: currentTags.filter(t => !t.tagId).map(t => ({ name: t.name, color: t.color })) // 新規タグ
+      };
+
+      $.ajax({
+          url: "/saveTags",
+          type: "POST",
+          contentType: "application/json; charset=utf-8",
+          data: JSON.stringify(payload),
+          success: function(res) {
+              console.log("タグ更新成功:", res);
+
+              // 新規タグにサーバ側で生成された tagId を付与
+              if (res.newTags && res.newTags.length) {
+                  res.newTags.forEach(newTag => {
+                      const tag = currentTags.find(t => t.name === newTag.name && !t.tagId);
+                      if (tag) tag.tagId = newTag.tagId;
+                  });
+                  td.data("tags", currentTags); // 最新のタグ配列を再保存
+              }
+
+              // hidden input にも反映
+              updateHiddenInputFromTd(td);
+          },
+          error: function(xhr) {
+              console.error("タグ更新失敗:", xhr.responseText);
+              alert("タグ更新に失敗しました");
+          }
+      });
+  }
+
+  function updateHiddenInputFromTd(td) {
+      const currentTags = td.data("tags") || [];
+      const selectedIds = currentTags
+          .filter(t => t.tagId) // null を除外
+          .map(t => t.tagId);
+      $('#tags-hidden').val(selectedIds.join(','));
+  }
+
+  //即時反映
+  // タグ削除
+  function deleteTag(tagId) {
+      $.post("/deleteTag", { tagId: tagId })
+       .done(() => console.log("タグ削除成功"))
+       .fail(xhr => console.error("タグ削除失敗", xhr.responseText));
+  }
+
+  // タグ更新（背景色など）
+  function updateTag(tag) {
+      $.ajax({
+          url: "/updateTag",
+          type: "POST",
+          data: tag, // name, tagColor, tagId 等
+          success: function(updatedTag) {
+              console.log("タグ更新成功:", updatedTag);
+          },
+          error: function(xhr) {
+              console.error("タグ更新失敗:", xhr.responseText);
+          }
+      });
+  }
 
   //タグセル用の編集モード切り替え
   $(document).on("keydown", ".tag-input", function(e) {
@@ -306,7 +558,7 @@ $(function() {
         tagList.prepend(newTag);
 
         //availableTagsにも追加
-        if (!availableTags.includes(value)) {
+        if (!availableTags.some(t => t.name === value)) {
             availableTags.push(value);
             $("#tag-list-datalist").append(`<option value="${value}">`);
         }
@@ -377,7 +629,7 @@ $(function() {
                 <button class="tag-sort-up cursor-pointer border rounded bg-blue-400 text-white w-6 h-6">↑</button>
                 <button class="tag-sort-down cursor-pointer border rounded bg-blue-400 text-white w-6 h-6">↓</button>
               </div>
-              <span class="tag-name text-center px-2 py-1 rounded bg-red-400 text-white">${tag}</span>
+              <span class="tag-name text-center px-2 py-1 rounded ${tag.color} text-white">${tag.name}</span>
               <button class="tag-settings p-1 hover:bg-gray-300 rounded ml-2">⚙️</button>
           </div>`
         ).join("")
@@ -419,9 +671,16 @@ $(function() {
       });
 
       //背景クリックで閉じる
-      $(document).on("click", function() {
+      $(document).on("click", function(e) {
+        if ($(e.target).closest(".tag-suggestions, .tag-settings, .tag-name").length > 0) {
+            return; // タグやメニューをクリックしたときは閉じない
+        }
+
+        if (!currentTag || !currentTag.length) return;
+
         actionList.addClass("hidden");
         // タグセル（td）を探して入力欄にフォーカス
+        console.log("currentTag : ", currentTag);
         const td = currentTag.closest("td[data-field='tag']");
         const input = td.find(".tag-input");
 
@@ -468,6 +727,8 @@ $(function() {
       td.find(".tag-suggestions").off("click").on("click", ".tag-name", function(e) {
         e.stopPropagation();
         e.preventDefault();
+
+        currentTag =$(this);
 
         const tagName = $(this).text().trim();
         const tagColor = $(this).attr("class").match(/bg-\S+/)?.[0] || "bg-blue-400";
@@ -516,39 +777,71 @@ $(function() {
 
       // タグを追加する関数
       function addTagToCurrentCell(value, options = {}) {
-        const tagColor = "bg-blue-400"; // 新規タグは青
+          if (!value || !value.trim()) return; // 空文字は無視
 
-        if (!currentTags.some(t => t.name === value)) {
-          currentTags.push({ name: value, color: tagColor });
-          renderCurrentTags();
-        }
+          const td = $(".edit-area:visible").closest("td[data-field='tag']");
+          let currentTags = td.data("tags") || [];
+          const tagColor = "bg-blue-400";
 
-        if (options.isNew && !availableTags.includes(value)) {
-          availableTags.push(value);
-          $("#tag-list-datalist").append(`<option value="${value}">`);
-        }
+          if (!currentTags.some(t => t.name === value)) {
+              currentTags.push({ tagId: null, name: value, color: tagColor });
+              td.data("tags", currentTags);
+              renderCurrentTags(td);
+          }
+
+          if (options.isNew && value.trim() && !availableTags.some(t => t.name === value)) {
+              const newTag = { tagId: null, name: value, color: tagColor };
+              availableTags.push(newTag);
+              $("#tag-list-datalist").append(`<option value="${value}">`);
+          }
       }
 
       // 編集終了時に表示へ反映
       function exitEdit() {
-        const html = currentTags.map(tag =>
-          `<div class="tag-item px-2 py-1 rounded ${tag.color} text-white" data-tag="${tag.name}">${tag.name}</div>`
-        ).join("");
+          currentTags = currentTags.filter(t => t.name && t.name.trim() !== ""); // 空タグ削除
+          td.data("tags", currentTags);
+          saveTags(td);
 
-        display.html(`<div class="tag-list flex flex-wrap gap-1 justify-center">${html}</div>`);
-        editArea.addClass("hidden");
-        display.removeClass("hidden");
+          const html = currentTags.map(tag =>
+            `<div class="tag-item px-2 py-1 rounded ${tag.color} text-white" data-tag="${tag.name}">${tag.name}</div>`
+          ).join("");
 
-        // ✅ タグ配列を td に保存
-        td.data("tags", currentTags);
+          display.html(`<div class="tag-list flex flex-wrap gap-1 justify-center">${html}</div>`);
+          editArea.addClass("hidden");
+          display.removeClass("hidden");
 
-        input.val("");
+          input.val("");
       }
     });
   }
 
+  // 選択されたタグIDを保持する配列
+  let selectedTags = [];
+
+  // タグを追加（例：リスト選択やクリックで呼び出す）
+  function addTag(tagId) {
+    if ($.inArray(tagId, selectedTags) === -1) {
+      selectedTags.push(tagId);
+      updateHiddenInput();
+    }
+  }
+
+  // タグを削除（チップの×ボタンなどで呼び出す）
+  function removeTag(tagId) {
+    selectedTags = $.grep(selectedTags, function(id) {
+      return id !== tagId;
+    });
+    updateHiddenInput();
+  }
+
+  // hidden input の値を更新
+  function updateHiddenInput() {
+    $('#tags-hidden').val(selectedTags.join(','));
+  }
+
   //上ボタンクリック
-  $(document).on("click", ".tag-sort-up", function() {
+  $(document).on("click", ".tag-sort-up", function(e) {
+    e.stopPropagation();
     const tagItem = $(this).closest(".tag-item");
     const parent = tagItem.parent();
     const prev = tagItem.prev(".tag-item");
@@ -561,7 +854,8 @@ $(function() {
   });
 
   //下ボタンクリック
-  $(document).on("click", ".tag-sort-down", function() {
+  $(document).on("click", ".tag-sort-down", function(e) {
+    e.stopPropagation();
     const tagItem = $(this).closest(".tag-item");
     const parent = tagItem.parent();
     const next = tagItem.next(".tag-item");
