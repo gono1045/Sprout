@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.sprout.dao.SproutItemListDao">
+
+<select id="selectAll" resultType="com.example.sprout.model.SproutItemListDetail">
+  SELECT
+      t1.id
+    , t1.title
+    , t1.status_cd
+    , m1.code_name AS status_name
+    , t1.priority_cd
+    , m2.code_name AS priority_name
+    , t1.deadline
+    , t1.detail
+    , t1.update_at
+    , t1.done_flg
+  FROM
+    sprout_item t1
+  LEFT JOIN m_code m1
+         ON t1.status_cd = m1.code
+        AND m1.code_id = '01'
+  LEFT JOIN m_code m2
+         ON t1.priority_cd = m2.code
+        AND m2.code_id = '02'
+  ORDER BY
+      t1.status_cd DESC
+    , t1.priority_cd DESC
+    , t1.deadline ASC
+    , t1.update_at DESC
+</select>
+
+<select id="selectByItemId" resultType="com.example.sprout.model.SproutItemListDetail">
+  SELECT
+      t1.id
+    , t1.title
+    , t1.status_cd
+    , m1.code_name AS status_name
+    , t1.priority_cd
+    , m2.code_name AS priority_name
+    , t1.deadline
+    , t1.detail
+    , t1.update_at
+    , t1.done_flg
+  FROM
+    sprout_item t1
+  LEFT JOIN m_code m1
+         ON t1.status_cd = m1.code
+        AND m1.code_id = '01'
+  LEFT JOIN m_code m2
+         ON t1.priority_cd = m2.code
+        AND m2.code_id = '02'
+  WHERE
+    t1.id = #{id}
+  ORDER BY
+      t1.status_cd DESC
+    , t1.priority_cd DESC
+    , t1.deadline ASC
+    , t1.update_at DESC
+</select>
+</mapper>
