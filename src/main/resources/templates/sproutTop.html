@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja" class="">
+    <head>
+      <meta charset="UTF-8" />
+      <title>予定一覧</title>
+      <!-- Google Font -->
+      <link href="https://fonts.googleapis.com/css2?family=Merienda&display=swap" rel="stylesheet">
+      <!-- flatpickr CSS -->
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+      <!-- DataTables CSS -->
+      <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+      <!-- Tailwind -->
+      <link rel="stylesheet" th:href="@{/css/output.css}">
+      <!-- favicon -->
+      <link rel="icon" type="image/png" th:href="@{/img/favicon.ico}">
+      <!-- jQuery -->
+      <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+      <!-- Day.js -->
+      <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+      <!-- DataTables -->
+      <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+      <!-- flatpickr -->
+      <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+      <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ja.js"></script>
+      <!-- Controller から渡された items を JS に設定 -->
+      <script th:inline="javascript">
+        /*<![CDATA[*/
+        window.sproutItems = /*[[${items}]]*/ [];
+        /*]]>*/
+      </script>
+      <!-- 自作JS -->
+      <script src="/js/sprout-datatables.js"></script>
+      <script src="/js/sprout-util.js"></script>
+      <script src="/js/itemUpdateModal.js"></script>
+      <script src="/js/sproutTop.js"></script>
+    </head>
+
+<body class="font-body min-h-screen p-10 dark:bg-gray-900 dark:text-blue-300"
+      th:style="|background-image: url('@{/img/top_bg.png}'); background-size: cover; background-position: center; background-repeat: no-repeat;|">
+  <div id="sproutTopRoot">
+    <!-- タイトル -->
+    <h1 class="mx-auto w-80">
+      <img th:src="@{/img/title.png}" alt="Sprout" class="w-full h-auto">
+    </h1>
+    <!-- メイン画面 -->
+    <div class="flex items-center justify-between mb-3">
+      <form method="get" action="/" class="flex mb-2">
+        <!-- 新規登録ボタン-->
+        <button id="createTaskModalButton" type="button"
+          class="mr-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+          新規
+        </button>
+        <!-- 完了済み表示切替ボタン -->
+        <!--
+        <input type="hidden" name="showCompleted" th:value="${!showCompleted}" />
+        <button type="submit" th:text="${showCompleted} ? '完了済みを隠す' : '完了済みを表示'"
+          class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-blue-500 dark:hover:bg-blue-300 dark:focus:ring-blue-300">
+        </button>
+      </form>
+      -->
+      <!-- 検索フォーム -->
+      <!--
+      <form method="get" th:action="@{/}" class="mb-2 flex gap-2 max-w-3xl">
+        <input type="text" name="keyword" th:value="${keyword}" placeholder="内容で検索" autocomplete="off"
+          class="w-80 flex-grow px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-200" />
+        <input type="hidden" name="showCompleted" th:value="${showCompleted}" />
+        <button type="submit"
+          class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-blue-500 dark:hover:bg-blue-300 dark:focus:ring-blue-300">
+          検索
+        </button>
+      -->
+      </form>
+    </div>
+
+    <!-- 隠し項目 -->
+
+    <!-- 予定一覧テーブル -->
+    <div class="overflow-x-auto">
+      <table id="sproutTable" class="table-fixed  border-collapse text-center min-w-full border border-blue-300
+      bg-white shadow rounded-lg dark:bg-gray-800"></table>
+    </div>
+  </div>
+</body>
+</html>
