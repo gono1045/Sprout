@@ -2,7 +2,7 @@ package com.example.sprout.form;
 
 import org.springframework.beans.BeanUtils;
 
-public abstract class SproutAbstractForm {
+public abstract class SproutAbstractForm<M> {
 
   /**
    * Model から Form に値をコピー
@@ -13,4 +13,18 @@ public abstract class SproutAbstractForm {
       return;
     BeanUtils.copyProperties(source, this);
   }
+
+  /**
+   * FormからModelを生成
+   */
+  public M createModel() {
+    M model = newModel();
+    BeanUtils.copyProperties(this, model);
+    return model;
+  }
+
+  /**
+   * 各FormでModelのインスタンス生成を定義
+   */
+  protected abstract M newModel();
 }

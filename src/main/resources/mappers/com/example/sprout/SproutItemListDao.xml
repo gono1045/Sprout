@@ -5,7 +5,7 @@
 
 <mapper namespace="com.example.sprout.dao.SproutItemListDao">
 
-<select id="selectAll" resultType="com.example.sprout.model.SproutItemListDetail">
+<select id="selectAll" resultType="SproutItemListDetail">
   SELECT
       t1.id
     , t1.title
@@ -32,7 +32,7 @@
     , t1.update_at DESC
 </select>
 
-<select id="selectByItemId" resultType="com.example.sprout.model.SproutItemListDetail">
+<select id="selectByItemId" resultType="SproutItemListDetail">
   SELECT
       t1.id
     , t1.title
@@ -60,4 +60,37 @@
     , t1.deadline ASC
     , t1.update_at DESC
 </select>
+<insert id="insert" parameterType="SproutItemListDetail">
+  INSERT INTO sprout_item (
+      title
+    , status_cd
+    , priority_cd
+    , deadline
+    , detail
+    , update_at
+  ) VALUE (
+      #{title}
+    , #{statusCd}
+    , #{priorityCd}
+    , #{deadline}
+    , #{detail}
+    , #{updateAt}
+  )
+</insert>
+<update id="update" parameterType="SproutItemListDetail">
+  UPDATE sprout_item
+  SET
+      title = #{title}
+    , status_cd = #{statusCd}
+    , priority_cd = #{priorityCd}
+    , deadline = #{deadline}
+    , detail = #{detail}
+    , update_at = #{updateAt}
+  WHERE
+    id = #{id}
+</update>
+<delete id="delete" parameterType="Long">
+  DELETE FROM sprout_item
+  WHERE id = #{id}
+</delete>
 </mapper>

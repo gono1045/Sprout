@@ -24,6 +24,7 @@
         <!-- 隠し項目 -->
         <input type="hidden" th:field="*{modalFlg}">
         <input type="hidden" th:field="*{updateAt}">
+        <input type="hidden" th:field="*{id}">
         <!-- タイトル -->
         <div class="flex items-center gap-2">
           <label for="title" class="whitespace-nowrap text-right w-20 block flex items-center h-full font-medium">タイトル：</label>
@@ -39,21 +40,21 @@
         <!-- ステータス -->
         <div class="flex items-center gap-2">
           <label class="whitespace-nowrap w-20 block text-sm font-medium">ステータス：</label>
-          <select th:field="*{statusName}"
+          <select th:field="*{statusCd}"
             class="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-200">
-            <option value="未着手">未着手</option>
-            <option value="進行中">進行中</option>
-            <option value="完了">完了</option>
+            <option value="1">未着手</option>
+            <option value="2">進行中</option>
+            <option value="3">完了</option>
           </select>
         </div>
         <!-- 優先度 -->
         <div class="flex items-center gap-2">
           <label class="whitespace-nowrap w-20 block text-sm font-medium">優先度：</label>
-          <select th:field="*{priorityName}"
+          <select th:field="*{priorityCd}"
             class="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-200">
-            <option value="低">低</option>
-            <option value="中">中</option>
-            <option value="高">高</option>
+            <option value="1">低</option>
+            <option value="2">中</option>
+            <option value="3">高</option>
           </select>
         </div>
         <!-- 作成・更新日 -->
@@ -69,7 +70,7 @@
         <div class="flex items-center gap-2">
           <label for="deadline" class="whitespace-nowrap w-20 text-right block flex items-center h-full font-medium">締切：</label>
           <div class="relative flex-1">
-            <input  type="date" th:field="*{deadline}"
+            <input  type="text" th:field="*{deadline}"
               class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-200" />
             <!-- カレンダーアイコン -->
             <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer hover:text-blue-600" id="deadlineIcon">
@@ -107,11 +108,39 @@
         class="js-modal-close bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400">
         キャンセル
       </button>
-      <!-- 追加 -->
-      <button type="submit" id="submitBtn"
-        class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400">
-        追加
-      </button>
+      <!-- フッター右側ボタングループ -->
+      <div class="flex">
+        <!-- 削除（更新時のみ） -->
+        <button
+          th:if="${sproutItemListForm.modalFlg == 1}"
+          type="button"
+          id="deleteBtn"
+          class="bg-red-600 text-white px-4 py-2 rounded
+                 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400">
+          削除
+        </button>
+        <!-- スペーサー -->
+        <span
+          th:if="${sproutItemListForm.modalFlg == 1}"
+          style="width: 16px; display: inline-block;">
+        </span>
+        <!-- 追加 -->
+        <button
+          th:if="${sproutItemListForm.modalFlg == 0}"
+          type="submit"
+          id="submitBtn"
+          class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400">
+          追加
+        </button>
+        <!-- 更新 -->
+        <button
+          th:if="${sproutItemListForm.modalFlg == 1}"
+          type="submit"
+          id="submitBtn"
+          class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400">
+          更新
+        </button>
+      </div>
     </div>
   </div>
 <!-- モーダルここまで -->
