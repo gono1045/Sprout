@@ -22,15 +22,10 @@
       <!-- flatpickr -->
       <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
       <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ja.js"></script>
-      <!-- Controller から渡された items を JS に設定 -->
-      <script th:inline="javascript">
-        /*<![CDATA[*/
-        window.sproutItems = /*[[${items}]]*/ [];
-        /*]]>*/
-      </script>
       <!-- 自作JS -->
       <script src="/js/sprout-datatables.js"></script>
       <script src="/js/sprout-util.js"></script>
+      <script src="/js/sprout-message.js"></script>
       <script src="/js/itemUpdateModal.js"></script>
       <script src="/js/sproutTop.js"></script>
     </head>
@@ -73,7 +68,7 @@
     </div>
 
     <!-- 隠し項目 -->
-
+    <input type="hidden" th:field="*{id}" th:object="${sproutItemListForm}">
     <!-- 予定一覧テーブル -->
     <div class="overflow-x-auto">
       <table id="sproutTable" class="table-fixed  border-collapse text-center min-w-full border border-blue-300

@@ -14,6 +14,7 @@ $(function () {
     _this.createTaskModalButtonId = sprout.util.getId(SCREEN_ID, "createTaskModalButton");
     _this.modalId = sprout.util.getId(SCREEN_ID, "modal");
     _this.tableId = sprout.util.getId(SCREEN_ID, "sproutTable");
+    _this.itemId = sprout.util.getId(SCREEN_ID, 'id');
 
   // JSON定義読み込み
   $.getJSON('/json/sproutTop.json', function (json) {
@@ -74,7 +75,8 @@ $(function () {
 
       {
         targets: 6,
-        width: '250px'
+        width: '250px',
+        className: 'text-left'
       }, // 詳細
 
       {
@@ -100,8 +102,11 @@ $(function () {
     ];
 
     // DataTable 初期化
-    $(_this.tableId).DataTable({
-      data: window.sproutItems,
+    window.sproutTopTable = $(_this.tableId).DataTable({
+      ajax: {
+        url: '/task/list',
+        dataSrc: ''
+      },
       columns: columns,
       columnDefs: columnDefs,
       paging: true,
@@ -111,6 +116,7 @@ $(function () {
       autoWidth: false,
       lengthChange: false,
     });
+
     // ヘッダ行のみ中央揃え
     $(_this.tableId + ' thead th').css('text-align', 'center');
   });
@@ -128,6 +134,26 @@ $(function () {
         data: { modalFlg: 0 },
         callBack: function ($modalEl) {
           console.log('モーダル表示成功', $modalEl[0]);
+          itemUpdateModal.init($modalEl);
+        }
+      });
+    });
+
+  // 更新モーダル
+  $(_this.tableId)
+    .off('click.openUpdateModal')
+    .on('click.openUpdateModal', '.sprout-link', function () {
+
+      const itemId = $(this).data('row-id');
+
+      sprout.util.openModal({
+        modalId: 'itemUpdateModal',
+        url: '/modal/update',
+        data: {
+          modalFlg: 1,
+          id: itemId
+        },
+        callBack: function ($modalEl) {
           itemUpdateModal.init($modalEl);
         }
       });

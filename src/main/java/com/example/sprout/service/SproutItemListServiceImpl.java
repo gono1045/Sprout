@@ -25,4 +25,20 @@ public class SproutItemListServiceImpl implements SproutItemListService {
   public SproutItemListDetail selectByItemId(Long id) {
     return sproutItemListDao.selectByItemId(id);
   }
+
+  // 新規タスク登録
+  @Override
+  public void insert(SproutItemListDetail model) {
+    sproutItemListDao.insert(model);
+  }
+
+  // タスク更新
+  public void update(SproutItemListDetail model) {
+    sproutItemListDao.update(model);
+  }
+
+  // 削除
+  public void delete(Long id) {
+    sproutItemListDao.delete(id);
+  }
 }

@@ -25,8 +25,8 @@
       "class": ""
     },
     {
-      "data": "createdAt",
-      "label": "作成日",
+      "data": "updateAtStr",
+      "label": "更新日",
       "inputType": "LABEL",
       "class": ""
     },

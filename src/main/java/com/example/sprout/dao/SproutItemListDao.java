@@ -14,4 +14,13 @@ public interface SproutItemListDao {
 
   // タスク情報取得
   SproutItemListDetail selectByItemId(Long id);
+
+  // 新規タスク登録
+  void insert(SproutItemListDetail model);
+
+  // タスク更新
+  void update(SproutItemListDetail model);
+
+  // タスク削除
+  void delete(Long id);
 }

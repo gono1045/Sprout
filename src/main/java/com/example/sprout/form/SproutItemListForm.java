@@ -2,8 +2,11 @@ package com.example.sprout.form;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
-public class SproutItemListForm extends SproutAbstractForm {
+import com.example.sprout.model.SproutItemListDetail;
+
+public class SproutItemListForm extends SproutAbstractForm<SproutItemListDetail> {
 
   /** タスクID */
   private Long id;
@@ -220,5 +223,21 @@ public class SproutItemListForm extends SproutAbstractForm {
    */
   public void setModalFlg(Integer modalFlg) {
     this.modalFlg = modalFlg;
+  }
+
+  @Override
+  protected SproutItemListDetail newModel() {
+    return new SproutItemListDetail();
+  }
+
+  @Override
+  public void setDetailListFrom(Object source) {
+    super.setDetailListFrom(source);
+
+    // 作成・更新日の補正
+    if (this.updateAt != null) {
+      this.updateAtStr = this.updateAt.format(
+          DateTimeFormatter.ofPattern("yyyy/MM/dd"));
+    }
   }
 }

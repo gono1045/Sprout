@@ -22,11 +22,70 @@ var itemUpdateModal = (function () {
 
     _this.modalEl = $modalEl;
 
-    _this.form = sprout.util.getId(SCREEN_ID, 'sproutItemListForm');
-    _this.deadline = sprout.util.getId(SCREEN_ID, 'deadline');
-    _this.deadlineIcon = sprout.util.getId(SCREEN_ID, 'deadlineIcon');
+    _this.formId = sprout.util.getId(SCREEN_ID, 'sproutItemListForm');
+    _this.deadlineId = sprout.util.getId(SCREEN_ID, 'deadline');
+    _this.deadlineIconId = sprout.util.getId(SCREEN_ID, 'deadlineIcon');
+    _this.submitBtnId = sprout.util.getId(SCREEN_ID, 'submitBtn');
+    _this.modalFlgId = sprout.util.getId(SCREEN_ID, 'modalFlg');
+    _this.deleteBtnId = sprout.util.getId(SCREEN_ID, 'deleteBtn');
+    _this.itemId = sprout.util.getId(SCREEN_ID, 'id');
 
     initDatePicker();
+
+    // 追加・更新ボタンクリック
+    $(_this.submitBtnId).off('click.modal').on('click.modal', function(e) {
+      e.preventDefault();
+      var modalFlg = $(_this.modalFlgId).val();
+
+      // 登録
+      if (modalFlg == 0) {
+        sprout.util.sendForm({
+          url: "/task/new",
+          form: _this.formId,
+          callBack: closeModalCallBack
+        });
+      }
+
+      // 更新
+      if (modalFlg == 1) {
+        sprout.util.sendForm({
+            url: "/task/update",
+            form: _this.formId,
+            callBack: closeModalCallBack
+        })
+      }
+    });
+
+    function closeModalCallBack() {
+        $modalEl.remove();
+
+        if (window.sproutTopTable) {
+          window.sproutTopTable.ajax.reload(null, false);
+        }
+    };
+
+    // 削除ボタンクリック
+    $(_this.deleteBtnId).off('click.modal').on('click.modal', function() {
+      var id = $(_this.itemId).val();
+
+      sprout.message.confirmExec({
+        messageId: 'WARN001',
+        title: '削除確認',
+        onOk: function() {
+          sprout.util.sendForm({
+            url: '/task/delete',
+            data: {id: id},
+            callBack: function() {
+              closeModalCallBack();
+              sprout.message.toast({
+                message: '削除が完了しました',
+                type: 'success'
+              });
+            }
+          });
+        }
+      });
+    });
   }
 
   /**
@@ -34,11 +93,8 @@ var itemUpdateModal = (function () {
    */
   function initDatePicker() {
 
-    const $deadline = _this.modalEl.find(_this.deadline);
-    const $deadlineIcon = _this.modalEl.find(_this.deadlineIcon);
-
-    if ($deadline.length && !$deadline[0]._flatpickr) {
-      flatpickr($deadline[0], {
+    if ($(_this.deadlineId).length && !$(_this.deadlineId)[0]._flatpickr) {
+      flatpickr($(_this.deadlineId)[0], {
         locale: 'ja',
         dateFormat: 'Y/m/d',
         allowInput: true
@@ -46,9 +102,9 @@ var itemUpdateModal = (function () {
     }
 
     // アイコンクリックでopen
-    $deadlineIcon.off('click.modal')
+    $(_this.deadlineIconId).off('click.modal')
       .on('click.modal', function () {
-        $deadline.focus();
+        $(_this.deadlineId).focus();
       });
   }
 
