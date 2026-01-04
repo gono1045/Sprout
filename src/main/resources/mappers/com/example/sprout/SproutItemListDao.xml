@@ -26,7 +26,7 @@
          ON t1.priority_cd = m2.code
         AND m2.code_id = '02'
   ORDER BY
-      t1.status_cd DESC
+      FIELD(t1.status_cd, 2, 1, 3)
     , t1.priority_cd DESC
     , t1.deadline ASC
     , t1.update_at DESC
@@ -55,7 +55,7 @@
   WHERE
     t1.id = #{id}
   ORDER BY
-      t1.status_cd DESC
+      FIELD(t1.status_cd, 2, 1, 3)
     , t1.priority_cd DESC
     , t1.deadline ASC
     , t1.update_at DESC

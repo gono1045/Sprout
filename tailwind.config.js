@@ -12,7 +12,12 @@ module.exports = {
   'font-body',
   'dark:text-green-300',
   'text-green-700',
-  'dark:text-green-300'
+  'dark:text-green-300',
+  'bg-yellow-400',
+  'bg-purple-400',
+  'bg-green-400',
+  'bg-red-400',
+  'bg-blue-400'
   ],
   theme: {
     extend: {
