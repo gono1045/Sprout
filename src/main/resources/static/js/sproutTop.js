@@ -26,8 +26,13 @@ $(function () {
       let renderFunc;
 
       if (col.data === 'tags') {
-        renderFunc = function() {
-          return ''; // 仮表示
+        renderFunc = function(data, type, row) {
+          return `
+            <span
+              class="sprout-tag-mount"
+              data-item-id="${row.id}">
+            </span>
+          `;
         };
       } else {
         renderFunc = SproutDataTables.getRender(col.inputType);
@@ -45,7 +50,8 @@ $(function () {
 
       {
         targets: 0,
-        width: '200px'
+        width: '200px',
+        orderable: true
       }, // タイトル
 
       {
@@ -55,22 +61,26 @@ $(function () {
 
       {
         targets: 2,
-        width: '100px'
+        width: '100px',
+        orderable: true
       }, // ステータス
 
       {
         targets: 3,
-        width: '100px'
+        width: '100px',
+        orderable: true
       }, // 優先度
 
       {
         targets: 4,
-        width: '150px'
+        width: '150px',
+        orderable: true
       }, // 作成日
 
       {
         targets: 5,
-        width: '150px'
+        width: '150px',
+        orderable: true
       }, // 締切
 
       {
@@ -115,6 +125,10 @@ $(function () {
       info: false,
       autoWidth: false,
       lengthChange: false,
+      ordering: false,
+      drawCallback: function () {
+        mountTagsInTable();
+      }
     });
 
     // ヘッダ行のみ中央揃え
@@ -158,4 +172,25 @@ $(function () {
         }
       });
     });
+
+    function mountTagsInTable() {
+      $(_this.tableId)
+        .find('.sprout-tag-mount')
+        .each(function () {
+
+          const $el = $(this);
+
+          // 再描画時の二重初期化防止
+          if ($el.data('mounted')) return;
+
+          sprout.tags.mount({
+            el: this,
+            itemId: $el.data('item-id')
+          });
+
+          $el.data('mounted', true);
+        });
+    }
+
+
 });

@@ -1,0 +1,83 @@
+package com.example.sprout.service;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.example.sprout.dao.SproutTagListDao;
+import com.example.sprout.model.SproutItemTag;
+import com.example.sprout.model.SproutTagList;
+
+@Service
+public class SproutTagListServiceImpl implements SproutTagListService {
+
+  @Autowired
+  private SproutTagListDao tagListDao;
+
+  @Override
+  public List<SproutTagList> selectAll() {
+    return tagListDao.selectAll();
+  }
+
+  @Override
+  public SproutTagList selectByTagId(Long tagId) {
+    return tagListDao.selectByTagId(tagId);
+  }
+
+  @Override
+  public void insert(SproutTagList model) {
+    tagListDao.insert(model);
+  }
+
+  @Override
+  public void update(SproutTagList model) {
+    tagListDao.update(model);
+  }
+
+  @Override
+  @Transactional
+  public void delete(Long tagId) {
+    tagListDao.delete(tagId);
+  }
+
+  @Override
+  @Transactional
+  public void updateTagSortOrders(List<SproutTagList> tags) {
+    for (SproutTagList tag : tags) {
+      tagListDao.updateTagSortOrder(tag.getTagId(), tag.getTagSortOrder());
+    }
+  }
+
+  @Override
+  public List<SproutTagList> selectTagsByItemId(Long itemId) {
+    return tagListDao.selectTagsByItemId(itemId);
+  }
+
+  /**
+   * タスクのタグを更新
+   * 既存のタグは削除して新しいタグを登録
+   */
+  @Override
+  @Transactional
+  public void updateItemTags(Long itemId, List<Long> tagIds) {
+
+    // 既存紐付けを削除
+    List<SproutTagList> existingTags = tagListDao.selectTagsByItemId(itemId);
+    for (SproutTagList tag : existingTags) {
+      SproutItemTag itemTag = new SproutItemTag();
+      itemTag.setItemId(itemId);
+      itemTag.setTagId(tag.getTagId());
+      tagListDao.deleteItemTag(itemTag);
+    }
+
+    // 新規タグを紐付け
+    for (Long tagId : tagIds) {
+      SproutItemTag itemTag = new SproutItemTag();
+      itemTag.setItemId(itemId);
+      itemTag.setTagId(tagId);
+      tagListDao.insertItemTag(itemTag);
+    }
+  }
+}

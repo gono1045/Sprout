@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.sprout.dao.SproutTagListDao">
+<select id="selectAll" parameterType="SproutTagList">
+  SELECT *
+  FROM sprout_tag t1
+  ORDER BY
+    t1.tag_sort_order ASC
+</select>
+<select id="selectByTagId" parameterType="SproutTagList">
+  SELECT *
+  FROM sprout_tag t1
+  WHERE t1.tag_id = #{tagId}
+</select>
+<select id="selectTagsByItemId" parameterType="SproutTagList">
+  SELECT
+      t1.*
+  FROM
+    sprout_tag t1
+    LEFT JOIN sprout_item_tag t2
+    ON t1.tag_id = t2.tag_id
+  WHERE
+    t2.item_id = #{itemId}
+</select>
+<insert id="insert" parameterType="SproutTagList">
+  INSERT INTO sprout_tag (
+      tag_name
+    , tag_detail
+    , tag_color
+    , tag_sort_order
+    , update_at
+  ) VALUE (
+      #{tagName}
+    , #{tagDetail}
+    , #{tagColor}
+    , #{tagSortOrder}
+    , #{updateAt}
+  )
+</insert>
+<update id="update" parameterType="SproutTagList">
+  UPDATE sprout_tag
+  SET
+      tag_name = #{tagName}
+    , tag_detail = #{tagDetail}
+    , tag_color = #{tagColor}
+    , tag_sort_order = #{tagSortOrder}
+    , update_at = #{updateAt}
+  WHERE
+    tag_id = #{tagId}
+</update>
+<delete id="delete" parameterType="Long">
+  DELETE FROM sprout_tag
+  WHERE tag_id = #{tagId}
+</delete>
+<update id="updateTagSortOrder">
+  UPDATE sprout_tag
+  SET tag_sort_order = #{tagSortOrder}
+  WHERE tag_id = #{tagId}
+</update>
+<insert id="insertItemTag" parameterType="sproutItemTag">
+  INSERT INTO sprout_item_tag (
+      item_id
+    , tag_id
+  ) VALUES (
+      #{itemId}
+    , #{tagId}
+  )
+</insert>
+<delete id="deleteItemTag" parameterType="sproutItemTag">
+  DELETE FROM sprout_item_tag
+  WHERE
+    item_id = #{itemId}
+    AND tag_id = #{tagId}
+</delete>
+</mapper>
