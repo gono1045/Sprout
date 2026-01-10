@@ -24,6 +24,8 @@ public class SproutTagListForm extends SproutAbstractForm<SproutTagList> {
   /** 親タグID */
   private Long parentTagId;
 
+  /** タスクID */
+  private Long itemId;
   /** タグリスト */
   private List<SproutTagList> tagList;
 
@@ -121,6 +123,22 @@ public class SproutTagListForm extends SproutAbstractForm<SproutTagList> {
    */
   public void setParentTagId(Long parentTagId) {
     this.parentTagId = parentTagId;
+  }
+
+  /**
+   * タスクIDを取得する
+   * @return itemId
+   */
+  public Long getItemId() {
+    return itemId;
+  }
+
+  /**
+   * タスクIDを設定する
+   * @param tagId タスクID
+   */
+  public void setItemId(Long itemId) {
+    this.itemId = itemId;
   }
 
   /**

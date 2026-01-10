@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.sprout.dao.SproutTagListDao;
+import com.example.sprout.enums.SproutTagColor;
 import com.example.sprout.model.SproutItemTag;
 import com.example.sprout.model.SproutTagList;
 
@@ -27,8 +28,18 @@ public class SproutTagListServiceImpl implements SproutTagListService {
   }
 
   @Override
-  public void insert(SproutTagList model) {
+  public SproutTagList insert(SproutTagList model) {
+
+    // タグ色をランダムで設定
+    SproutTagColor sproutTagColor = SproutTagColor.random();
+    model.setTagColor(sproutTagColor.getTailwindClass());
+
+    // 並び順は最後尾に追加
+    Integer maxOrder = tagListDao.selectMaxSortOrder();
+    model.setTagSortOrder(maxOrder == null ? 1 : maxOrder + 1);
+
     tagListDao.insert(model);
+    return model;
   }
 
   @Override
@@ -66,10 +77,7 @@ public class SproutTagListServiceImpl implements SproutTagListService {
     // 既存紐付けを削除
     List<SproutTagList> existingTags = tagListDao.selectTagsByItemId(itemId);
     for (SproutTagList tag : existingTags) {
-      SproutItemTag itemTag = new SproutItemTag();
-      itemTag.setItemId(itemId);
-      itemTag.setTagId(tag.getTagId());
-      tagListDao.deleteItemTag(itemTag);
+      tagListDao.deleteItemTag(itemId, tag.getTagId());
     }
 
     // 新規タグを紐付け
@@ -79,5 +87,11 @@ public class SproutTagListServiceImpl implements SproutTagListService {
       itemTag.setTagId(tagId);
       tagListDao.insertItemTag(itemTag);
     }
+  }
+
+  @Override
+  @Transactional
+  public void deleteItemTag(Long itemId, Long tagId) {
+    tagListDao.deleteItemTag(itemId, tagId);
   }
 }

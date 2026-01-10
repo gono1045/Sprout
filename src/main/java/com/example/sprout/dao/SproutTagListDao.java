@@ -50,6 +50,12 @@ public interface SproutTagListDao {
   void updateTagSortOrder(@Param("tagId") Long tagId, @Param("tagSortOrder") Integer tagSortOrder);
 
   /**
+   * タグの並び順最大値を取得
+   * @return 最大値(データなしの場合null)
+   */
+  Integer selectMaxSortOrder();
+
+  /**
    * タスクに紐づくタグ一覧取得
    * @param itemId タスクID
    * @return タグリスト
@@ -64,7 +70,8 @@ public interface SproutTagListDao {
 
   /**
    * タスクとタグの紐付け削除
-   * @param model タスクIDとタグID
+   * @param itemId タスクID
+   * @param tagId タグID
    */
-  void deleteItemTag(SproutItemTag model);
+  void deleteItemTag(@Param("itemId") Long itemId, @Param("tagId") Long tagId);
 }
