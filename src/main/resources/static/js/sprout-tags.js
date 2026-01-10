@@ -500,10 +500,8 @@ sprout.tags = (function() {
     $('.sprout-tag-dropdown-portal').remove();
     $('.sprout-tag-action-popup').remove();
 
-    currentState.mode = 'view';
-    renderView(currentState);
-
     if (isSame) {
+      renderView(currentState);
       return;
     }
 
@@ -579,12 +577,17 @@ sprout.tags = (function() {
 
       // 全タグに追加
       currentState.allTags.push(tag);
-
       // 選択状態にも追加
       currentState.tags.push(tag);
 
-      // 編集中なら再描画しない
-      if (currentState.finishing) return;
+      saveItemTags(
+        currentState.itemId,
+        currentState.tags.map(t => t.tagId)
+      );
+
+      // originalを更新
+      currentState.originalTagIds =
+          currentState.tags.map(t => t.tagId);
 
       // 再描画（閉じない）
       renderEdit(currentState);
