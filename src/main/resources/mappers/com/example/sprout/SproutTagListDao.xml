@@ -60,6 +60,12 @@
   SET tag_sort_order = #{tagSortOrder}
   WHERE tag_id = #{tagId}
 </update>
+<select id="selectMaxSortOrder" resultType="int">
+  SELECT
+    MAX(tag_sort_order)
+  FROM
+    sprout_tag
+</select>
 <insert id="insertItemTag" parameterType="sproutItemTag">
   INSERT INTO sprout_item_tag (
       item_id

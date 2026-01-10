@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.example.sprout.form.SproutTagListForm;
@@ -32,6 +33,24 @@ public class SproutTagListController {
     form.setTagList(list);
 
     return form;
+  }
+
+  @PostMapping("/tags")
+  @ResponseBody
+  public SproutTagList create(@RequestBody SproutTagListForm form) {
+    return sproutTagListService.insert(form.createModel());
+  }
+
+  /**
+   * タグをタグテーブルと中間テーブルから削除する
+   * @param tagId
+   * @param itemId
+   */
+  @PostMapping("/tags/delete")
+  @ResponseBody
+  public void delete(@RequestParam("tagId") Long tagId, @RequestParam("itemId") Long itemId) {
+    sproutTagListService.delete(tagId);
+    sproutTagListService.deleteItemTag(itemId, tagId);
   }
 
   /**
@@ -62,7 +81,7 @@ public class SproutTagListController {
    */
   @PostMapping("/items/{itemId}/tags")
   @ResponseBody
-  public void updateItemTags(@PathVariable Long itemId, @RequestBody List<Long> tagIds) {
+  public void updateItemTags(@PathVariable Long itemId, @RequestParam("tagIds") List<Long> tagIds) {
     sproutTagListService.updateItemTags(itemId, tagIds);
   }
 

@@ -1,5 +1,7 @@
 package com.example.sprout.model;
 
+import java.time.LocalDateTime;
+
 /**
  * タグ情報を表すModel
  */
@@ -22,6 +24,9 @@ public class SproutTagList {
 
   /** 親タグID */
   private Long parentTagId;
+
+  /** 更新日時 */
+  private LocalDateTime updateAt;
 
   /**
    * タグIDを取得する
@@ -117,5 +122,21 @@ public class SproutTagList {
    */
   public void setParentTagId(Long parentTagId) {
     this.parentTagId = parentTagId;
+  }
+
+  /**
+   * 更新日時を取得する
+   * @return updateAt
+   */
+  public LocalDateTime getUpdateAt() {
+    return updateAt;
+  }
+
+  /**
+   * 更新日時を設定する
+   * @param updateAt 更新日時
+   */
+  public void setUpdateAt(LocalDateTime updateAt) {
+    this.updateAt = updateAt;
   }
 }

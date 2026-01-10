@@ -2,6 +2,8 @@ package com.example.sprout.service;
 
 import java.util.List;
 
+import org.apache.ibatis.annotations.Param;
+
 import com.example.sprout.model.SproutTagList;
 
 public interface SproutTagListService {
@@ -23,7 +25,7 @@ public interface SproutTagListService {
    * 新規タグを登録する
    * @param model
    */
-  void insert(SproutTagList model);
+  SproutTagList insert(SproutTagList model);
 
   /**
    * タグを更新する
@@ -57,4 +59,11 @@ public interface SproutTagListService {
    * @param tagIds 紐付けるタグIDリスト
    */
   void updateItemTags(Long itemId, List<Long> tagIds);
+
+  /**
+   * タスクとタグの紐付け削除
+   * @param itemId タスクID
+   * @param tagId タグID
+   */
+  void deleteItemTag(@Param("itemId") Long itemId, @Param("tagId") Long tagId);
 }
