@@ -16,7 +16,8 @@ sprout.tags = (function() {
       tags: [],
       mode: 'view',
       allTags: [],
-      finishing: false
+      finishing: false,
+      dropdownIndex: -1
     };
 
     init(state);
@@ -186,12 +187,23 @@ sprout.tags = (function() {
   /**
    * ドロップダウンリスト描画
    */
-  function renderDropdown(state) {
+  function renderDropdown(state, filterText = '') {
     // 既存 dropdown があれば削除
     $('.sprout-tag-dropdown-portal').remove();
 
     // td の位置とサイズを取得
     const rect = state.el.closest('td')[0].getBoundingClientRect();
+
+    // 未選択タグを取得して、フィルタリング
+    const selectableTags = getSelectableTags(state)
+      .filter(tag => tag.tagName.toLowerCase().includes(filterText.toLowerCase()));
+
+    if (!selectableTags.length) return;
+
+    // indexが範囲内ならリセット
+    if (state.dropdownIndex >= selectableTags.length) {
+      state.dropdownIndex = -1;
+    }
 
     const html = `
       <ul
@@ -203,10 +215,12 @@ sprout.tags = (function() {
           width: ${rect.width}px;
         "
       >
-      ${getSelectableTags(state).map((tag, index) => `
+      ${selectableTags.map((tag, index) => `
           <li
-            class="sprout-tag-option group flex items-center gap-2 px-2 py-1 text-sm hover:bg-gray-100 cursor-pointer"
+            class="sprout-tag-option group flex items-center gap-2 px-2 py-1 text-sm hover:bg-gray-100 cursor-pointer
+              ${index === state.dropdownIndex ? 'bg-gray-100' : 'hover:bg-gray-100'}"
             data-tag-id="${tag.tagId}"
+            data-index="${index}"
           >
             <div class="flex flex-col text-gray-400 text-xs leading-none select-none">
               <span class="sprout-tag-move-up cursor-pointer hover:text-black">▲</span>
@@ -218,7 +232,6 @@ sprout.tags = (function() {
             >
               ${tag.tagName}
             </div>
-
             <div class="sprout-tag-gear text-gray-400 cursor-pointer select-none">⚙</div>
           </li>
         `).join('')}
@@ -450,6 +463,11 @@ sprout.tags = (function() {
       if (e.key !== 'Enter') return;
       if (e.isComposing) return; // IME変換Enterを無視
 
+      // ★ dropdown選択中なら「新規作成しない」
+      if (currentState && currentState.dropdownIndex >= 0) {
+        return;
+      }
+
       e.preventDefault();
 
       const name = $(this).val().trim();
@@ -461,6 +479,55 @@ sprout.tags = (function() {
       createTag(name);
       $(this).val('');
     });
+
+  /**
+   * autoComplete用inputイベント
+   */
+  $(document)
+    .off('input.sproutTagInput')
+    .on('input.sproutTagInput', '.sprout-tag-input', function() {
+      const text = $(this).val().trim();
+      currentState.dropdownIndex = -1;
+      renderDropdown(currentState, text);
+    });
+
+    $(document)
+      .off('keydown.sproutTagInputNav')
+      .on('keydown.sproutTagInputNav', '.sprout-tag-input', function (e) {
+
+        if (!currentState) return;
+
+        const $options = $('.sprout-tag-option');
+        if (!$options.length) return;
+
+        // ↓
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          currentState.dropdownIndex =
+            (currentState.dropdownIndex + 1) % $options.length;
+          renderDropdown(currentState, $(this).val().trim());
+          return;
+        }
+
+        // ↑
+        if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          currentState.dropdownIndex =
+            currentState.dropdownIndex <= 0
+              ? $options.length - 1
+              : currentState.dropdownIndex - 1;
+          renderDropdown(currentState, $(this).val().trim());
+          return;
+        }
+
+        // Enter（選択中がある場合）
+        if (e.key === 'Enter' && currentState.dropdownIndex >= 0) {
+          e.preventDefault();
+          $options.eq(currentState.dropdownIndex).trigger('click');
+          currentState.dropdownIndex = -1;
+          return;
+        }
+      });
 
   /**
    * すべてのタグ取得
@@ -505,7 +572,6 @@ sprout.tags = (function() {
       return;
     }
 
-    // ===== ここから「本当に変更がある場合のみ保存」 =====
     currentState.finishing = true;
 
     saveItemTags(currentState.itemId, currentIds)
