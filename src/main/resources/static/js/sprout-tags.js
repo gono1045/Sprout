@@ -12,6 +12,7 @@ sprout.tags = (function() {
   function mount(options) {
     const state = {
       el: $(options.el),
+      anchorEl: null,
       itemId: options.itemId,
       tags: [],
       mode: 'view',
@@ -20,6 +21,7 @@ sprout.tags = (function() {
       dropdownIndex: -1
     };
 
+    state.isActive = false;
     init(state);
   }
 
@@ -42,10 +44,11 @@ sprout.tags = (function() {
    * 初期化
    */
   function init(state) {
-    currentState = state;
 
     if (!state.itemId) {
-      console.warn("itemId is required for sprout.tags");
+      state.tags = [];
+      state.originalTagIds = [];
+      renderView(state);
       return;
     }
 
@@ -66,6 +69,7 @@ sprout.tags = (function() {
   function saveSortDebounced() {
     clearTimeout(saveSortTimer);
     saveSortTimer = setTimeout(() => {
+      if (!currentState?.allTags) return;
       saveTagSortOrders(currentState.allTags);
     }, 800);
   }
@@ -89,8 +93,8 @@ sprout.tags = (function() {
    */
   function renderView(state) {
     $('.sprout-tag-dropdown-portal').remove();
-    var $td = state.el.closest('td');
-    $td.removeClass('relative overflow-visible').addClass('cursor-pointer');
+    const $base = state.el;
+    $base.removeClass('relative overflow-visible').addClass('cursor-pointer');
 
     const html = state.tags.map(tag => {
       return `
@@ -102,22 +106,20 @@ sprout.tags = (function() {
       `;
     }).join("");
 
-    // mount には触らない（サイズも padding もいじらない）
+    // 内部 div で上下中央に揃える
     state.el.html(`
-      <div class="sprout-tag-view flex items-center justify-center cursor-pointer min-h-[24px]">
-        ${html || '<span class="tag-empty">&nbsp;</span>'}
+      <div class="sprout-tag-view flex items-center justify-center w-full h-full cursor-pointer">
+        <div class="flex items-center justify-center">
+          ${html || '<span class="tag-empty inline-block w-full h-full">&nbsp;</span>'}
+        </div>
       </div>
     `);
 
-    $td
+    $base
       .off('click.sproutTags')
-      .on('click.sproutTags', function (e) {
+      .on('click.sproutTags', '.sprout-tag-view', function (e) {
         e.stopPropagation();
-
-        if (state.mode !== 'edit') {
-            state.mode = 'edit';
-            renderEdit(state);
-        }
+        renderEdit(state);
       });
   }
 
@@ -125,14 +127,16 @@ sprout.tags = (function() {
    * 編集モード描画
    */
   function renderEdit(state) {
+    currentState = state;
+    state.isActive = true;
     state.mode = 'edit';
-    var $td = state.el.closest('td');
-    $td.removeClass('cursor-pointer').off('click.sproutTags')
+    var $base = state.el;
+    $base.removeClass('cursor-pointer').off('click.sproutTags')
       .addClass('relative overflow-visible');
 
     state.el.html(`
-      <div class="sprout-tag-edit w-full h-full px-2 py-1">
-        <div class="flex flex-wrap gap-1 mb-1">
+      <div class="sprout-tag-edit w-full h-full px-2 py-1 flex items-center">
+        <div class="flex flex-wrap gap-1 items-center w-full">
           ${state.tags.map(tag => `
             <span
               class="sprout-tag-chip inline-flex items-center px-2 py-1 rounded text-white text-sm cursor-pointer
@@ -148,7 +152,9 @@ sprout.tags = (function() {
       </div>
     `);
 
+    state.anchorEl = state.el.parent()[0];
     fetchAllTags(state);
+
     // input に自動フォーカス
     requestAnimationFrame(() => {
       const $input = state.el.find('.sprout-tag-input');
@@ -209,19 +215,17 @@ sprout.tags = (function() {
    * ドロップダウンリスト描画
    */
   function renderDropdown(state, filterText = '') {
-    // 既存 dropdown があれば削除
     $('.sprout-tag-dropdown-portal').remove();
 
-    // td の位置とサイズを取得
-    const rect = state.el.closest('td')[0].getBoundingClientRect();
+    const rect = state.anchorEl.getBoundingClientRect();
+    const scrollX = window.pageXOffset;
+    const scrollY = window.pageYOffset;
 
-    // 未選択タグを取得して、フィルタリング
     const selectableTags = getSelectableTags(state)
       .filter(tag => tag.tagName.toLowerCase().includes(filterText.toLowerCase()));
 
     if (!selectableTags.length) return;
 
-    // indexが範囲内ならリセット
     if (state.dropdownIndex >= selectableTags.length) {
       state.dropdownIndex = -1;
     }
@@ -229,10 +233,9 @@ sprout.tags = (function() {
     const html = `
       <ul
         class="sprout-tag-dropdown-portal fixed bg-white dark:bg-gray-800 border shadow z-[9999]"
-        data-item-id="${state.itemId}"
         style="
-          left: ${rect.left}px;
-          top: ${rect.bottom}px;
+          left: ${rect.left + scrollX}px;
+          top: ${rect.bottom + scrollY}px;
           width: ${rect.width}px;
         "
       >
@@ -627,7 +630,9 @@ sprout.tags = (function() {
    * 編集モードを終了する
    */
   function finishEdit() {
-    if (!currentState) return;
+    if (!currentState?.isActive) return;
+    currentState.isActive = false;
+
     if (currentState.mode !== 'edit') return;
     if (currentState.finishing) return;
 
@@ -652,6 +657,13 @@ sprout.tags = (function() {
     }
 
     currentState.finishing = true;
+
+    if (!currentState.itemId) {
+      currentState.mode = 'view';
+      currentState.finishing = false;
+      renderView(currentState);
+      return;
+    }
 
     saveItemTags(currentState.itemId, currentIds)
       .done(function () {
@@ -708,10 +720,12 @@ sprout.tags = (function() {
       // 選択状態にも追加
       currentState.tags.push(tag);
 
-      saveItemTags(
-        currentState.itemId,
-        currentState.tags.map(t => t.tagId)
-      );
+      if (currentState.itemId) {
+        saveItemTags(
+          currentState.itemId,
+          currentState.tags.map(t => t.tagId)
+        );
+      }
 
       // originalを更新
       currentState.originalTagIds =

@@ -28,10 +28,10 @@ $(function () {
       if (col.data === 'tags') {
         renderFunc = function(data, type, row) {
           return `
-            <span
-              class="sprout-tag-mount"
+            <div
+              class="sprout-tag-mount absolute inset-0 w-full h-full"
               data-item-id="${row.id}">
-            </span>
+            </div>
           `;
         };
       } else {
@@ -41,7 +41,9 @@ $(function () {
       return {
         data: col.data,
         title: col.label,
-        className: col.class ? col.class + ' border border-blue-300' : 'border border-blue-300',
+        className: col.data === 'tags'
+          ? 'relative min-h-[40px] border border-blue-300'
+          : (col.class ? col.class + ' border border-blue-300' : 'border border-blue-300'),
         render: renderFunc
       };
     });
