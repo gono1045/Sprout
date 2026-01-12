@@ -48,9 +48,8 @@ public class SproutTagListController {
    */
   @PostMapping("/tags/delete")
   @ResponseBody
-  public void delete(@RequestParam("tagId") Long tagId, @RequestParam("itemId") Long itemId) {
+  public void delete(@RequestParam("tagId") Long tagId) {
     sproutTagListService.delete(tagId);
-    sproutTagListService.deleteItemTag(itemId, tagId);
   }
 
   /**

@@ -40,7 +40,7 @@ public interface SproutTagListDao {
    * タグ削除
    * @param tagId タグID
    */
-  void delete(Long tagId);
+  void delete(@Param("tagId") Long tagId);
 
   /**
    * タグの並び順を更新
@@ -67,6 +67,12 @@ public interface SproutTagListDao {
    * @param model タスクIDとタグID
    */
   void insertItemTag(SproutItemTag model);
+
+  /**
+   * タグ削除に伴う中間テーブルのレコード削除
+   * @param tagId タグID
+   */
+  void deleteByTagId(@Param("tagId") Long tagId);
 
   /**
    * タスクとタグの紐付け削除
