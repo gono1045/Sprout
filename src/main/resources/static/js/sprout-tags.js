@@ -407,15 +407,27 @@ sprout.tags = (function() {
               url: '/tags/delete',
               method: 'POST',
               data: {
-                tagId: tagId,
-                itemId: itemId
+                tagId: tagId
               }
             })
             .done(function() {
+
+              // stateから完全削除
+              currentState.tags = currentState.tags.filter(
+                tag => tag.tagId !== tagId
+              );
+
+              currentState.allTags = currentState.allTags.filter(
+                tag => tag.tagId !== tagId
+              );
+
+              currentState.originalTagIds =
+                currentState.tags.map(t => t.tagId);
+
               // 操作ポップアップを閉じる
               $('.sprout-tag-action-popup').remove();
-              // 再取得してリスト更新
-              fetchAllTags(currentState);
+              finishEdit();
+              $(document).trigger('sprout:tag-deleted', { tagId });
 
               sprout.message.toast({
                 message: 'タグを削除しました',
@@ -568,6 +580,9 @@ sprout.tags = (function() {
     $('.sprout-tag-action-popup').remove();
 
     if (isSame) {
+      currentState.mode = 'view';
+      currentState.finishing = false;
+      currentState.originalTagIds = [...currentIds];
       renderView(currentState);
       return;
     }

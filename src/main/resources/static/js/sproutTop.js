@@ -173,24 +173,30 @@ $(function () {
       });
     });
 
-    function mountTagsInTable() {
-      $(_this.tableId)
-        .find('.sprout-tag-mount')
-        .each(function () {
+  function mountTagsInTable() {
+    $(_this.tableId)
+      .find('.sprout-tag-mount')
+      .each(function () {
 
-          const $el = $(this);
+        const $el = $(this);
 
-          // 再描画時の二重初期化防止
-          if ($el.data('mounted')) return;
+        // 再描画時の二重初期化防止
+        if ($el.data('mounted')) return;
 
-          sprout.tags.mount({
-            el: this,
-            itemId: $el.data('item-id')
-          });
-
-          $el.data('mounted', true);
+　       sprout.tags.mount({
+          el: this,
+          itemId: $el.data('item-id')
         });
+
+        $el.data('mounted', true);
+      });
+  }
+
+  $(document).on('sprout:tag-deleted', function (e, data) {
+    console.log('タグ削除イベント受信', data);
+
+    if (window.sproutTopTable) {
+      window.sproutTopTable.ajax.reload(null, false);
     }
-
-
+  });
 });

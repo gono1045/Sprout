@@ -75,6 +75,10 @@
     , #{tagId}
   )
 </insert>
+<delete id="deleteByTagId" parameterType="sproutItemTag">
+  DELETE FROM sprout_item_tag
+  WHERE tag_id = #{tagId}
+</delete>
 <delete id="deleteItemTag" parameterType="sproutItemTag">
   DELETE FROM sprout_item_tag
   WHERE

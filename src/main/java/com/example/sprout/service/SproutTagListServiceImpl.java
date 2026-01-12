@@ -50,6 +50,7 @@ public class SproutTagListServiceImpl implements SproutTagListService {
   @Override
   @Transactional
   public void delete(Long tagId) {
+    tagListDao.deleteByTagId(tagId);
     tagListDao.delete(tagId);
   }
 
