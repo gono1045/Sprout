@@ -23,6 +23,21 @@ sprout.tags = (function() {
     init(state);
   }
 
+  const TAG_COLORS = [
+    'bg-red-400',
+    'bg-orange-400',
+    'bg-amber-400',
+    'bg-yellow-400',
+    'bg-lime-400',
+    'bg-green-400',
+    'bg-emerald-400',
+    'bg-teal-400',
+    'bg-cyan-400',
+    'bg-sky-400',
+    'bg-blue-400',
+    'bg-purple-400'
+  ];
+
   /**
    * 初期化
    */
@@ -53,6 +68,12 @@ sprout.tags = (function() {
     saveSortTimer = setTimeout(() => {
       saveTagSortOrders(currentState.allTags);
     }, 800);
+  }
+
+  function saveTagSortOrders(tags) {
+    tags.forEach(tag => {
+      updateTag(tag);
+    });
   }
 
   /**
@@ -245,7 +266,6 @@ sprout.tags = (function() {
    * 操作ポップアップ描画
    */
   function renderActionPopup(state, tagId, $li) {
-    // 既存の action popup を削除
     $('.sprout-tag-action-popup').remove();
 
     const dropdownRect = $('.sprout-tag-dropdown-portal')[0].getBoundingClientRect();
@@ -253,20 +273,30 @@ sprout.tags = (function() {
 
     const html = `
       <div
-        class="sprout-tag-action-popup fixed bg-white dark:bg-gray-800 border shadow min-w-[120px] z-[10000]"
+        class="sprout-tag-action-popup fixed bg-white dark:bg-gray-800 border shadow z-[10000]"
         data-tag-id="${tagId}"
         style="
           left: ${dropdownRect.right}px;
           top: ${liRect.top}px;
         "
       >
-        <div class="flex flex-col gap-1 px-1 py-1">
-          <div class="sprout-tag-action-item inline-flex self-center items-center justify-center cursor-pointer rounded
-            px-4 py-2 text-sm bg-yellow-500 hover:bg-yellow-600 text-white leading-none" data-action="color">
-            色変更
-          </div>
-          <div class="sprout-tag-action-item inline-flex self-center items-center justify-center cursor-pointer rounded
-            px-4 py-2 text-sm bg-red-500 hover:bg-red-600 text-white leading-none" data-action="delete">
+        <!-- カラーパレット（最初から表示） -->
+        <div class="sprout-tag-color-palette grid grid-cols-6 gap-1 p-2">
+          ${TAG_COLORS.map(color => `
+            <div
+              class="sprout-tag-color-item w-6 h-6 rounded cursor-pointer ${color}"
+              data-tag-id="${tagId}"
+              data-color="${color}"
+            ></div>
+          `).join('')}
+        </div>
+
+        <div class="px-2 pb-2">
+          <div
+            class="sprout-tag-action-item w-full text-center cursor-pointer rounded
+            px-2 py-1 text-sm bg-red-500 hover:bg-red-600 text-white"
+            data-action="delete"
+          >
             削除
           </div>
         </div>
@@ -393,8 +423,7 @@ sprout.tags = (function() {
       const itemId = currentState.itemId;
 
       if (action === 'color') {
-        console.log('色変更', tagId);
-        // TODO: カラーパレット表示
+        renderColorPalette(tagId, $popup);
       }
 
       if (action === 'delete') {
@@ -444,6 +473,39 @@ sprout.tags = (function() {
         });
       }
     });
+
+    /**
+     * カラーパレット操作
+     */
+    $(document)
+      .off('click.sproutTagColor')
+      .on('click.sproutTagColor', '.sprout-tag-color-item', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const tagId = Number($(this).data('tag-id'));
+        const color = $(this).data('color');
+
+        // allTags 側を更新
+        const tag = currentState.allTags.find(t => t.tagId === tagId);
+        if (!tag) return;
+
+        tag.tagColor = color;
+
+        // 選択済みタグにも反映
+        currentState.tags.forEach(t => {
+          if (t.tagId === tagId) {
+            t.tagColor = color;
+          }
+        });
+
+        // 再描画（閉じない）
+        renderEdit(currentState);
+        renderDropdown(currentState);
+
+        // 保存
+        updateTag(tag);
+      });
 
     /**
      * タグチップクリックで選択解除
@@ -550,7 +612,9 @@ sprout.tags = (function() {
       method: 'GET'
     })
     .done(function (form) {
-      state.allTags = form.tagList;
+      if (!state.allTags || !state.allTags.length) {
+        state.allTags = form.tagList;
+      }
       currentState = state;
       renderDropdown(state);
     })
@@ -618,27 +682,10 @@ sprout.tags = (function() {
     return $.ajax({
       url: `/items/${itemId}/tags`,
       method: 'POST',
-      traditional: true, // 配列送信時に重要
+      traditional: true,
       data: {
         tagIds: tagIds
       }
-    });
-  }
-
-  /**
-   * タグソート保存
-   */
-  function saveTagSortOrders(tags) {
-    return $.ajax({
-      url: '/tags/sort',
-      method: 'POST',
-      contentType: 'application/json',
-      data: JSON.stringify({
-        tagList: tags.map(tag => ({
-          tagId: tag.tagId,
-          tagSortOrder: tag.tagSortOrder
-        }))
-      })
     });
   }
 
@@ -679,6 +726,23 @@ sprout.tags = (function() {
         message: 'タグ作成に失敗しました',
         type: 'error'
       });
+    });
+  }
+
+  /**
+   * タグ更新
+   */
+  function updateTag(tag) {
+    return $.ajax({
+      url: '/tags/update',
+      method: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify({
+        tagId: tag.tagId,
+        tagName: tag.tagName,
+        tagColor: tag.tagColor,
+        tagSortOrder: tag.tagSortOrder
+      })
     });
   }
 

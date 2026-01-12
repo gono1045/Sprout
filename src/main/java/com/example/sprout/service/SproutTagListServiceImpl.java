@@ -55,14 +55,6 @@ public class SproutTagListServiceImpl implements SproutTagListService {
   }
 
   @Override
-  @Transactional
-  public void updateTagSortOrders(List<SproutTagList> tags) {
-    for (SproutTagList tag : tags) {
-      tagListDao.updateTagSortOrder(tag.getTagId(), tag.getTagSortOrder());
-    }
-  }
-
-  @Override
   public List<SproutTagList> selectTagsByItemId(Long itemId) {
     return tagListDao.selectTagsByItemId(itemId);
   }

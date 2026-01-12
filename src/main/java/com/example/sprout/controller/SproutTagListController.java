@@ -35,6 +35,11 @@ public class SproutTagListController {
     return form;
   }
 
+  /**
+   *  新規タグを作成する
+   * @param form
+   * @return
+   */
   @PostMapping("/tags")
   @ResponseBody
   public SproutTagList create(@RequestBody SproutTagListForm form) {
@@ -53,13 +58,13 @@ public class SproutTagListController {
   }
 
   /**
-   * タグの並び順を更新する
+   * タグ情報を更新する
    * @param form
    */
-  @PostMapping("/tags/sort")
+  @PostMapping("/tags/update")
   @ResponseBody
-  public void updateTagSortOrders(@RequestBody SproutTagListForm form) {
-    sproutTagListService.updateTagSortOrders(form.getTagList());
+  public void updateTag(@RequestBody SproutTagListForm form) {
+    sproutTagListService.update(form.createModel());
   }
 
   /**
