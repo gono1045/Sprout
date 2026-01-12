@@ -21,7 +21,6 @@ var itemUpdateModal = (function () {
     }
 
     _this.modalEl = $modalEl;
-
     _this.formId = sprout.util.getId(SCREEN_ID, 'sproutItemListForm');
     _this.deadlineId = sprout.util.getId(SCREEN_ID, 'deadline');
     _this.deadlineIconId = sprout.util.getId(SCREEN_ID, 'deadlineIcon');
@@ -86,6 +85,22 @@ var itemUpdateModal = (function () {
         }
       });
     });
+
+    const $tagEl = $modalEl.find('.sprout-tag-mount');
+    const itemId = $(_this.itemId).val();
+
+    if ($tagEl.length) {
+      $tagEl.each(function() {
+        if ($(this).data('mounted')) return;
+
+        sprout.tags.mount({
+          el: this,
+          itemId: itemId || null
+        });
+
+        $(this).data('mounted', true);
+      });
+    }
   }
 
   /**

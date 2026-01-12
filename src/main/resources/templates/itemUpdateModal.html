@@ -35,7 +35,20 @@
         </div>
         <!-- タグ -->
         <div class="flex items-center gap-2">
-          <!-- 後で実装予定 -->
+          <label class="whitespace-nowrap w-20 block text-sm font-medium">
+            タグ：
+          </label>
+          <div
+            class="flex-1 min-h-[42px] max-w-[300px]
+                   border border-gray-300 rounded
+                   px-3 py-2
+                   focus-within:ring-2 focus-within:ring-blue-400
+                   dark:bg-gray-900 dark:border-gray-600 relative js-tag-container">
+            <div
+              class="sprout-tag-mount w-full h-full absolute inset-0"
+              th:attr="data-item-id=${sproutItemListForm.id}">
+            </div>
+          </div>
         </div>
         <!-- ステータス -->
         <div class="flex items-center gap-2">
