@@ -1,5 +1,6 @@
 package com.example.sprout.form;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.example.sprout.model.SproutTagList;
@@ -26,6 +27,10 @@ public class SproutTagListForm extends SproutAbstractForm<SproutTagList> {
 
   /** タスクID */
   private Long itemId;
+
+  /** 更新日時 */
+  private LocalDateTime updateAt;
+
   /** タグリスト */
   private List<SproutTagList> tagList;
 
@@ -142,6 +147,22 @@ public class SproutTagListForm extends SproutAbstractForm<SproutTagList> {
   }
 
   /**
+   * 更新日時を取得する
+   * @return updateAt
+   */
+  public LocalDateTime getUpdateAt() {
+    return updateAt;
+  }
+
+  /**
+   * 更新日時を設定する
+   * @param updateAt 更新日時
+   */
+  public void setUpdateAt(LocalDateTime updateAt) {
+    this.updateAt = updateAt;
+  }
+
+  /**
    * タグリストを取得する
    * @return tagList
    */
@@ -155,6 +176,13 @@ public class SproutTagListForm extends SproutAbstractForm<SproutTagList> {
    */
   public void setTagList(List<SproutTagList> tagList) {
     this.tagList = tagList;
+  }
+
+  @Override
+  public SproutTagList createModel() {
+    SproutTagList model = super.createModel();
+    model.setUpdateAt(LocalDateTime.now());
+    return model;
   }
 
   @Override

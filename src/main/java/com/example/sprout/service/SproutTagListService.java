@@ -40,12 +40,6 @@ public interface SproutTagListService {
   void delete(Long tagId);
 
   /**
-   * タグの並び順を更新する
-   * @param tags
-   */
-  void updateTagSortOrders(List<SproutTagList> tags);
-
-  /**
    * タスクに紐づくタグを取得する
    * @param itemId
    * @return

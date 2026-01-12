@@ -55,11 +55,6 @@
   DELETE FROM sprout_tag
   WHERE tag_id = #{tagId}
 </delete>
-<update id="updateTagSortOrder">
-  UPDATE sprout_tag
-  SET tag_sort_order = #{tagSortOrder}
-  WHERE tag_id = #{tagId}
-</update>
 <select id="selectMaxSortOrder" resultType="int">
   SELECT
     MAX(tag_sort_order)
