@@ -13,7 +13,7 @@ public interface SproutItemListService {
   SproutItemListDetail selectByItemId(Long id);
 
   // 新規タスク登録
-  void insert(SproutItemListDetail model);
+  Long insert(SproutItemListDetail model);
 
   // タスク更新
   void update(SproutItemListDetail model);
