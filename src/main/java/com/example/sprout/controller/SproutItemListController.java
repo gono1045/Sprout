@@ -75,8 +75,10 @@ public class SproutItemListController {
   public SproutItemListForm createNewTask(@ModelAttribute SproutItemListForm form) {
 
     form.setUpdateAt(LocalDateTime.now());
-    sproutItemListService.insert(form.createModel());
+    SproutItemListDetail model = form.createModel();
+    sproutItemListService.insert(model);
 
+    form.setId(model.getId());
     return form;
   }
 

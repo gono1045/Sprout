@@ -60,7 +60,7 @@
     , t1.deadline ASC
     , t1.update_at DESC
 </select>
-<insert id="insert" parameterType="SproutItemListDetail">
+<insert id="insert" parameterType="SproutItemListDetail" useGeneratedKeys="true" keyProperty="id">
   INSERT INTO sprout_item (
       title
     , status_cd

@@ -21,6 +21,7 @@ sprout.tags = (function() {
       dropdownIndex: -1
     };
 
+    state.el.data('sproutTagsState', state);
     state.isActive = false;
     init(state);
   }
@@ -44,23 +45,23 @@ sprout.tags = (function() {
    * 初期化
    */
   function init(state) {
+    state.tags = [];
+    state.originalTagIds = [];
 
-    if (!state.itemId) {
-      state.tags = [];
-      state.originalTagIds = [];
+    // DBに紐づく既存タグがあれば取得
+    if (state.itemId) {
+      fetchItemTags(state.itemId)
+        .done(function(tags) {
+          state.tags = tags;
+          state.originalTagIds = tags.map(t => t.tagId);
+          renderView(state);
+        })
+        .fail(function() {
+          console.error("タグ取得失敗 itemId:", state.itemId);
+        });
+    } else {
       renderView(state);
-      return;
     }
-
-    fetchItemTags(state.itemId)
-      .done(function(tags) {
-        state.tags = tags;
-        state.originalTagIds = tags.map(t => t.tagId);
-        renderView(state);
-      })
-      .fail(function() {
-        console.error("タグ取得失敗 itemId:", state.itemId);
-      });
   }
 
   let currentState = null;
@@ -651,7 +652,7 @@ sprout.tags = (function() {
     if (isSame) {
       currentState.mode = 'view';
       currentState.finishing = false;
-      currentState.originalTagIds = [...currentIds];
+      currentState.originalTagIds = currentState.tags.map(t => t.tagId);
       renderView(currentState);
       return;
     }

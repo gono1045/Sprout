@@ -28,8 +28,9 @@ public class SproutItemListServiceImpl implements SproutItemListService {
 
   // 新規タスク登録
   @Override
-  public void insert(SproutItemListDetail model) {
+  public Long insert(SproutItemListDetail model) {
     sproutItemListDao.insert(model);
+    return model.getId();
   }
 
   // タスク更新

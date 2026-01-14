@@ -28,6 +28,7 @@ var itemUpdateModal = (function () {
     _this.modalFlgId = sprout.util.getId(SCREEN_ID, 'modalFlg');
     _this.deleteBtnId = sprout.util.getId(SCREEN_ID, 'deleteBtn');
     _this.itemId = sprout.util.getId(SCREEN_ID, 'id');
+    _this.tagId = sprout.util.getId(SCREEN_ID, 'tagId');
 
     initDatePicker();
 
@@ -41,7 +42,18 @@ var itemUpdateModal = (function () {
         sprout.util.sendForm({
           url: "/task/new",
           form: _this.formId,
-          callBack: closeModalCallBack
+          callBack: function(res) {
+            const itemId = res.id;
+            const tagIds = _this.modalEl.find('.sprout-tag-mount').data('sproutTagsState')?.tags.map(t => t.tagId) ?? [];
+
+            if (tagIds.length) {
+              $.post(`/items/${itemId}/tags`, { tagIds: tagIds })
+                .done(closeModalCallBack)
+                .fail(() => alert('タグ登録に失敗しました'));
+            } else {
+              closeModalCallBack();
+            }
+          }
         });
       }
 
