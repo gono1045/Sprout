@@ -7,6 +7,8 @@ var SCREEN_ID = 'sproutTop';
 var _this = {};
 
 $(function () {
+  var showCompleted = false;
+
   // 画面IDを付与
   sprout.util.applyScreenIdPrefix($('#sproutTopRoot'), SCREEN_ID);
 
@@ -15,6 +17,9 @@ $(function () {
     _this.modalId = sprout.util.getId(SCREEN_ID, "modal");
     _this.tableId = sprout.util.getId(SCREEN_ID, "sproutTable");
     _this.itemId = sprout.util.getId(SCREEN_ID, 'id');
+    _this.toggleCompletedBtnId = sprout.util.getId(SCREEN_ID, 'toggleCompletedBtn');
+    _this.taskSearchBtnId = sprout.util.getId(SCREEN_ID, 'taskSearchBtn');
+    _this.taskSearchInputId = sprout.util.getId(SCREEN_ID, 'taskSearchInput');
 
   // JSON定義読み込み
   $.getJSON('/json/sproutTop.json', function (json) {
@@ -113,6 +118,17 @@ $(function () {
       } // 優先度コード
     ];
 
+    // 完了済みタスクフィルタ
+    DataTable.ext.search.push(function(settings, data) {
+        const statusCd = Number(data[9]);
+
+        // 完了済みを非表示
+        if (!showCompleted && statusCd == 3) {
+            return false;
+        }
+        return true;
+    });
+
     // DataTable 初期化
     window.sproutTopTable = $(_this.tableId).DataTable({
       ajax: {
@@ -123,7 +139,8 @@ $(function () {
       columnDefs: columnDefs,
       paging: true,
       pageLength: 5,
-      searching: false,
+      searching: true,
+      dom: 't',
       info: false,
       autoWidth: false,
       lengthChange: false,
@@ -135,6 +152,45 @@ $(function () {
 
     // ヘッダ行のみ中央揃え
     $(_this.tableId + ' thead th').css('text-align', 'center');
+  });
+
+  // 完了済み表示切り替え
+  $(_this.toggleCompletedBtnId)
+    .off('click.toggleCompleted')
+    .on('click.toggleCompleted', function() {
+        showCompleted = !showCompleted;
+
+        $(this).text(showCompleted ? '完了済みを非表示' : '完了済みを表示');
+
+        if(window.sproutTopTable) {
+            window.sproutTopTable.draw();
+        }
+    });
+
+  // 検索クリック
+  $(_this.taskSearchBtnId).on('click', function() {
+    const keyword = $(_this.taskSearchInputId).val();
+
+    if (window.sproutTopTable) {
+        window.sproutTopTable.search(keyword).draw();
+    }
+  });
+
+  var isComposing = false;
+  // 検索inputでEnter
+  $(_this.taskSearchInputId)
+    .on('compositionstart', function() {
+      isComposing = true;
+    })
+    .on('compositionend', function() {
+        isComposing = false;
+    })
+    .on('keydown', function(e) {
+    if (e.key === 'Enter') {
+        if (isComposing) return;
+        e.preventDefault();
+        $(_this.taskSearchBtnId).click();
+    }
   });
 
   // 新規登録モーダル

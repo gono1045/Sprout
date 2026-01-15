@@ -23,8 +23,6 @@ public class SproutItemListDetail {
   private String detail;
   /** 更新日 */
   private LocalDateTime updateAt;
-  /** 完了フラグ */
-  private Integer doneFlg;
 
   /**
    * タスクIDを取得する
@@ -169,21 +167,4 @@ public class SproutItemListDetail {
   public void setUpdateAt(LocalDateTime updateAt) {
     this.updateAt = updateAt;
   }
-
-  /**
-   * 完了フラグを取得する
-   * @return doneFlg
-   */
-  public Integer getDoneFlg() {
-    return doneFlg;
-  }
-
-  /**
-   * 完了フラグを設定する
-   * @param doneFlg 完了フラグ
-   */
-  public void setDoneFlg(Integer doneFlg) {
-    this.doneFlg = doneFlg;
-  }
-
 }
