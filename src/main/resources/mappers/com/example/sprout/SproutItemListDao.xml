@@ -16,7 +16,6 @@
     , t1.deadline
     , t1.detail
     , t1.update_at
-    , t1.done_flg
   FROM
     sprout_item t1
   LEFT JOIN m_code m1
@@ -43,7 +42,6 @@
     , t1.deadline
     , t1.detail
     , t1.update_at
-    , t1.done_flg
   FROM
     sprout_item t1
   LEFT JOIN m_code m1

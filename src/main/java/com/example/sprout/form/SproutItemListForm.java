@@ -28,8 +28,6 @@ public class SproutItemListForm extends SproutAbstractForm<SproutItemListDetail>
   private LocalDateTime updateAt;
   /** 更新日(文字列) */
   private String updateAtStr;
-  /** 完了フラグ */
-  private Integer doneFlg;
   /** モーダル用フラグ */
   private Integer modalFlg;
 
@@ -191,22 +189,6 @@ public class SproutItemListForm extends SproutAbstractForm<SproutItemListDetail>
    */
   public void setUpdateAtStr(String updateAtStr) {
     this.updateAtStr = updateAtStr;
-  }
-
-  /**
-   * 完了フラグを取得する
-   * @return doneFlg
-   */
-  public Integer getDoneFlg() {
-    return doneFlg;
-  }
-
-  /**
-   * 完了フラグを設定する
-   * @param doneFlg 完了フラグ
-   */
-  public void setDoneFlg(Integer doneFlg) {
-    this.doneFlg = doneFlg;
   }
 
   /**
