@@ -140,7 +140,7 @@ $(function () {
       paging: true,
       pageLength: 5,
       searching: true,
-      dom: 't',
+      dom: 'tp',
       info: false,
       autoWidth: false,
       lengthChange: false,
