@@ -20,6 +20,9 @@ $(function () {
     _this.toggleCompletedBtnId = sprout.util.getId(SCREEN_ID, 'toggleCompletedBtn');
     _this.taskSearchBtnId = sprout.util.getId(SCREEN_ID, 'taskSearchBtn');
     _this.taskSearchInputId = sprout.util.getId(SCREEN_ID, 'taskSearchInput');
+    _this.sproutListId = sprout.util.getId(SCREEN_ID, 'sproutList');
+    _this.sproutPrevId = sprout.util.getId(SCREEN_ID, 'sproutPrev');
+    _this.sproutNextId = sprout.util.getId(SCREEN_ID, 'sproutNext');
 
   // JSON定義読み込み
   $.getJSON('/json/sproutTop.json', function (json) {
@@ -257,4 +260,170 @@ $(function () {
       window.sproutTopTable.ajax.reload(null, false);
     }
   });
+
+  // sproutArea描画
+  function renderSproutList(sprouts) {
+    const list = $(_this.sproutListId);
+    list.empty();
+
+    sprouts.forEach(sp => {
+      const expRate = Math.min(
+        Math.floor((sp.exp / sp.nextExp) * 100), 100);
+        const $li = $(`
+          <li class="w-72 flex-shrink-0 mr-4">
+            <div class="rounded-xl border-4 p-4 bg-white/80 dark:bg-gray-800"
+                 style="border-color: ${sp.tagColor};">
+              <img src="${sp.imageUrl}"
+                   class="w-full h-60 object-contain rounded-lg mb-3" />
+              <div class="text-center space-y-1">
+                <div class="font-semibold">
+                  ${sp.tagName} Lv.${sp.level}
+                </div>
+                <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div class="h-full"
+                       style=" width: ${expRate}%;
+                               background-color: ${sp.tagColor};">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </li>
+        `);
+        list.append($li);
+    });
+  }
+
+  // 植物エリア制御用定数
+  const VISIBLE_COUNT = 5;
+  let currentIndex = 0;
+  let itemWidth = 0;
+  let visible = 0;
+  let total = 0;
+
+  // 植物エリアのスライダーメソッド
+  function initSproutSlider() {
+    const $list = $(_this.sproutListId);
+    const $items = $list.children('li');
+
+    total = $items.length;
+    if (total === 0) return;
+
+    visible = Math.min(VISIBLE_COUNT, total);
+
+    const prependClones = $items.slice(-visible).clone();
+    const appendClones = $items.slice(0, visible).clone();
+
+    $list.prepend(prependClones);
+    $list.append(appendClones);
+
+    itemWidth = $items.outerWidth(true);
+    currentIndex = visible;
+
+    updateSproutPosition(true);
+  }
+
+  // 画像の位置制御
+  function updateSproutPosition(noAnimation) {
+    const $list = $(_this.sproutListId);
+    const translateX = -currentIndex * itemWidth;
+
+    if (noAnimation) {
+      $list.css('transition', 'none');
+    } else {
+      $list.css('transition', 'transform 0.3s ease');
+    }
+
+    $list.css('transform', `translateX(${translateX}px)`);
+  }
+
+  let isAdjusting = false;
+
+  // 次へ
+  $(_this.sproutNextId).on('click', function () {
+    if (isAdjusting) return;
+
+    currentIndex++;
+    updateSproutPosition();
+
+    if (currentIndex === total + visible) {
+      isAdjusting = true;
+      const $list = $(_this.sproutListId);
+
+      $list.one('transitionend', function () {
+        currentIndex = visible;
+        updateSproutPosition(true);
+        isAdjusting = false;
+      });
+    }
+  });
+
+  // 前へ
+  $(_this.sproutPrevId).on('click', function () {
+    if (isAdjusting) return;
+
+    currentIndex--;
+    updateSproutPosition();
+
+    if (currentIndex === 0) {
+      isAdjusting = true;
+      const $list = $(_this.sproutListId);
+
+      $list.one('transitionend', function () {
+        currentIndex = total;
+        updateSproutPosition(true);
+        isAdjusting = false;
+      });
+    }
+  });
+
+  const sproutPlants = [
+    {
+      tagId: 1,
+      tagName: 'Sprout',
+      tagColor: '#4ade80',   // green-400
+      level: 12,
+      exp: 320,
+      nextExp: 500,
+      imageUrl: '/img/stage01.PNG'
+    },
+    {
+      tagId: 2,
+      tagName: '音楽',
+      tagColor: '#60a5fa',   // blue-400
+      level: 5,
+      exp: 80,
+      nextExp: 200,
+      imageUrl: '/img/stage02.PNG'
+    },
+    {
+      tagId: 3,
+      tagName: '人間関係',
+      tagColor: '#f87171',   // red-400
+      level: 5,
+      exp: 80,
+      nextExp: 200,
+      imageUrl: '/img/stage03.PNG'
+    },
+    {
+      tagId: 2,
+      tagName: '生活',
+      tagColor: '#facc15',   // yellow-400
+      level: 5,
+      exp: 80,
+      nextExp: 200,
+      imageUrl: '/img/stage04.PNG'
+    },
+    {
+      tagId: 2,
+      tagName: '学習',
+      tagColor: '#c084fc',   // purple-400
+      level: 5,
+      exp: 80,
+      nextExp: 200,
+      imageUrl: '/img/stage05.PNG'
+    },
+  ];
+
+  renderSproutList(sproutPlants);
+  initSproutSlider();
 });
