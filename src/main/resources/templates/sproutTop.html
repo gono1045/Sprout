@@ -78,9 +78,31 @@
     <!-- 隠し項目 -->
     <input type="hidden" th:field="*{id}" th:object="${sproutItemListForm}">
     <!-- 予定一覧テーブル -->
-    <div class="overflow-x-auto">
+    <div class="overflow-x-auto mb-8">
       <table id="sproutTable" class="table-fixed  border-collapse text-center min-w-full border border-blue-300
       bg-white shadow rounded-lg dark:bg-gray-800"></table>
+    </div>
+    <!-- 植物育成エリア -->
+    <div id="sproutArea" class="relative min-h-[26rem] w-full flex items-center">
+      <!-- 左ボタン -->
+      <button
+        id="sproutPrev"
+        class="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-700 rounded-full p-2 shadow hover:bg-white">
+        ＜
+      </button>
+      <!-- 画像コンテナ（viewport） -->
+      <div class="overflow-hidden mx-auto"
+           style="width: calc(18rem * 5 + 1rem * 4);">
+        <ul id="sproutList"
+            class="flex transition-transform duration-300">
+        </ul>
+      </div>
+      <!-- 左ボタン -->
+      <button
+        id="sproutNext"
+        class="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-700 rounded-full p-2 shadow hover:bg-white">
+        ＞
+      </button>
     </div>
   </div>
 </body>
