@@ -23,6 +23,9 @@ $(function () {
     _this.sproutListId = sprout.util.getId(SCREEN_ID, 'sproutList');
     _this.sproutPrevId = sprout.util.getId(SCREEN_ID, 'sproutPrev');
     _this.sproutNextId = sprout.util.getId(SCREEN_ID, 'sproutNext');
+    _this.sproutDetailId = sprout.util.getId(SCREEN_ID, 'sproutDetail');
+    _this.sproutDetailRightId = sprout.util.getId(SCREEN_ID, 'sproutDetailRight');
+    _this.sproutDetailLeftId = sprout.util.getId(SCREEN_ID, 'sproutDetailLeft');
 
   // JSON定義読み込み
   $.getJSON('/json/sproutTop.json', function (json) {
@@ -266,11 +269,22 @@ $(function () {
     const list = $(_this.sproutListId);
     list.empty();
 
+    if (!sprouts || sprouts.length === 0) {
+        sprout.message.inline({
+            target: list[0],
+            message: `
+              タグが登録されていません<br>
+              タスクにタグを設定すると植物の成長が始まります
+            `
+        });
+        return;
+    }
+
     sprouts.forEach(sp => {
       const expRate = Math.min(
         Math.floor((sp.exp / sp.nextExp) * 100), 100);
         const $li = $(`
-          <li class="w-72 flex-shrink-0 mr-4">
+          <li class="w-72 flex-shrink-0 mr-4 sprout-card" data-tag-id="${sp.tagId}">
             <div class="rounded-xl border-4 p-4 bg-white/80 dark:bg-gray-800"
                  style="border-color: ${sp.tagColor};">
               <img src="${sp.imageUrl}"

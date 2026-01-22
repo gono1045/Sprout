@@ -278,7 +278,38 @@ sprout.message = (function () {
         }
       };
       document.addEventListener('click', clickHandler);
-    }
-  };
+    },
 
+    /**
+     * インラインメッセージ表示（エリア内）
+     *
+     * @param {object} params
+     * @param {HTMLElement|string} params.target - 表示先要素 or セレクタ
+     * @param {string} params.message - 表示メッセージ
+     */
+    inline: function (params) {
+
+      if (!params || !params.target || !params.message) {
+        console.error('inline: target / message が指定されていません');
+        return;
+      }
+
+      const targetEl =
+        typeof params.target === 'string'
+          ? document.querySelector(params.target)
+          : params.target;
+
+      if (!targetEl) return;
+
+      targetEl.innerHTML = `
+        <div class="w-full h-full flex items-center justify-center">
+          <div class="w-auto text-gray-500 text-center leading-relaxed
+            rounded-xl border-4 p-6
+            bg-white/80 dark:bg-gray-800">
+            ${params.message}
+          </div>
+        </div>
+      `;
+    },
+  };
 })();
