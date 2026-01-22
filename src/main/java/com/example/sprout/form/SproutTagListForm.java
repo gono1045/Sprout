@@ -185,6 +185,7 @@ public class SproutTagListForm extends SproutAbstractForm<SproutTagList> {
     return model;
   }
 
+
   @Override
   protected SproutTagList newModel() {
     return new SproutTagList();
