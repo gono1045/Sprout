@@ -15,3 +15,6 @@ mybatis:
   type-aliases-package: com.example.sprout.model
   configuration:
     map-underscore-to-camel-case: true
+
+server:
+  port: ${PORT:8080}
