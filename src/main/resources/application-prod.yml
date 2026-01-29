@@ -1,14 +1,30 @@
 spring:
+  profiles:
+    active: prod
+
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
   jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
       ddl-auto: update
     show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          time_zone: UTC
 
 mybatis:
   mapper-locations: classpath*:mappers/**/*.xml
@@ -18,3 +34,4 @@ mybatis:
 
 server:
   port: ${PORT:8080}
+  forward-headers-strategy: framework
