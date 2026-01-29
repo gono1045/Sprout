@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="ja" class="">
+<html xmlns:th="http://www.thymeleaf.org" lang="ja" class="text-[70%]">
     <head>
       <meta charset="UTF-8" />
       <title>予定一覧</title>
@@ -31,11 +31,11 @@
       <script src="/js/sproutTop.js"></script>
     </head>
 
-<body class="font-body min-h-screen p-10 dark:bg-gray-900 dark:text-blue-300"
+<body class="font-body min-h-screen px-8 py-6 dark:bg-gray-900 dark:text-blue-300"
       th:style="|background-image: url('@{/img/top_bg.png}'); background-size: cover; background-position: center; background-repeat: no-repeat;|">
   <div id="sproutTopRoot">
     <!-- タイトル -->
-    <h1 class="mx-auto w-80">
+    <h1 class="mx-auto w-70">
       <img th:src="@{/img/title.png}" alt="Sprout" class="w-full h-auto">
     </h1>
     <!-- メイン画面 -->
@@ -43,14 +43,14 @@
       <form method="get" action="/" class="flex w-full">
         <!-- 新規登録ボタン-->
         <button id="createTaskModalButton" type="button"
-          class="mr-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+          class="mr-2 px-3 py-1.5 bg-blue-500 text-white rounded hover:bg-blue-600">
           新規
         </button>
         <!-- 完了済み表示切替ボタン -->
         <button
           id="toggleCompletedBtn"
           type="button"
-          class="px-4 py-2 bg-blue-600 text-white rounded
+          class="px-3 py-1.5 bg-blue-600 text-white rounded
                  hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400
                  dark:bg-blue-500 dark:hover:bg-blue-300">
           完了済みを表示
@@ -62,14 +62,14 @@
               type="text"
               placeholder="内容で検索"
               autocomplete="off"
-              class="w-80 px-3 py-2 border border-r-0
+              class="w-64 px-3 py-1.5 border border-r-0
                      rounded-l-md rounded-r-none
                      focus:outline-none focus:ring-2 focus:ring-blue-400
                      dark:bg-gray-800 dark:border-gray-600" />
             <button
               id="taskSearchBtn"
               type="button"
-              class="px-4 py-2 bg-blue-600 border border-blue-600 text-white rounded-r-md rounded-l-none hover:bg-blue-400">
+              class="px-3 py-1.5 bg-blue-600 border border-blue-600 text-white rounded-r-md rounded-l-none hover:bg-blue-400">
               検索
             </button>
           </div>
@@ -92,12 +92,12 @@
       </button>
       <!-- 画像コンテナ（viewport） -->
       <div class="overflow-hidden mx-auto"
-           style="width: calc(18rem * 5 + 1rem * 4);">
+           style="width: calc((16rem + 0.75rem) * 5 - 0.75rem);">
         <ul id="sproutList"
             class="flex transition-transform duration-300">
         </ul>
       </div>
-      <!-- 左ボタン -->
+      <!-- 右ボタン -->
       <button
         id="sproutNext"
         class="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-700 rounded-full p-2 shadow hover:bg-white">

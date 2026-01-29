@@ -284,11 +284,11 @@ $(function () {
       const expRate = Math.min(
         Math.floor((sp.exp / sp.nextExp) * 100), 100);
         const $li = $(`
-          <li class="w-72 flex-shrink-0 mr-4 sprout-card" data-tag-id="${sp.tagId}">
-            <div class="rounded-xl border-4 p-4 bg-white/80 dark:bg-gray-800"
+          <li class="w-64 flex-shrink-0 mr-3 sprout-card" data-tag-id="${sp.tagId}">
+            <div class="rounded-lg border-2 p-4 bg-white/80 dark:bg-gray-800"
                  style="border-color: ${sp.tagColor};">
               <img src="${sp.imageUrl}"
-                   class="w-full h-60 object-contain rounded-lg mb-3" />
+                   class="w-full h-52 object-contain rounded-md mb-2" />
               <div class="text-center space-y-1">
                 <div class="font-semibold">
                   ${sp.tagName} Lv.${sp.level}
