@@ -1,7 +1,4 @@
 spring:
-  profiles:
-    active: prod
-
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
@@ -22,7 +19,6 @@ spring:
     show-sql: false
     properties:
       hibernate:
-        format_sql: false
         jdbc:
           time_zone: UTC
 
@@ -34,4 +30,3 @@ mybatis:
 
 server:
   port: ${PORT:8080}
-  forward-headers-strategy: framework
