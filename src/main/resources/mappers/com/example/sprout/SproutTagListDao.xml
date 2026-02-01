@@ -4,18 +4,18 @@
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.example.sprout.dao.SproutTagListDao">
-<select id="selectAll" parameterType="SproutTagList">
+<select id="selectAll" resultType="SproutTagList">
   SELECT *
   FROM sprout_tag t1
   ORDER BY
     t1.tag_sort_order ASC
 </select>
-<select id="selectByTagId" parameterType="SproutTagList">
+<select id="selectByTagId" resultType="SproutTagList">
   SELECT *
   FROM sprout_tag t1
   WHERE t1.tag_id = #{tagId}
 </select>
-<select id="selectTagsByItemId" parameterType="SproutTagList">
+<select id="selectTagsByItemId" resultType="SproutTagList">
   SELECT
       t1.*
   FROM
@@ -32,7 +32,7 @@
     , tag_color
     , tag_sort_order
     , update_at
-  ) VALUE (
+  ) VALUES (
       #{tagName}
     , #{tagDetail}
     , #{tagColor}
@@ -53,7 +53,7 @@
 </update>
 <delete id="delete" parameterType="Long">
   DELETE FROM sprout_tag
-  WHERE tag_id = #{tagId}
+  WHERE tag_id = #{value}
 </delete>
 <select id="selectMaxSortOrder" resultType="int">
   SELECT
@@ -61,7 +61,7 @@
   FROM
     sprout_tag
 </select>
-<insert id="insertItemTag" parameterType="sproutItemTag">
+<insert id="insertItemTag" parameterType="SproutItemTag">
   INSERT INTO sprout_item_tag (
       item_id
     , tag_id
@@ -70,11 +70,11 @@
     , #{tagId}
   )
 </insert>
-<delete id="deleteByTagId" parameterType="sproutItemTag">
+<delete id="deleteByTagId" parameterType="SproutItemTag">
   DELETE FROM sprout_item_tag
   WHERE tag_id = #{tagId}
 </delete>
-<delete id="deleteItemTag" parameterType="sproutItemTag">
+<delete id="deleteItemTag" parameterType="SproutItemTag">
   DELETE FROM sprout_item_tag
   WHERE
     item_id = #{itemId}

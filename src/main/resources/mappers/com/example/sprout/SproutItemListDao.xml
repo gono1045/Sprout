@@ -25,7 +25,12 @@
          ON t1.priority_cd = m2.code
         AND m2.code_id = '02'
   ORDER BY
-      FIELD(t1.status_cd, 2, 1, 3)
+    CASE t1.status_cd
+      WHEN 2 THEN 1
+      WHEN 1 THEN 2
+      WHEN 3 THEN 3
+      ELSE 4
+    END
     , t1.priority_cd DESC
     , t1.deadline ASC
     , t1.update_at DESC
@@ -53,7 +58,12 @@
   WHERE
     t1.id = #{id}
   ORDER BY
-      FIELD(t1.status_cd, 2, 1, 3)
+    CASE t1.status_cd
+      WHEN 2 THEN 1
+      WHEN 1 THEN 2
+      WHEN 3 THEN 3
+      ELSE 4
+    END
     , t1.priority_cd DESC
     , t1.deadline ASC
     , t1.update_at DESC
@@ -66,7 +76,7 @@
     , deadline
     , detail
     , update_at
-  ) VALUE (
+  ) VALUES (
       #{title}
     , #{statusCd}
     , #{priorityCd}
@@ -89,6 +99,6 @@
 </update>
 <delete id="delete" parameterType="Long">
   DELETE FROM sprout_item
-  WHERE id = #{id}
+  WHERE id = #{value}
 </delete>
 </mapper>
