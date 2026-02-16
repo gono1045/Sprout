@@ -57,6 +57,12 @@ module.exports = {
     'max-w-[60%]',
     'z-[9999]',
     'z-[10000]',
+
+    // ===== ログインページ背景 =====
+    'bg-gradient-to-br',
+    'from-green-100',
+    'via-emerald-200',
+    'to-teal-200',
   ],
 
   theme: {
