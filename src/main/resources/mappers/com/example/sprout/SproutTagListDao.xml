@@ -7,23 +7,28 @@
 <select id="selectAll" resultType="SproutTagList">
   SELECT *
   FROM sprout_tag t1
+  WHERE
+    t1.user_id = #{userId}
   ORDER BY
     t1.tag_sort_order ASC
 </select>
 <select id="selectByTagId" resultType="SproutTagList">
   SELECT *
   FROM sprout_tag t1
-  WHERE t1.tag_id = #{tagId}
+  WHERE
+    t1.tag_id = #{tagId}
+    AND t1.user_id = #{userId}
 </select>
 <select id="selectTagsByItemId" resultType="SproutTagList">
   SELECT
       t1.*
   FROM
     sprout_tag t1
-    LEFT JOIN sprout_item_tag t2
-    ON t1.tag_id = t2.tag_id
+    INNER JOIN sprout_item_tag t2
+      ON t1.tag_id = t2.tag_id
   WHERE
     t2.item_id = #{itemId}
+    AND t1.user_id = #{userId}
 </select>
 <insert id="insert" parameterType="SproutTagList" useGeneratedKeys="true" keyProperty="tagId">
   INSERT INTO sprout_tag (
@@ -32,12 +37,16 @@
     , tag_color
     , tag_sort_order
     , update_at
+    , update_user
+    , user_id
   ) VALUES (
       #{tagName}
     , #{tagDetail}
     , #{tagColor}
     , #{tagSortOrder}
     , #{updateAt}
+    , #{updateUser}
+    , #{userId}
   )
 </insert>
 <update id="update" parameterType="SproutTagList">
@@ -48,18 +57,32 @@
     , tag_color = #{tagColor}
     , tag_sort_order = #{tagSortOrder}
     , update_at = #{updateAt}
+    , update_user = #{updateUser}
   WHERE
     tag_id = #{tagId}
+    AND user_id = #{userId}
 </update>
-<delete id="delete" parameterType="Long">
+<delete id="delete">
   DELETE FROM sprout_tag
-  WHERE tag_id = #{value}
+  WHERE tag_id = #{tagId}
+  AND user_id = #{userId}
 </delete>
+<update id="updateTagSortOrder">
+  UPDATE
+    sprout_tag
+  SET
+    tag_sort_order = #{tagSortOrder}
+  WHERE
+    tag_id = #{tagId}
+    AND user_id = #{userId}
+</update>
 <select id="selectMaxSortOrder" resultType="int">
   SELECT
-    MAX(tag_sort_order)
+    COALESCE(MAX(tag_sort_order), 0)
   FROM
     sprout_tag
+  WHERE
+    user_id = #{userId}
 </select>
 <insert id="insertItemTag" parameterType="SproutItemTag">
   INSERT INTO sprout_item_tag (
@@ -71,13 +94,34 @@
   )
 </insert>
 <delete id="deleteByTagId" parameterType="SproutItemTag">
-  DELETE FROM sprout_item_tag
-  WHERE tag_id = #{tagId}
+  DELETE FROM
+    sprout_item_tag it
+  USING
+    sprout_tag t
+  WHERE
+    it.tag_id = t.tag_id
+      AND it.tag_id = #{tagId}
+      AND t.user_id = #{userId}
 </delete>
 <delete id="deleteItemTag" parameterType="SproutItemTag">
-  DELETE FROM sprout_item_tag
+  DELETE FROM
+    sprout_item_tag it
+  USING
+    sprout_item i
   WHERE
-    item_id = #{itemId}
-    AND tag_id = #{tagId}
+    it.item_id = i.id
+      AND it.item_id = #{itemId}
+      AND it.tag_id = #{tagId}
+      AND i.user_id = #{userId}
+</delete>
+<delete id="deleteItemTagsByItemId">
+  DELETE FROM
+    sprout_item_tag it
+  USING
+    sprout_item i
+  WHERE
+    it.item_id = i.id
+    AND it.item_id = #{itemId}
+    AND i.user_id = #{userId}
 </delete>
 </mapper>

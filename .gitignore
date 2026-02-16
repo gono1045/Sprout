@@ -35,3 +35,8 @@ build/
 # exeファイルを無視
 *.exe
 
+# local環境用設定（機密情報を含む）
+src/main/resources/application-local.yml
+
+# macOS
+.DS_Store

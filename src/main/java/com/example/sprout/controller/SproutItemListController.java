@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.example.sprout.form.SproutItemListForm;
 import com.example.sprout.model.SproutItemListDetail;
+import com.example.sprout.security.SproutUserDetails;
 import com.example.sprout.service.SproutItemListService;
 
 @Controller
@@ -27,10 +29,12 @@ public class SproutItemListController {
    * @return Top画面
    */
   @GetMapping("/")
-  public String initTop(@ModelAttribute SproutItemListForm form, Model model) {
+  public String initTop(@ModelAttribute SproutItemListForm form, Model model,
+      @AuthenticationPrincipal SproutUserDetails sproutUserDetails) {
 
     // タスク一覧取得
     model.addAttribute("items", sproutItemListService.init());
+    model.addAttribute("loginId", sproutUserDetails.getLoginId());
 
     return "sproutTop";
   }

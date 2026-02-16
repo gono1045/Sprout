@@ -24,6 +24,8 @@
   LEFT JOIN m_code m2
          ON t1.priority_cd = m2.code
         AND m2.code_id = '02'
+  WHERE
+    t1.user_id = #{userId}
   ORDER BY
     CASE t1.status_cd
       WHEN 2 THEN 1
@@ -35,7 +37,6 @@
     , t1.deadline ASC
     , t1.update_at DESC
 </select>
-
 <select id="selectByItemId" resultType="SproutItemListDetail">
   SELECT
       t1.id
@@ -57,6 +58,7 @@
         AND m2.code_id = '02'
   WHERE
     t1.id = #{id}
+    AND t1.user_id = #{userId}
   ORDER BY
     CASE t1.status_cd
       WHEN 2 THEN 1
@@ -76,6 +78,8 @@
     , deadline
     , detail
     , update_at
+    , update_user
+    , user_id
   ) VALUES (
       #{title}
     , #{statusCd}
@@ -83,6 +87,8 @@
     , #{deadline}
     , #{detail}
     , #{updateAt}
+    , #{updateUser}
+    , #{userId}
   )
 </insert>
 <update id="update" parameterType="SproutItemListDetail">
@@ -94,11 +100,14 @@
     , deadline = #{deadline}
     , detail = #{detail}
     , update_at = #{updateAt}
+    , update_user = #{updateUser}
   WHERE
     id = #{id}
+    AND user_id = #{userId}
 </update>
-<delete id="delete" parameterType="Long">
+<delete id="delete">
   DELETE FROM sprout_item
-  WHERE id = #{value}
+  WHERE id = #{id}
+  AND user_id = #{userId}
 </delete>
 </mapper>
