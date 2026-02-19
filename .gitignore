@@ -40,3 +40,6 @@ src/main/resources/application-local.yml
 
 # macOS
 .DS_Store
+
+# Tailwind build output.css
+src/main/resources/static/css/output.css
