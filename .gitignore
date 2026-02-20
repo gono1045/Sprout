@@ -41,5 +41,12 @@ src/main/resources/application-local.yml
 # macOS
 .DS_Store
 
+# Node.js / npm関連【追加】
+node_modules/
+package-lock.json
+.env.local
+.env.*.local
+dist/
+
 # Tailwind build output.css
 src/main/resources/static/css/output.css
