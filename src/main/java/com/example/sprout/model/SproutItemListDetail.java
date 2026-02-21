@@ -23,6 +23,10 @@ public class SproutItemListDetail {
   private String detail;
   /** 更新日 */
   private LocalDateTime updateAt;
+  /** ユーザーID **/
+  private Long userId;
+  /** 更新ユーザー **/
+  private String updateUser;
 
   /**
    * タスクIDを取得する
@@ -166,5 +170,37 @@ public class SproutItemListDetail {
    */
   public void setUpdateAt(LocalDateTime updateAt) {
     this.updateAt = updateAt;
+  }
+
+  /**
+   * ユーザーIDを取得する
+   * @return userId
+   */
+  public Long getUserId() {
+    return userId;
+  }
+
+  /**
+   * ユーザーIDを設定する
+   * @param userId ユーザーID
+   */
+  public void setUserId(Long userId) {
+    this.userId = userId;
+  }
+
+  /**
+   * 更新ユーザーを取得する
+   * @return updateUser
+   */
+  public String getUpdateUser() {
+    return updateUser;
+  }
+
+  /**
+   * 更新ユーザーを設定する
+   * @param updateUser 更新ユーザー
+   */
+  public void setUpdateUser(String updateUser) {
+    this.updateUser = updateUser;
   }
 }

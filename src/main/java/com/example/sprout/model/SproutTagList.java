@@ -9,24 +9,22 @@ public class SproutTagList {
 
   /** タグID */
   private Long tagId;
-
   /** タグ名 */
   private String tagName;
-
   /** タグ詳細 */
   private String tagDetail;
-
   /** タグ色 */
   private String tagColor;
-
   /** ソート順 */
   private Integer tagSortOrder;
-
   /** 親タグID */
   private Long parentTagId;
-
   /** 更新日時 */
   private LocalDateTime updateAt;
+  /** ユーザーID **/
+  private Long userId;
+  /** 更新ユーザー **/
+  private String updateUser;
 
   /**
    * タグIDを取得する
@@ -138,5 +136,37 @@ public class SproutTagList {
    */
   public void setUpdateAt(LocalDateTime updateAt) {
     this.updateAt = updateAt;
+  }
+
+  /**
+   * ユーザーIDを取得する
+   * @return userId
+   */
+  public Long getUserId() {
+    return userId;
+  }
+
+  /**
+   * ユーザーIDを設定する
+   * @param userId ユーザーID
+   */
+  public void setUserId(Long userId) {
+    this.userId = userId;
+  }
+
+  /**
+   * 更新ユーザーを取得する
+   * @return updateUser
+   */
+  public String getUpdateUser() {
+    return updateUser;
+  }
+
+  /**
+   * 更新ユーザーを設定する
+   * @param updateUser 更新ユーザー
+   */
+  public void setUpdateUser(String updateUser) {
+    this.updateUser = updateUser;
   }
 }
