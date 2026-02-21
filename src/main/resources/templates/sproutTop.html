@@ -1,39 +1,61 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ja" class="text-[70%]">
-    <head>
-      <meta charset="UTF-8" />
-      <title>予定一覧</title>
-      <!-- Google Font -->
-      <link href="https://fonts.googleapis.com/css2?family=Merienda&display=swap" rel="stylesheet">
-      <!-- flatpickr CSS -->
-      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-      <!-- DataTables CSS -->
-      <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-      <!-- Tailwind -->
-      <link rel="stylesheet" th:href="@{/css/output.css}">
-      <!-- favicon -->
-      <link rel="icon" type="image/png" th:href="@{/img/favicon.ico}">
-      <!-- jQuery -->
-      <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-      <!-- Day.js -->
-      <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
-      <!-- DataTables -->
-      <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-      <!-- flatpickr -->
-      <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-      <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ja.js"></script>
-      <!-- 自作JS -->
-      <script src="/js/sprout-datatables.js"></script>
-      <script src="/js/sprout-util.js"></script>
-      <script src="/js/sprout-message.js"></script>
-      <script src="/js/sprout-tags.js"></script>
-      <script src="/js/itemUpdateModal.js"></script>
-      <script src="/js/sproutTop.js"></script>
-    </head>
-
+  <head>
+    <meta charset="UTF-8" />
+    <title>予定一覧</title>
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Merienda&display=swap" rel="stylesheet">
+    <!-- flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <!-- Tailwind -->
+    <link rel="stylesheet" th:href="@{/css/output.css}">
+    <!-- favicon -->
+    <link rel="icon" type="image/png" th:href="@{/img/favicon.ico}">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- Day.js -->
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <!-- DataTables -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <!-- flatpickr -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ja.js"></script>
+    <!-- 自作JS -->
+    <script th:src="@{/js/sprout-datatables.js}"></script>
+    <script th:src="@{/js/sprout-util.js}"></script>
+    <script th:src="@{/js/sprout-message.js}"></script>
+    <script th:src="@{/js/sprout-tags.js}"></script>
+    <script th:src="@{/js/itemUpdateModal.js}"></script>
+    <script th:src="@{/js/sproutTop.js}"></script>
+  </head>
 <body class="font-body min-h-screen px-8 py-6 dark:bg-gray-900 dark:text-blue-300"
       th:style="|background-image: url('@{/img/top_bg.png}'); background-size: cover; background-position: center; background-repeat: no-repeat;|">
-  <div id="sproutTopRoot">
+<div id="sproutTopRoot">
+    <!-- 右上ユーザーメニュー -->
+    <div class="flex justify-end relative">
+      <div class="relative">
+        <!-- ユーザーボタン -->
+        <button id="userMenuButton"
+          class="flex items-center gap-2 px-4 py-2 bg-white/80 dark:bg-gray-700
+                 rounded-full shadow hover:bg-white">
+          <span th:text="${loginId}">user</span>
+          <span class="text-lg">⋯</span>
+        </button>
+        <!-- ドロップダウン -->
+        <div id="userMenuDropdown"
+             class="hidden absolute right-0 mt-2 w-40 bg-white dark:bg-gray-700
+                    rounded-lg shadow-lg border dark:border-gray-600">
+          <form th:action="@{/logout}" method="post">
+            <button type="submit"
+              class="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600">
+              ログアウト
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
     <!-- タイトル -->
     <h1 class="mx-auto w-70">
       <img th:src="@{/img/title.png}" alt="Sprout" class="w-full h-auto">
@@ -75,12 +97,12 @@
           </div>
       </form>
     </div>
-    <!-- 隠し項目 -->
-    <input type="hidden" th:field="*{id}" th:object="${sproutItemListForm}">
     <!-- 予定一覧テーブル -->
-    <div class="overflow-x-auto mb-8">
-      <table id="sproutTable" class="table-fixed  border-collapse text-center min-w-full border border-blue-300
-      bg-white shadow rounded-lg dark:bg-gray-800"></table>
+    <div>
+      <div class="overflow-x-auto overflow-y-auto min-h-[20rem]">
+        <table id="sproutTable" class="table-fixed  border-collapse text-center min-w-full border border-blue-300
+        bg-white shadow rounded-lg dark:bg-gray-800"></table>
+      </div>
     </div>
     <!-- 植物育成エリア -->
     <div id="sproutArea" class="relative min-h-[26rem] w-full flex items-center">
@@ -90,7 +112,7 @@
         class="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-700 rounded-full p-2 shadow hover:bg-white">
         ＜
       </button>
-      <!-- 画像コンテナ（viewport） -->
+      <!-- 画像コンテナ -->
       <div class="overflow-hidden mx-auto"
            style="width: calc((16rem + 0.75rem) * 5 - 0.75rem);">
         <ul id="sproutList"
@@ -104,6 +126,6 @@
         ＞
       </button>
     </div>
-  </div>
+</div>
 </body>
 </html>

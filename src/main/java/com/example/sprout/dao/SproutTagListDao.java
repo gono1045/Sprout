@@ -13,16 +13,18 @@ public interface SproutTagListDao {
 
   /**
    * タグ一覧取得（初期表示用）
+   * @param userId ユーザーID
    * @return タグリスト
    */
-  List<SproutTagList> selectAll();
+  List<SproutTagList> selectAll(@Param("userId") Long userId);
 
   /**
    * タグ情報取得（タグID指定）
    * @param tagId タグID
+   * @param userId ユーザーID
    * @return タグ情報
    */
-  SproutTagList selectByTagId(Long tagId);
+  SproutTagList selectByTagId(@Param("tagId") Long tagId, @Param("userId") Long userId);
 
   /**
    * タグ新規登録
@@ -39,28 +41,33 @@ public interface SproutTagListDao {
   /**
    * タグ削除
    * @param tagId タグID
+   * @param userId ユーザーID
    */
-  void delete(@Param("tagId") Long tagId);
+  void delete(@Param("tagId") Long tagId, @Param("userId") Long userId);
 
   /**
    * タグの並び順を更新
    * @param tagId
    * @param tagSortOrder
+   * @param userId
    */
-  void updateTagSortOrder(@Param("tagId") Long tagId, @Param("tagSortOrder") Integer tagSortOrder);
+  void updateTagSortOrder(@Param("tagId") Long tagId, @Param("tagSortOrder") Integer tagSortOrder,
+      @Param("userId") Long userId);
 
   /**
    * タグの並び順最大値を取得
+   * @param userId ユーザーID
    * @return 最大値(データなしの場合null)
    */
-  Integer selectMaxSortOrder();
+  Integer selectMaxSortOrder(@Param("userId") Long userId);
 
   /**
    * タスクに紐づくタグ一覧取得
    * @param itemId タスクID
+   * @param userId ユーザーID
    * @return タグリスト
    */
-  List<SproutTagList> selectTagsByItemId(Long itemId);
+  List<SproutTagList> selectTagsByItemId(@Param("itemId") Long itemId, @Param("userId") Long userId);
 
   /**
    * タスクとタグの紐付け登録
@@ -71,13 +78,23 @@ public interface SproutTagListDao {
   /**
    * タグ削除に伴う中間テーブルのレコード削除
    * @param tagId タグID
+   * @param userId ユーザーID
    */
-  void deleteByTagId(@Param("tagId") Long tagId);
+  void deleteByTagId(@Param("tagId") Long tagId, @Param("userId") Long userId);
 
   /**
    * タスクとタグの紐付け削除
    * @param itemId タスクID
    * @param tagId タグID
+   * @param userId ユーザーID
    */
-  void deleteItemTag(@Param("itemId") Long itemId, @Param("tagId") Long tagId);
+  void deleteItemTag(@Param("itemId") Long itemId, @Param("tagId") Long tagId, @Param("userId") Long userId);
+
+  /**
+   * タスクのタグを一気に解除
+   * @param itemId
+   * @param userId
+   */
+  void deleteItemTagsByItemId(@Param("itemId") Long itemId,
+      @Param("userId") Long userId);
 }

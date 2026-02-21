@@ -35,3 +35,15 @@ build/
 # exeファイルを無視
 *.exe
 
+# local環境用設定（機密情報を含む）
+src/main/resources/application-local.yml
+
+# macOS
+.DS_Store
+
+# Node.js / npm関連【追加】
+node_modules/
+package-lock.json
+.env.local
+.env.*.local
+dist/

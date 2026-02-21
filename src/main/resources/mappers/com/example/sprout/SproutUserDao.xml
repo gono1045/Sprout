@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.sprout.dao.SproutUserDao">
+  <select id="findByLoginIdAndProvider" resultType="com.example.sprout.model.SproutUser">
+    SELECT
+      user_id,
+      login_id,
+      email,
+      password,
+      provider,
+      provider_user_id,
+      is_active,
+      created_at,
+      updated_at
+    FROM sprout_user
+    WHERE
+      login_id = #{loginId}
+      AND provider = #{provider}
+      AND is_active = true
+  </select>
+  <select id="findByEmailAndProvider" resultType="com.example.sprout.model.SproutUser">
+    SELECT
+      user_id,
+      login_id,
+      email,
+      password,
+      provider,
+      provider_user_id,
+      is_active,
+      created_at,
+      updated_at
+    FROM sprout_user
+    WHERE
+      email = #{email}
+      AND provider = #{provider}
+      AND is_active = true
+  </select>
+  <insert id="insert" parameterType="com.example.sprout.model.SproutUser" useGeneratedKeys="true" keyProperty="userId">
+    INSERT INTO sprout_user (
+      login_id,
+      email,
+      password,
+      provider,
+      provider_user_id,
+      is_active,
+      created_at,
+      updated_at
+    ) VALUES (
+      #{loginId},
+      #{email},
+      #{password},
+      #{provider},
+      #{providerUserId},
+      #{isActive},
+      #{createdAt},
+      #{updatedAt}
+    )
+  </insert>
+</mapper>
