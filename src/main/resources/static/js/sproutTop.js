@@ -26,6 +26,8 @@ $(function () {
     _this.sproutDetailId = sprout.util.getId(SCREEN_ID, 'sproutDetail');
     _this.sproutDetailRightId = sprout.util.getId(SCREEN_ID, 'sproutDetailRight');
     _this.sproutDetailLeftId = sprout.util.getId(SCREEN_ID, 'sproutDetailLeft');
+    _this.userMenuButtonId = sprout.util.getId(SCREEN_ID, 'userMenuButton');
+    _this.userMenuDropdownId = sprout.util.getId(SCREEN_ID, 'userMenuDropdown');
 
   // JSON定義読み込み
   $.getJSON('/json/sproutTop.json', function (json) {
@@ -158,6 +160,20 @@ $(function () {
 
     // ヘッダ行のみ中央揃え
     $(_this.tableId + ' thead th').css('text-align', 'center');
+  });
+
+  // ユーザーメニュー開閉
+  $(function () {
+    $(_this.userMenuButtonId).on('click', function () {
+      $(_this.userMenuDropdownId).toggleClass('hidden');
+    });
+
+    // 外クリックで閉じる
+    $(document).on('click', function (e) {
+      if (!$(e.target).closest(_this.userMenuButtonId, _this.userMenuDropdownId).length) {
+        $(_this.userMenuDropdownId).addClass('hidden');
+      }
+    });
   });
 
   // 完了済み表示切り替え
