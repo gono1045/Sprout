@@ -1,7 +1,5 @@
 package com.example.sprout.dao;
 
-import java.util.Optional;
-
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -16,7 +14,7 @@ public interface SproutUserDao {
    * @param provider 認証プロバイダ
    * @return ユーザー情報
    */
-  Optional<SproutUser> findByLoginIdAndProvider(@Param("loginId") String loginId,
+  SproutUser findByLoginIdAndProvider(@Param("loginId") String loginId,
       @Param("provider") String provider);
 
   /**
@@ -25,7 +23,7 @@ public interface SproutUserDao {
    * @param provider 認証プロバイダ
    * @return ユーザー情報
    */
-  Optional<SproutUser> findByEmailAndProvider(@Param("email") String email,
+  SproutUser findByEmailAndProvider(@Param("email") String email,
       @Param("provider") String provider);
 
   /**
