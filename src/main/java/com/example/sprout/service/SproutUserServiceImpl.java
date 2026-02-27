@@ -39,7 +39,8 @@ public class SproutUserServiceImpl implements SproutUserService {
    */
   @Override
   public boolean existsByLoginId(String loginId) {
-    return sproutUserDao.findByLoginIdAndProvider(loginId, "LOCAL").isPresent();
+    return sproutUserDao
+        .findByLoginIdAndProvider(loginId, "LOCAL") != null;
   }
 
   /**
@@ -49,6 +50,7 @@ public class SproutUserServiceImpl implements SproutUserService {
    */
   @Override
   public boolean existsByEmail(String email) {
-    return sproutUserDao.findByEmailAndProvider(email, "LOCAL").isPresent();
+    return sproutUserDao
+        .findByEmailAndProvider(email, "LOCAL") != null;
   }
 }

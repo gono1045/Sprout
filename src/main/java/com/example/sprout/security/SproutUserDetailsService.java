@@ -43,12 +43,15 @@ public class SproutUserDetailsService implements UserDetailsService {
 
     if (input.contains("@")) {
       // email で検索（LOCALユーザー限定）
-      user = userDao.findByEmailAndProvider(input, "LOCAL")
-          .orElseThrow(() -> new UsernameNotFoundException("ユーザーが存在しません"));
+      user = userDao.findByEmailAndProvider(input, "LOCAL");
     } else {
       // loginId で検索（LOCALユーザー限定）
-      user = userDao.findByLoginIdAndProvider(input, "LOCAL")
-          .orElseThrow(() -> new UsernameNotFoundException("ユーザーが存在しません"));
+      user = userDao.findByLoginIdAndProvider(input, "LOCAL");
+    }
+
+    // ★ nullチェックに変更
+    if (user == null) {
+      throw new UsernameNotFoundException("ユーザーが存在しません");
     }
 
     return new SproutUserDetails(user);
