@@ -538,10 +538,11 @@ sprout.tags = (function() {
     .off('keydown.sproutTagInput')
     .on('keydown.sproutTagInput', '.sprout-tag-input', function (e) {
 
+      if (e.originalEvent && e.originalEvent.isComposing) return;
+      if (e.keyCode === 229) return;
       if (e.key !== 'Enter') return;
-      if (e.isComposing) return; // IME変換Enterを無視
 
-      // ★ dropdown選択中なら「新規作成しない」
+      // dropdown選択中なら「新規作成しない」
       if (currentState && currentState.dropdownIndex >= 0) {
         return;
       }

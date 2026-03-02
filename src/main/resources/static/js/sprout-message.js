@@ -15,6 +15,14 @@ sprout.message = (function () {
     INFO001: '処理が完了しました'
   };
 
+  /** z-index定義 */
+  const Z_INDEX = {
+    dropdown: 9999,
+    popup: 10000,
+    modal: 20000,
+    toast: 20000
+  };
+
   return {
 
     /**
@@ -39,7 +47,8 @@ sprout.message = (function () {
         /* overlay */
         const overlay = document.createElement('div');
         overlay.className =
-          'fixed inset-0 z-50 flex items-center justify-center bg-black/40';
+          'fixed inset-0 flex items-center justify-center bg-black/40';
+        overlay.style.zIndex = Z_INDEX.modal;
 
         /* dialog */
         const dialog = document.createElement('div');
@@ -191,7 +200,8 @@ sprout.message = (function () {
 
       const toast = document.createElement('div');
       toast.className =
-        'fixed top-5 right-5 z-50 px-4 py-3 rounded shadow text-white transition-opacity';
+        'fixed top-5 right-5 px-4 py-3 rounded shadow text-white transition-opacity';
+      toast.style.zIndex = Z_INDEX.toast;
 
       if (type === 'success') {
         toast.classList.add('bg-green-600');
@@ -208,76 +218,6 @@ sprout.message = (function () {
         toast.classList.add('opacity-0');
         setTimeout(() => toast.remove(), 300);
       }, params.duration || 3000);
-    },
-
-    /**
-     * 行操作ポップアップ（複製・削除）表示
-     *
-     * @param {object} params
-     * @param {HTMLElement} params.anchorEl - ポップアップを表示するボタン要素
-     * @param {function} [params.onDuplicate] - 複製ボタンクリック時コールバック
-     * @param {function} [params.onDelete] - 削除ボタンクリック時コールバック
-     */
-    rowActionPopup: function(params) {
-
-      if (!params || !params.anchorEl) {
-        console.error('rowActionPopup: anchorEl が指定されていません');
-        return;
-      }
-
-      // 既存ポップアップがあれば削除
-      const existing = document.getElementById('sprout-row-action-popup');
-      if (existing) existing.remove();
-
-      /* ===== popup ===== */
-      const popup = document.createElement('div');
-      popup.id = 'sprout-row-action-popup';
-      popup.className =
-        'absolute z-50 flex flex-col bg-white dark:bg-gray-800 border rounded shadow-md';
-      popup.style.minWidth = '120px';
-      popup.style.padding = '0.25rem';
-      popup.style.gap = '0.25rem';
-
-      /* 複製ボタン */
-      const duplicateBtn = document.createElement('button');
-      duplicateBtn.className =
-        'px-2 py-1 rounded bg-green-600 text-white hover:bg-green-700 text-center';
-        duplicateBtn.style.margin = '0 20px';
-      duplicateBtn.textContent = '複製';
-      duplicateBtn.onclick = function() {
-        popup.remove();
-        if (typeof params.onDuplicate === 'function') params.onDuplicate();
-      };
-
-      /* 削除ボタン */
-      const deleteBtn = document.createElement('button');
-      deleteBtn.className =
-        'px-2 py-1 rounded bg-red-600 text-white hover:bg-red-700 text-center';
-        deleteBtn.style.margin = '0 20px';
-      deleteBtn.textContent = '削除';
-      deleteBtn.id = 'table-popup-delete';
-      deleteBtn.onclick = function() {
-        popup.remove();
-        if (typeof params.onDelete === 'function') params.onDelete();
-      };
-
-      popup.append(duplicateBtn, deleteBtn);
-      document.body.appendChild(popup);
-
-      /* 表示位置をanchorElの下に配置 */
-      const cellEl = params.anchorEl.closest('td') || params.anchorEl;
-      const rect = cellEl.getBoundingClientRect();
-      popup.style.top  = params.anchorEl.getBoundingClientRect().bottom + window.scrollY + 'px'; // ⋯ボタンの下
-      popup.style.left = rect.left + window.scrollX + 'px';
-
-      /* popup外クリックで閉じる */
-      const clickHandler = function(e) {
-        if (!popup.contains(e.target) && e.target !== params.anchorEl) {
-          popup.remove();
-          document.removeEventListener('click', clickHandler);
-        }
-      };
-      document.addEventListener('click', clickHandler);
     },
 
     /**
