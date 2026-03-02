@@ -47,6 +47,25 @@ $(function () {
             </div>
           `;
         };
+      } else if (col.data === 'operation') {
+        renderFunc = function(data, type, row) {
+          return `
+            <div class="flex flex-col justify-center gap-1">
+              <button
+                type="button"
+                class="sprout-row-duplicate px-2 py-1 rounded bg-green-600 text-white text-ms hover:bg-green-700"
+                data-item-id="${row.id}">
+                複製
+              </button>
+              <button
+                type="button"
+                class="sprout-row-delete px-2 py-1 rounded bg-red-600 text-white text-ms hover:bg-red-700"
+                data-item-id="${row.id}">
+                削除
+              </button>
+            </div>
+          `;
+          };
       } else {
         renderFunc = SproutDataTables.getRender(col.inputType);
       }
@@ -279,6 +298,74 @@ $(function () {
       window.sproutTopTable.ajax.reload(null, false);
     }
   });
+
+  // 複製・削除イベント
+  $(_this.tableId)
+    .off('click.sproutRowDuplicate')
+    .on('click.sproutRowDuplicate', '.sprout-row-duplicate', function () {
+
+      const itemId = $(this).data('item-id');
+
+      duplicateItem(itemId);
+    });
+
+  $(_this.tableId)
+    .off('click.sproutRowDelete')
+    .on('click.sproutRowDelete', '.sprout-row-delete', function () {
+
+      const itemId = $(this).data('item-id');
+
+      sprout.message.confirmExec({
+        messageId: 'WARN001',
+        onOk: function () {
+          deleteItem(itemId);
+        }
+      });
+    });
+
+  // タスク削除メソッド
+  function deleteItem(itemId) {
+    $.ajax({
+      url: '/task/delete',
+      type: 'POST',
+      data: { id: itemId }
+    })
+    .done(function () {
+      sprout.message.toast({
+        message: '削除しました',
+        type: 'success'
+      });
+      window.sproutTopTable.ajax.reload(null, false);
+    })
+    .fail(function () {
+      sprout.message.toast({
+        message: '削除に失敗しました',
+        type: 'error'
+      });
+    });
+  }
+
+  // タスク複製メソッド
+  function duplicateItem(itemId) {
+    $.ajax({
+      url: '/task/duplicate',
+      type: 'POST',
+      data: { id: itemId }
+    })
+    .done(function () {
+      sprout.message.toast({
+        message: '複製しました',
+        type: 'success'
+      });
+      window.sproutTopTable.ajax.reload(null, false);
+    })
+    .fail(function () {
+      sprout.message.toast({
+        message: '複製に失敗しました',
+        type: 'error'
+      });
+    });
+  }
 
   // sproutArea描画
   function renderSproutList(sprouts) {
