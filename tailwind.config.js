@@ -63,25 +63,55 @@ module.exports = {
     'from-green-100',
     'via-emerald-200',
     'to-teal-200',
+
+    // ===== Sproutグリーンパレット（safelist） =====
+    'bg-sprout-leaf',
+    'bg-sprout-moss',
+    'bg-sprout-fern',
+    'text-sprout-leaf',
+    'text-sprout-mint',
+    'border-sprout-fern',
+    'hover:bg-sprout-moss',
+    'dark:bg-dark-surface',
+    'dark:bg-dark-raised',
   ],
 
   theme: {
     extend: {
       fontFamily: {
         title: ['Merienda', 'cursive'],
-        body: ['ui-sans-serif', 'system-ui'],
+        // Noto Sans JP を追加（body の第1候補に昇格）
+        body: ['Noto Sans JP', 'ui-sans-serif', 'system-ui'],
       },
 
-      /**
-       * Tailwind 標準カラーを拡張
-       * （将来 logical color を作る時も使える）
-       */
       colors: {
-        gray: colors.gray,
+        // ===== Sproutブランドカラー（パターンC準拠） =====
+        sprout: {
+          forest: '#0D2818',   // 最深グリーン
+          grove:  '#1A4A30',   // 深グリーン
+          fern:   '#2D6A4F',   // 中グリーン
+          moss:   '#40916C',   // メインアクセント（ボタンなど）
+          leaf:   '#52B788',   // プライマリカラー
+          mint:   '#74C69D',   // ライトアクセント
+          amber:  '#C89A3A',   // 警告・強調
+          rose:   '#C85A5A',   // エラー・削除
+        },
+
+        // ===== ダークモード背景カラー =====
+        dark: {
+          base:    '#111820',  // 最深部
+          surface: '#1A2430',  // カード面
+          raised:  '#1F2C3A',  // 浮き上がり要素
+          input:   '#162030',  // 入力フィールド
+          border:  '#243440',  // ボーダー
+        },
+
+        // ===== Tailwind標準カラー（既存互換） =====
+        gray:   colors.gray,
         yellow: colors.yellow,
-        red: colors.red,
-        green: colors.green,
-        blue: colors.blue,
+        red:    colors.red,
+        green:  colors.green,
+        blue:   colors.blue,
         purple: colors.purple,
       },
     },
