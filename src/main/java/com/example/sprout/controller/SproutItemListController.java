@@ -15,14 +15,18 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.example.sprout.form.SproutItemListForm;
 import com.example.sprout.model.SproutItemListDetail;
+import com.example.sprout.model.SproutTagList;
 import com.example.sprout.security.SproutUserDetails;
 import com.example.sprout.service.SproutItemListService;
+import com.example.sprout.service.SproutTagListService;
 
 @Controller
 public class SproutItemListController {
 
   @Autowired
   private SproutItemListService sproutItemListService;
+  @Autowired
+  private SproutTagListService sproutTagListService;
 
   /**
    * Top画面 初期表示
@@ -142,7 +146,13 @@ public class SproutItemListController {
     SproutItemListForm duplicatedForm = new SproutItemListForm();
     duplicatedForm.setDetailListFrom(original);
     duplicatedForm.setUpdateAt(LocalDateTime.now());
-    sproutItemListService.insert(duplicatedForm.createModel());
+    SproutItemListDetail newModel = duplicatedForm.createModel();
+    sproutItemListService.insert(newModel);
+
+    // タグの紐付けも実施
+    Long newTaskId = newModel.getId();
+    List<SproutTagList> itemTags = sproutTagListService.selectTagsByItemId(id);
+    sproutTagListService.updateItemTags(newTaskId, itemTags.stream().map(SproutTagList::getTagId).toList());
 
     return duplicatedForm;
   }
