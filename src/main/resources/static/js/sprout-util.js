@@ -222,8 +222,50 @@ sprout.util = (function() {
           console.error('sendForm Ajax error:', err);
         }
       });
-    }
+    },
+
+    /**
+     * Enterキーによるモーダル内キーアクション制御
+     *
+     * ・data-enter-submit="true" が付いた入力項目のみ有効
+     * ・textareaではEnterを無効化しない（改行優先）
+     * ・通常のformデフォルトsubmitは抑止
+     */
+    initGlobalEnterSubmit: function () {
+
+      document.removeEventListener("keydown", window.__autoSubmitHandler);
+
+      window.__autoSubmitHandler = function (e) {
+
+        if (e.key !== "Enter") return;
+
+        const target = e.target;
+        const form = target.closest("form.js-auto-submit");
+        if (!form) return;
+
+        if (target.tagName === "TEXTAREA") return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        // submitボタンを明示的に押す
+        const submitBtn = form.querySelector("button[type='submit']");
+        if (submitBtn) {
+          submitBtn.click();
+        }
+
+      };
+
+      document.addEventListener("keydown", window.__autoSubmitHandler);
+    },
 
   };
 
 })();
+
+/**
+ * 共通初期化処理
+ */
+$(function () {
+  sprout.util.initGlobalEnterSubmit();
+});
