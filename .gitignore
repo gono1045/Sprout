@@ -47,3 +47,9 @@ package-lock.json
 .env.local
 .env.*.local
 dist/
+
+# Claude / Cowork【追加】
+github_helper.sh
+sprout_ui_pattern_c*.html
+CLAUDE.md
+.claude/
