@@ -182,15 +182,17 @@ $(function () {
     $(_this.tableId + ' thead th').css('text-align', 'center');
   });
 
-
   // ダークモード切替ロジック
   var $html = $('html');
 
   function _applyTheme(theme) {
       $html.attr('data-theme', theme);
-      $(_this.themeToggleId).text(theme === 'dark' ? '☀️' : '🌙');
+      var iconName = theme === 'dark' ? 'sun' : 'moon';
+      $(_this.themeToggleId).html('<i data-lucide="' +iconName + '"></i>');
+      lucide.createIcons();
   }
 
+  // 保存済みテーマの適用
   var savedTheme = localStorage.getItem('theme') || 'light';
   _applyTheme(savedTheme);
 

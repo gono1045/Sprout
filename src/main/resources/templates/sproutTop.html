@@ -13,6 +13,8 @@
     <link rel="stylesheet" th:href="@{/css/output.css}">
     <!-- favicon -->
     <link rel="icon" type="image/png" th:href="@{/img/favicon.ico}">
+    <!-- icon -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <!-- Day.js -->
@@ -30,107 +32,101 @@
     <script th:src="@{/js/itemUpdateModal.js}"></script>
     <script th:src="@{/js/sproutTop.js}"></script>
   </head>
-<body class="font-body min-h-screen px-8 py-6"
+<body class="font-body min-h-screen"
       style="background-color: var(--paper); color: var(--text-primary);">
 <div id="sproutTopRoot">
-    <!-- ダークモード切替ボタン -->
-    <button id="themeToggle" type="button"
-        class="px-2 py-1 rounded-md hover:bg-gray-100 transition-colors"
-        aria-label="テーマ切替">🌙
-    </button>
-    <!-- 右上ユーザーメニュー -->
-    <div class="flex justify-end relative">
-      <div class="relative">
-        <!-- ユーザーボタン -->
-        <button id="userMenuButton"
-          class="flex items-center gap-2 px-4 py-2 bg-white/80 dark:bg-gray-700
-                 rounded-full shadow hover:bg-white">
-          <span th:text="${loginId}">user</span>
-          <span class="text-lg">⋯</span>
-        </button>
-        <!-- ドロップダウン -->
-        <div id="userMenuDropdown"
-             class="hidden absolute right-0 mt-2 w-40 bg-white dark:bg-gray-700
-                    rounded-lg shadow-lg border dark:border-gray-600">
-          <form th:action="@{/logout}" method="post">
-            <button type="submit"
-              class="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600">
-              ログアウト
+    <!-- ヘッダー -->
+    <header class="header sticky top-0 z-50  h-20 border-b bg-[var(--paper)]">
+        <div class="header-inner h-full max-w-12xl mx-auto px-8 flex items-center justify-between">
+            <a class="logo text-4xl font-bold" href="/">Sprout</a>
+            <nav class="header-nav items-center gap-3 flex">
+                <!-- ダークモード切替ボタン -->
+                <button class="btn-icon p-1 cursor-pointer" id="themeToggle" type="button" aria-label="テーマ切替"></button>
+                <div class="avatar-wrap relative">
+                    <!-- ユーザーボタン -->
+                    <button id="userMenuButton" class="avatar w-9 h-9 rounded-full bg-green-700 text-white font-bold 
+                        flex items-center justify-center cursor-pointer"
+                        th:text="${#strings.substring(loginId, 0, 1)}">U</button>
+                     <!-- ドロップダウン -->
+                     <div id="userMenuDropdown" class="header-dropdown hidden absolute right-0 top-11 min-w-[140px]
+                        rounded-lg shadow-lg py-2 bg-white">
+                        <span class="dropdown-username block px-4 py-2 text-xs text-gray-500" th:text="${loginId}">user</span>
+                        <form th:action="@{/logout}" method="post">
+                          <button type="submit" class="dropdown-item block w-full text-left px-4 py-2 hover:bg-gray-100">ログアウト</button>
+                        </form>
+                     </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+    <main class="px-8 py-6">
+        <!-- メイン画面 -->
+        <div class="flex items-center justify-between mb-2">
+          <form method="get" action="/" class="flex w-full">
+            <!-- 新規登録ボタン-->
+            <button id="createTaskModalButton" type="button"
+              class="mr-2 px-3 py-1.5 bg-blue-500 text-white rounded hover:bg-blue-600">
+              新規
             </button>
-          </form>
-       </div>
-      </div>
-    </div>
-    <!-- タイトル -->
-    <h1 class="mx-auto w-70">
-      <img th:src="@{/img/title.png}" alt="Sprout" class="w-full h-auto">
-    </h1>
-    <!-- メイン画面 -->
-    <div class="flex items-center justify-between mb-2">
-      <form method="get" action="/" class="flex w-full">
-        <!-- 新規登録ボタン-->
-        <button id="createTaskModalButton" type="button"
-          class="mr-2 px-3 py-1.5 bg-blue-500 text-white rounded hover:bg-blue-600">
-          新規
-        </button>
-        <!-- 完了済み表示切替ボタン -->
-        <button
-          id="toggleCompletedBtn"
-          type="button"
-          class="px-3 py-1.5 bg-blue-600 text-white rounded
-                 hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400
-                 dark:bg-blue-500 dark:hover:bg-blue-300">
-          完了済みを表示
-        </button>
-          <!-- 検索フォーム -->
-          <div class="flex ml-auto">
-            <input
-              id="taskSearchInput"
-              type="text"
-              placeholder="内容で検索"
-              autocomplete="off"
-              class="w-64 px-3 py-1.5 border border-r-0
-                     rounded-l-md rounded-r-none
-                     focus:outline-none focus:ring-2 focus:ring-blue-400
-                     dark:bg-gray-800 dark:border-gray-600" />
+            <!-- 完了済み表示切替ボタン -->
             <button
-              id="taskSearchBtn"
+              id="toggleCompletedBtn"
               type="button"
-              class="px-3 py-1.5 bg-blue-600 border border-blue-600 text-white rounded-r-md rounded-l-none hover:bg-blue-400">
-              検索
+              class="px-3 py-1.5 bg-blue-600 text-white rounded
+                     hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400
+                     dark:bg-blue-500 dark:hover:bg-blue-300">
+              完了済みを表示
             </button>
+              <!-- 検索フォーム -->
+              <div class="flex ml-auto">
+                <input
+                  id="taskSearchInput"
+                  type="text"
+                  placeholder="内容で検索"
+                  autocomplete="off"
+                  class="w-64 px-3 py-1.5 border border-r-0
+                         rounded-l-md rounded-r-none
+                         focus:outline-none focus:ring-2 focus:ring-blue-400
+                         dark:bg-gray-800 dark:border-gray-600" />
+                <button
+                  id="taskSearchBtn"
+                  type="button"
+                  class="px-3 py-1.5 bg-blue-600 border border-blue-600 text-white rounded-r-md rounded-l-none hover:bg-blue-400">
+                  検索
+                </button>
+              </div>
+          </form>
+        </div>
+        <!-- 予定一覧テーブル -->
+        <div>
+          <div class="overflow-x-auto overflow-y-auto min-h-[20rem]">
+            <table id="sproutTable" class="table-fixed  border-collapse text-center min-w-full border border-blue-300
+            bg-white shadow rounded-lg dark:bg-gray-800"></table>
           </div>
-      </form>
-    </div>
-    <!-- 予定一覧テーブル -->
-    <div>
-      <div class="overflow-x-auto overflow-y-auto min-h-[20rem]">
-        <table id="sproutTable" class="table-fixed  border-collapse text-center min-w-full border border-blue-300
-        bg-white shadow rounded-lg dark:bg-gray-800"></table>
-      </div>
-    </div>
-    <!-- 植物育成エリア -->
-    <div id="sproutArea" class="relative min-h-[26rem] w-full flex items-center">
-      <!-- 左ボタン -->
-      <button
-        id="sproutPrev"
-        class="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-700 rounded-full p-2 shadow hover:bg-white">
-        ＜
-      </button>
-      <!-- 画像コンテナ -->
-      <div class="overflow-hidden mx-auto"
-           style="width: calc((16rem + 0.75rem) * 5 - 0.75rem);">
-        <ul id="sproutList"
-            class="flex transition-transform duration-300">
-        </ul>
-      </div>
-      <!-- 右ボタン -->
-      <button
-        id="sproutNext"
-        class="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-700 rounded-full p-2 shadow hover:bg-white">
-        ＞
-      </button>
-    </div>
+        </div>
+        <!-- 植物育成エリア -->
+        <div id="sproutArea" class="relative min-h-[26rem] w-full flex items-center">
+          <!-- 左ボタン -->
+          <button
+            id="sproutPrev"
+            class="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-700 rounded-full p-2 shadow hover:bg-white">
+            ＜
+          </button>
+          <!-- 画像コンテナ -->
+          <div class="overflow-hidden mx-auto"
+               style="width: calc((16rem + 0.75rem) * 5 - 0.75rem);">
+            <ul id="sproutList"
+                class="flex transition-transform duration-300">
+            </ul>
+          </div>
+          <!-- 右ボタン -->
+          <button
+            id="sproutNext"
+            class="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-700 rounded-full p-2 shadow hover:bg-white">
+            ＞
+          </button>
+        </div>
+    </main>
 </div>
 </body>
 </html>
