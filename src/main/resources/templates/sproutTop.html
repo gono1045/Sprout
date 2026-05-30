@@ -30,9 +30,14 @@
     <script th:src="@{/js/itemUpdateModal.js}"></script>
     <script th:src="@{/js/sproutTop.js}"></script>
   </head>
-<body class="font-body min-h-screen px-8 py-6 dark:bg-gray-900 dark:text-blue-300"
-      th:style="|background-image: url('@{/img/top_bg.png}'); background-size: cover; background-position: center; background-repeat: no-repeat;|">
+<body class="font-body min-h-screen px-8 py-6"
+      style="background-color: var(--paper); color: var(--text-primary);">
 <div id="sproutTopRoot">
+    <!-- ダークモード切替ボタン -->
+    <button id="themeToggle" type="button"
+        class="px-2 py-1 rounded-md hover:bg-gray-100 transition-colors"
+        aria-label="テーマ切替">🌙
+    </button>
     <!-- 右上ユーザーメニュー -->
     <div class="flex justify-end relative">
       <div class="relative">
@@ -53,7 +58,7 @@
               ログアウト
             </button>
           </form>
-        </div>
+       </div>
       </div>
     </div>
     <!-- タイトル -->

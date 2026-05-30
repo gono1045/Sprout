@@ -1,3 +1,18 @@
 @import "tailwindcss";
 
+:root {
+    --paper: #F4F1E9;
+    --forest: #1B4332;
+    --moss: #3E7A52;
+    --moss-2: #5BA178;
+    --text-primary: var(--forest);
+    --text-secondary: #4a7c60;
+    --border-subtle: rgba(27, 67, 50, 0.15);
+}
 
+/* ダークモード */
+[data-theme="dark"] {
+    --paper: #1a2e24;
+    --forest: #a7f3c8;
+    --moss: #6ee7a8;
+}
