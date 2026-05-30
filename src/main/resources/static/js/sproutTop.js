@@ -28,6 +28,7 @@ $(function () {
     _this.sproutDetailLeftId = sprout.util.getId(SCREEN_ID, 'sproutDetailLeft');
     _this.userMenuButtonId = sprout.util.getId(SCREEN_ID, 'userMenuButton');
     _this.userMenuDropdownId = sprout.util.getId(SCREEN_ID, 'userMenuDropdown');
+    _this.themeToggleId = sprout.util.getId(SCREEN_ID, 'themeToggle');
 
   // JSON定義読み込み
   $.getJSON('/json/sproutTop.json', function (json) {
