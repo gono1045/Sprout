@@ -4,7 +4,100 @@
 
 ---
 
-## CSS / TailwindCSS
+## バックエンド（Java / Spring Boot）
+
+### 全層共通
+
+| ルール | 詳細 |
+|---|---|
+| クラス名プレフィックス | 全クラスに `Sprout` を付ける（例: `SproutItemListController`） |
+| DI | `@Autowired` フィールドインジェクションを使用（コンストラクタインジェクションは未使用） |
+| Lombok | 未使用。getter/setter は手書き |
+| Javadoc | クラス・メソッド・フィールドに `/** 説明 **/` 形式で記載 |
+| パッケージ | `com.example.sprout.層名`（controller / service / dao / model / form / enums / security / validation） |
+
+### Controller 層
+
+| ルール | 詳細 |
+|---|---|
+| アノテーション | `@Controller` |
+| 画面返却 | `String` でビュー名を return |
+| JSON 返却 | `@ResponseBody` + Form / Model を return |
+| ログインユーザー取得 | `@AuthenticationPrincipal SproutUserDetails` を引数に宣言 |
+| パス変数 | `@PathVariable` |
+| リクエストパラメータ | `@RequestParam` |
+| JSONボディ | `@RequestBody` + DTO/Form |
+| エンドポイント命名 | リソース名複数形 + 動詞（例: `/task/new`, `/task/update`, `/tags/all`） |
+| ビジネスロジック | **Controller に書かない**。必ず Service 層に委譲 |
+
+### Service 層
+
+| ルール | 詳細 |
+|---|---|
+| 構成 | Interface + Impl 分離。`@Service` は Impl 側に付与 |
+| 認証情報 | `accessControlService.getLoginUserId()` / `getLoginId()` で取得 |
+| 共通フィールドセット | `userId`, `updateUser`, `updateAt` は Service 層でセット（Controller/DAO では行わない） |
+| 権限チェック | `accessControlService.checkItemOwner(id)` 等で所有権を検証 |
+
+### DAO 層（MyBatis）
+
+| ルール | 詳細 |
+|---|---|
+| アノテーション | `@Mapper`（interface のみ定義，実装は XML mapper） |
+| 複数パラメータ | `@Param("名前")` を必ず付ける（例: `@Param("userId") Long userId`） |
+| メソッド命名 | `selectAll` / `selectByXxx` / `insert` / `update` / `delete` のパターン |
+| XML 配置場所 | `src/main/resources/mappers/com/example/sprout/XXXDao.xml` |
+
+### Model クラス
+
+| ルール | 詳細 |
+|---|---|
+| 用途 | DBマッピング・層間データ渡し |
+| フィールド | `/** 説明 **/` コメント付きで宣言 |
+| getter/setter | 全フィールドに実装（Lombok 未使用） |
+| 日付型 | `LocalDate`（日付）/ `LocalDateTime`（日時刻） |
+
+### Form クラス
+
+| ルール | 詳細 |
+|---|---|
+| 継承 | **`SproutAbstractForm<M>` を必ず継承**する |
+| `newModel()` | 対応する Model のインスタンスを返す（抽象メソッドの実装） |
+| `setDetailListFrom(src)` | Model → Form に `BeanUtils.copyProperties` でコピー |
+| `createModel()` | Form → Model 変換。Controller から呼び出す |
+| 用途 | Controller ↔ View 間のデータバインド。Service へは Model に変換して渡す |
+
+### 例外ハンドリング
+
+| 例外 | 処理 |
+|---|---|
+| `AccessDeniedException` | `GlobalExceptionHandler` で捕捉、`error/403` ビューへ |
+| `IllegalStateException` | ログイン時の認証情報取得失敗。`/login` へリダイレクト |
+| `Exception`（汎用） | `GlobalExceptionHandler` で捕捉、`error/500` ビューへ |
+| 層内スロー | 権限エラーは `AccessDeniedException`、認証失敗は `IllegalStateException` をスロー |
+| エラービュー | `src/main/resources/templates/error/403.html` / `500.html` |
+
+### アクセス制御
+
+| ルール | 詳細 |
+|---|---|
+| 認可集約 | `AccessControlService` に権限チェックロジックを集約 |
+| 所有権検証 | `checkItemOwner(id)` / `checkTagOwner(id)` で他ユーザーデータへのアクセスを防止 |
+| ユーザー情報取得 | `SecurityContextHolder` から `SproutUserDetails` を経由して取得 |
+
+### Enum
+
+| ルール | 詳細 |
+|---|---|
+| パッケージ | `com.example.sprout.enums` |
+| ユーティリティメソッド | enum 内に定義可（例: `SproutTagColor.random()`） |
+| Tailwind連携 | カラー系 enum は `getTailwindClass()` でクラス文字列を返す |
+
+---
+
+## フロントエンド（TailwindCSS / jQuery / Thymeleaf）
+
+### CSS / TailwindCSS
 
 | ルール | 詳細 |
 |---|---|
@@ -15,9 +108,7 @@
 | ダークモード | `dark:` プレフィックス。`darkMode: 'class'` 設定済み |
 | カスタムフォント | `font-title`（Merienda）、`font-body`（system-ui）→ `tailwind.config.js` の `theme.extend` で定義済み |
 
----
-
-## JavaScript
+### JavaScript
 
 | ルール | 詳細 |
 |---|---|
@@ -30,9 +121,7 @@
 | モーダル | `sprout.util.openModal({ modalId, url, data, callBack })` でAJAX取得・動的生成 |
 | 外部ライブラリ | flatpickr（日付入力）、DataTables（テーブル）、Day.js（日付操作） |
 
----
-
-## HTML / Thymeleaf
+### HTML / Thymeleaf
 
 | ルール | 詳細 |
 |---|---|
@@ -41,9 +130,7 @@
 | モーダルHTML | Controller からフラグメントとして返却し、`sprout.util.openModal()` で描画 |
 | 閉じるボタン | `class="js-modal-close"` を付与（`sprout.util` が自動でイベント登録） |
 
----
-
-## ファイル構成規則
+### ファイル構成規則
 
 ```
 static/
