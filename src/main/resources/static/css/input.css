@@ -16,3 +16,99 @@
     --forest: #a7f3c8;
     --moss: #6ee7a8;
 }
+
+/* ===== テーマカラー テキスト ===== */
+.text-theme-primary   { color: var(--text-primary); }
+.text-theme-secondary { color: var(--text-secondary); }
+
+/* ロゴ */
+.sprout-logo-text {
+  color: #047857; /* emerald-700 — ライト */
+}
+.dark .sprout-logo-text {
+  color: #a7f3d0; /* ダーク */
+}
+
+/* コンテンツ主要テキスト：テーブルラベル・タスクタイトル・グローブ名（ライト/ダーク共通） */
+.text-sprout-content {
+  color: #a7f3c8;
+}
+
+/* タスクタイトルリンク（ライト/ダーク共通） */
+.sprout-link {
+  color: #a7f3c8;
+}
+.sprout-link:hover {
+  color: #6ee7b7;
+}
+
+/* Heroエリアのラベル（FEATURED タグ / マイガーデン） */
+.hero-label {
+  color: var(--text-secondary);
+  font-size: 0.625rem;   /* 10px */
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* タグフィルターチップ */
+.tag-chip {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.tag-chip:active {
+  transform: scale(0.95);
+}
+
+/* ===== カスタムグリッドテーブル ===== */
+.tbl-row {
+  display: grid;
+  grid-template-columns: 28px 1fr 220px 100px 80px 80px 90px 38px;
+  align-items: center;
+  min-height: 44px;
+}
+
+.tbl-cell {
+  padding: 6px 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* タグセルはwrap許可 */
+.tbl-cell:has(.sprout-tag-mount),
+.tbl-cell:has(.sprout-tag-view) {
+  white-space: normal;
+  overflow: visible;
+}
+
+.tbl-data-row:hover {
+  background-color: rgba(209, 250, 229, 0.3);
+}
+
+/* ステータスpillバッジ */
+.status-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+.status-pill--todo  { background: #e0e7ff; color: #3730a3; }
+.status-pill--doing { background: #d1fae5; color: #065f46; }
+.status-pill--done  { background: #f3f4f6; color: #6b7280; }
+
+/* 優先度カラードット */
+.priority-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+.priority-dot--high { background: #ef4444; }
+.priority-dot--mid  { background: #f59e0b; }
+.priority-dot--low  { background: #6b7280; }
+

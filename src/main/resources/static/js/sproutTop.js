@@ -19,6 +19,7 @@ $(function () {
     _this.itemId = sprout.util.getId(SCREEN_ID, 'id');
     _this.toggleCompletedBtnId = sprout.util.getId(SCREEN_ID, 'toggleCompletedBtn');
     _this.taskSearchBtnId = sprout.util.getId(SCREEN_ID, 'taskSearchBtn');
+    _this.tagFilterChipsId = sprout.util.getId(SCREEN_ID, 'tagFilterChips');
     _this.taskSearchInputId = sprout.util.getId(SCREEN_ID, 'taskSearchInput');
     _this.sproutListId = sprout.util.getId(SCREEN_ID, 'sproutList');
     _this.sproutPrevId = sprout.util.getId(SCREEN_ID, 'sproutPrev');
@@ -29,178 +30,225 @@ $(function () {
     _this.userMenuButtonId = sprout.util.getId(SCREEN_ID, 'userMenuButton');
     _this.userMenuDropdownId = sprout.util.getId(SCREEN_ID, 'userMenuDropdown');
     _this.themeToggleId = sprout.util.getId(SCREEN_ID, 'themeToggle');
+    _this.groveListId = sprout.util.getId(SCREEN_ID, 'sproutTopGroveList');
+    _this.featImgId = sprout.util.getId(SCREEN_ID, 'sproutTopFeatImg');
+    _this.featStageId = sprout.util.getId(SCREEN_ID, 'sproutTopFeatStage');
+    _this.featExpId = sprout.util.getId(SCREEN_ID, 'sproutTopFeatExp');
+    _this.featBarId = sprout.util.getId(SCREEN_ID, 'sproutTopFeatBar');
+    _this.featClearId = sprout.util.getId(SCREEN_ID, 'sproutTopFeatClear');
+    _this.arcRingId = sprout.util.getId(SCREEN_ID, 'sproutTopArcRing');
+    _this.featNameId = sprout.util.getId(SCREEN_ID, 'sproutTopFeatName');
 
-  // JSON定義読み込み
-  $.getJSON('/json/sproutTop.json', function (json) {
+    // カスタムテーブル用変数
+    var _allItems    = [];
+    var _activeTagId = null;
 
-    // columns 定義生成
-    const columns = json.columns.map(col => {
+    // データロード（タグをアイテムごとにプリフェッチして item._tagIds にセット）
+    function loadItems() {
+      $.getJSON('/task/list', function (data) {
+        _allItems = data || [];
+        var requests = _allItems.map(function(item) {
+          return $.getJSON('/items/' + item.id + '/tags').then(function(tags) {
+            item._tagIds = (tags || []).map(function(t) { return String(t.tagId); });
+          });
+        });
+        $.when.apply($, requests).always(function() {
+          renderTable(getFilteredItems());
+        });
+      });
+    }
 
-      // tags 列だけは空文字にする
-      let renderFunc;
+    // 現在のフィルター状態（完了済み + タグ）を適用したアイテム一覧を返す
+    function getFilteredItems() {
+      var items = _allItems;
+      if (!showCompleted) {
+        items = items.filter(function(item) { return item.statusCd !== 3; });
+      }
+      if (_selectedTagIds.size > 0) {
+        items = items.filter(function(item) {
+          return item._tagIds && item._tagIds.some(function(id) {
+            return _selectedTagIds.has(id);
+          });
+        });
+      }
+      return items;
+    }
 
-      if (col.data === 'tags') {
-        renderFunc = function(data, type, row) {
-          return `
-            <div
-              class="sprout-tag-mount absolute inset-0 w-full h-full"
-              data-item-id="${row.id}">
-            </div>
-          `;
-        };
-      } else if (col.data === 'operation') {
-        renderFunc = function(data, type, row) {
-          return `
-            <div class="flex flex-col justify-center gap-1">
-              <button
-                type="button"
-                class="sprout-row-duplicate px-2 py-1 rounded bg-green-600 text-white text-ms hover:bg-green-700"
-                data-item-id="${row.id}">
-                複製
-              </button>
-              <button
-                type="button"
-                class="sprout-row-delete px-2 py-1 rounded bg-red-600 text-white text-ms hover:bg-red-700"
-                data-item-id="${row.id}">
-                削除
-              </button>
-            </div>
-          `;
-          };
-      } else {
-        renderFunc = SproutDataTables.getRender(col.inputType);
+    // テーブルレンダリング
+    function renderTable(items) {
+      var $body = $(sprout.util.getId(SCREEN_ID, 'sproutTableBody'));
+      $body.empty();
+
+      if (!items || items.length === 0) {
+        $body.append(
+          '<div class="text-center py-8 text-gray-400 text-sm">タスクがありません</div>'
+        );
+        return;
       }
 
-      return {
-        data: col.data,
-        title: col.label,
-        className: col.data === 'tags'
-          ? 'relative min-h-[40px] border border-blue-300'
-          : (col.class ? col.class + ' border border-blue-300' : 'border border-blue-300'),
-        render: renderFunc
-      };
-    });
+      $.each(items, function (i, item) {
+        var deadline = item.deadline ? dayjs(item.deadline).format('MM/DD') : '-';
 
-    const columnDefs = [
+        var $row = $('<div></div>')
+          .addClass('tbl-row tbl-data-row border-b border-gray-100 dark:border-gray-700')
+          .attr('data-item-id', item.id);
 
-      {
-        targets: 0,
-        width: '200px',
-        orderable: true
-      }, // タイトル
+        $row.html(
+          '<div class="tbl-cell"></div>' +
+          '<div class="tbl-cell">' +
+            '<a href="javascript:void(0)" class="sprout-link hover:text-green-700" data-row-id="' + item.id + '">' +
+              escapeHtml(item.title) +
+            '</a>' +
+          '</div>' +
+          '<div class="tbl-cell">' +
+            '<div class="sprout-tag-mount" data-item-id="' + item.id + '"></div>' +
+          '</div>' +
+          '<div class="tbl-cell">' + renderStatusPill(item.statusCd, item.statusName) + '</div>' +
+          '<div class="tbl-cell text-xs text-gray-500">' + deadline + '</div>' +
+          '<div class="tbl-cell text-xs">' + renderPriorityDot(item.priorityCd) + (item.priorityName || '-') + '</div>' +
+          '<div class="tbl-cell text-xs text-gray-500">-</div>' +
+          '<div class="tbl-cell">' +
+            '<button class="btn-measure text-sm hover:text-green-600" data-item-id="' + item.id + '">⏱</button>' +
+          '</div>'
+        );
 
-      {
-        targets: 1,
-        width: '150px'
-      }, // タグ
+        $body.append($row);
+      });
 
-      {
-        targets: 2,
-        width: '100px',
-        orderable: true
-      }, // ステータス
+      $body.find('.sprout-tag-mount').each(function() {
+        var $el = $(this);
+        if ($el.data('mounted')) return;
+        sprout.tags.mount({ el: this, itemId: $el.data('item-id') });
+        $el.data('mounted', true);
+      });
+    }
 
-      {
-        targets: 3,
-        width: '100px',
-        orderable: true
-      }, // 優先度
+    function renderStatusPill(statusCd, statusName) {
+      var cls = 'status-pill';
+      if      (statusCd === 1) cls += ' status-pill--todo';
+      else if (statusCd === 2) cls += ' status-pill--doing';
+      else if (statusCd === 3) cls += ' status-pill--done';
+      return '<span class="' + cls + '">' + escapeHtml(statusName || '-') + '</span>';
+    }
 
-      {
-        targets: 4,
-        width: '150px',
-        orderable: true
-      }, // 作成日
+    function renderPriorityDot(priorityCd) {
+      var cls = 'priority-dot';
+      if      (priorityCd === 1) cls += ' priority-dot--high';
+      else if (priorityCd === 2) cls += ' priority-dot--mid';
+      else                       cls += ' priority-dot--low';
+      return '<span class="' + cls + '"></span>';
+    }
 
-      {
-        targets: 5,
-        width: '150px',
-        orderable: true
-      }, // 締切
-
-      {
-        targets: 6,
-        width: '250px',
-        className: 'text-left'
-      }, // 詳細
-
-      {
-        targets: 7,
-        width: '50px',
-        orderable: false
-      }, // 計測
-
-      {
-        targets: 8,
-        width: '50px',
-        orderable: false
-      }, // 操作
-      {
-        targets: 9,
-        visible: false
-      }, // ステータスコード
-
-      {
-        targets: 10,
-        visible: false
-      } // 優先度コード
-    ];
-
-    // 完了済みタスクフィルタ
-    DataTable.ext.search.push(function(settings, data) {
-        const statusCd = Number(data[9]);
-
-        // 完了済みを非表示
-        if (!showCompleted && statusCd == 3) {
-            return false;
-        }
-        return true;
-    });
-
-    // DataTable 初期化
-    window.sproutTopTable = $(_this.tableId).DataTable({
-      ajax: {
-        url: '/task/list',
-        dataSrc: ''
-      },
-      columns: columns,
-      columnDefs: columnDefs,
-      paging: true,
-      pageLength: 5,
-      searching: true,
-      dom: 'tp',
-      info: false,
-      autoWidth: false,
-      lengthChange: false,
-      ordering: false,
-      drawCallback: function () {
-        mountTagsInTable();
-      }
-    });
-
-    // ヘッダ行のみ中央揃え
-    $(_this.tableId + ' thead th').css('text-align', 'center');
-  });
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
 
   // ダークモード切替ロジック
   var $html = $('html');
 
   function _applyTheme(theme) {
+      $html.toggleClass('dark', theme === 'dark');
       $html.attr('data-theme', theme);
       var iconName = theme === 'dark' ? 'sun' : 'moon';
-      $(_this.themeToggleId).html('<i data-lucide="' +iconName + '"></i>');
-      lucide.createIcons();
+      $(_this.themeToggleId).html('<i data-lucide="' + iconName + '"></i>');
+      if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+      }
   }
 
   // 保存済みテーマの適用
-  var savedTheme = localStorage.getItem('theme') || 'light';
+  var savedTheme = localStorage.getItem('sprout-theme') || 'light';
   _applyTheme(savedTheme);
 
   $(_this.themeToggleId).off('click.toggleTheme').on('click.toggleTheme', function() {
-      var currentTheme = $html.attr('data-theme');
-      var newTheme = currentTheme === 'light' ? 'dark' : 'light';
-      _applyTheme(newTheme);
-      localStorage.setItem('sprout-theme', newTheme);
+    var newTheme = $html.hasClass('dark') ? 'light' : 'dark';
+    _applyTheme(newTheme);
+    localStorage.setItem('sprout-theme', newTheme);
+  });
+
+  // Groveエリア初期化
+  function initGrove(tagList) {
+    var $list = $(_this.groveListId);
+    $list.empty();
+    
+    $.each(tagList, function(i, tag) {
+      // Lv.内のExp進捗(%) ExpやLvが0のときは0%表示
+      var expPct = (tag.exp && tag.lv) ? Math.min(100, ((tag.exp % 100) / 100) * 100) : 0;
+      var $card = $('<li></li>').addClass('grove-card flex-none bg-white/80 dark:bg-gray-800/80 ' +
+        'rounded-xl p-2.5 shadow cursor-pointer hover:shadow-md transition border border-transparent ' +
+        'hover:border-gray-200 dark:hover:border-gray-600')
+        .css({'width': '126px', 'scroll-snap-align': 'start'})
+        .attr('data-tag-id', tag.tagId);
+
+      $card.html(
+        '<div class="flex items-end justify-center mb-2" style="height:74px;">' +
+          '<img src="/img/plant_lv' + (tag.lv || 1) + '.png" ' +
+               'onerror="this.src=\'/img/plant_default.png\'" ' +
+               'style="width:68px;height:68px;" class="object-contain" />' +
+        '</div>' +
+        '<p class="text-center text-xs font-semibold truncate mb-0.5 text-sprout-content">' + escapeHtml(tag.tagName) + '</p>' +
+        '<p class="text-center text-xs text-sprout-content opacity-70">Lv.' + (tag.lv || 1) + ' / ' + escapeHtml(tag.stage || '種') + '</p>' +
+        '<div class="w-full h-0.5 bg-gray-200 dark:bg-gray-700 rounded-full mt-1.5 overflow-hidden">' +
+          '<div class="h-full bg-green-400 rounded-full" style="width:' + expPct + '%"></div>' +
+        '</div>'
+      );
+      
+      $list.append($card);
+    });
+
+    // GroveカードクリックでFeature反映＋タグフィルター
+    $list.off('click.grove').on('click.grove', '.grove-card', function() {
+      var tagId = $(this).data('tag-id');
+      var tag = tagList.find(function(t) { return t.tagId === tagId; });
+      if (!tag) return;
+
+      updateFeatured(tag);
+
+      if (typeof filterByTag === 'function') {
+        filterByTag(tagId);
+      }
+    });
+  }
+
+  // Featured更新
+  function updateFeatured(tag) {
+    var EXP_PER_LV = 100;
+    var exp = tag.exp || 0;
+    var lv = tag.lv || 1;
+    var expInLv = exp % EXP_PER_LV;
+    var expPct = (expInLv / EXP_PER_LV) * 100;
+    var circumference = 427.3; // 2π × r(68)
+
+    $(_this.featNameId).text(tag.tagName).css('color', '');
+    $(_this.featStageId).text(tag.stage || '種');
+    $(_this.featExpId).text(expInLv + ' / ' + EXP_PER_LV);
+    $(_this.featBarId).css('width', expPct + '%');
+    $(_this.featImgId).attr('src', '/img/plant_lv' + lv + '.png')
+      .off('error.feat').on('error.feat', function() {
+        $(this).attr('src', '/img/plant_default.png');
+      });
+
+    var offset = circumference - (expPct / 100) * circumference;
+    $(_this.arcRingId).css('stroke-dashoffset', offset);
+    $(_this.featClearId).removeClass('hidden');
+  }
+
+  // 選択解除
+  $(_this.featClearId).off('click.clearFeatured').on('click.clearFeatured', function() {
+    $(_this.featNameId).text('タグを選択してください').css('color', '');
+    $(_this.featStageId).text('---');
+    $(_this.featExpId).text('— / —');
+    $(_this.featBarId).css('width', '0%');
+    $(_this.arcRingId).css('stroke-dashoffset', 427.3);
+    $(this).addClass('hidden');
+    if (typeof clearTagFilter === 'function') {
+        clearTagFilter();
+    }
   });
 
   // ユーザーメニュー開閉
@@ -217,27 +265,65 @@ $(function () {
     });
   });
 
+  // タグフィルター状態
+  var _selectedTagIds = new Set();
+
+  // タグでフィルタリング
+  function filterByTag(tagId) {
+    _selectedTagIds.clear();
+    _selectedTagIds.add(String(tagId));
+    renderTable(getFilteredItems());
+  }
+
+  // フィルタークリア
+  function clearTagFilter() {
+    _selectedTagIds.clear();
+    renderTable(getFilteredItems());
+  }
+
   // 完了済み表示切り替え
   $(_this.toggleCompletedBtnId)
     .off('click.toggleCompleted')
     .on('click.toggleCompleted', function() {
         showCompleted = !showCompleted;
-
         $(this).text(showCompleted ? '完了済みを非表示' : '完了済みを表示');
-
-        if(window.sproutTopTable) {
-            window.sproutTopTable.draw();
-        }
+        renderTable(getFilteredItems());
     });
 
-  // 検索クリック
-  $(_this.taskSearchBtnId).on('click', function() {
-    const keyword = $(_this.taskSearchInputId).val();
+  // 検索
+  $(_this.taskSearchInputId)
+    .off('input.search')
+    .on('input.search', function () {
+      var keyword = $(this).val().toLowerCase().trim();
+      var base = getFilteredItems();
 
-    if (window.sproutTopTable) {
-        window.sproutTopTable.search(keyword).draw();
+      if (!keyword) {
+        renderTable(base);
+        return;
+      }
+
+      renderTable(base.filter(function (item) {
+        return item.title && item.title.toLowerCase().indexOf(keyword) !== -1;
+      }));
+    });
+
+  // ⌘K / Ctrl+K で検索フォーカス
+  $(document).off('keydown.cmdK').on('keydown.cmdK', function (e) {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      e.preventDefault();
+      $(_this.taskSearchInputId).focus().select();
     }
   });
+
+  // Escape で検索クリア
+  $(_this.taskSearchInputId)
+    .off('keydown.esc')
+    .on('keydown.esc', function (e) {
+      if (e.key === 'Escape') {
+        $(this).val('').trigger('input.search');
+        $(this).blur();
+      }
+    });
 
   var isComposing = false;
   // 検索inputでEnter
@@ -252,7 +338,6 @@ $(function () {
     if (e.key === 'Enter') {
         if (isComposing) return;
         e.preventDefault();
-        $(_this.taskSearchBtnId).click();
     }
   });
 
@@ -294,31 +379,9 @@ $(function () {
       });
     });
 
-  function mountTagsInTable() {
-    $(_this.tableId)
-      .find('.sprout-tag-mount')
-      .each(function () {
-
-        const $el = $(this);
-
-        // 再描画時の二重初期化防止
-        if ($el.data('mounted')) return;
-
-　       sprout.tags.mount({
-          el: this,
-          itemId: $el.data('item-id')
-        });
-
-        $el.data('mounted', true);
-      });
-  }
-
   $(document).on('sprout:tag-deleted', function (e, data) {
     console.log('タグ削除イベント受信', data);
-
-    if (window.sproutTopTable) {
-      window.sproutTopTable.ajax.reload(null, false);
-    }
+    loadItems();
   });
 
   // 複製・削除イベント
@@ -357,7 +420,7 @@ $(function () {
         message: '削除しました',
         type: 'success'
       });
-      window.sproutTopTable.ajax.reload(null, false);
+      loadItems();
     })
     .fail(function () {
       sprout.message.toast({
@@ -379,7 +442,7 @@ $(function () {
         message: '複製しました',
         type: 'success'
       });
-      window.sproutTopTable.ajax.reload(null, false);
+      loadItems();
     })
     .fail(function () {
       sprout.message.toast({
@@ -389,180 +452,9 @@ $(function () {
     });
   }
 
-  // sproutArea描画
-  function renderSproutList(sprouts) {
-    const list = $(_this.sproutListId);
-    list.empty();
-
-    if (!sprouts || sprouts.length === 0) {
-        sprout.message.inline({
-            target: list[0],
-            message: `
-              タグが登録されていません<br>
-              タスクにタグを設定すると植物の成長が始まります
-            `
-        });
-        return;
-    }
-
-    sprouts.forEach(sp => {
-      const expRate = Math.min(
-        Math.floor((sp.exp / sp.nextExp) * 100), 100);
-        const $li = $(`
-          <li class="w-64 flex-shrink-0 mr-3 sprout-card" data-tag-id="${sp.tagId}">
-            <div class="rounded-lg border-2 p-4 bg-white/80 dark:bg-gray-800"
-                 style="border-color: ${sp.tagColor};">
-              <img src="${sp.imageUrl}"
-                   class="w-full h-52 object-contain rounded-md mb-2" />
-              <div class="text-center space-y-1">
-                <div class="font-semibold">
-                  ${sp.tagName} Lv.${sp.level}
-                </div>
-                <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div class="h-full"
-                       style=" width: ${expRate}%;
-                               background-color: ${sp.tagColor};">
-                  </div>
-                </div>
-              </div>
-            </div>
-          </li>
-        `);
-        list.append($li);
-    });
-  }
-
-  // 植物エリア制御用定数
-  const VISIBLE_COUNT = 5;
-  let currentIndex = 0;
-  let itemWidth = 0;
-  let visible = 0;
-  let total = 0;
-
-  // 植物エリアのスライダーメソッド
-  function initSproutSlider() {
-    const $list = $(_this.sproutListId);
-    const $items = $list.children('li');
-
-    total = $items.length;
-    if (total === 0) return;
-
-    visible = Math.min(VISIBLE_COUNT, total);
-
-    const prependClones = $items.slice(-visible).clone();
-    const appendClones = $items.slice(0, visible).clone();
-
-    $list.prepend(prependClones);
-    $list.append(appendClones);
-
-    itemWidth = $items.outerWidth(true);
-    currentIndex = visible;
-
-    updateSproutPosition(true);
-  }
-
-  // 画像の位置制御
-  function updateSproutPosition(noAnimation) {
-    const $list = $(_this.sproutListId);
-    const translateX = -currentIndex * itemWidth;
-
-    if (noAnimation) {
-      $list.css('transition', 'none');
-    } else {
-      $list.css('transition', 'transform 0.3s ease');
-    }
-
-    $list.css('transform', `translateX(${translateX}px)`);
-  }
-
-  let isAdjusting = false;
-
-  // 次へ
-  $(_this.sproutNextId).on('click', function () {
-    if (isAdjusting) return;
-
-    currentIndex++;
-    updateSproutPosition();
-
-    if (currentIndex === total + visible) {
-      isAdjusting = true;
-      const $list = $(_this.sproutListId);
-
-      $list.one('transitionend', function () {
-        currentIndex = visible;
-        updateSproutPosition(true);
-        isAdjusting = false;
-      });
-    }
+  $.getJSON('/tags/all', function(data) {
+    var tagList = data.tagList || [];
+    initGrove(tagList);
   });
-
-  // 前へ
-  $(_this.sproutPrevId).on('click', function () {
-    if (isAdjusting) return;
-
-    currentIndex--;
-    updateSproutPosition();
-
-    if (currentIndex === 0) {
-      isAdjusting = true;
-      const $list = $(_this.sproutListId);
-
-      $list.one('transitionend', function () {
-        currentIndex = total;
-        updateSproutPosition(true);
-        isAdjusting = false;
-      });
-    }
-  });
-
-  const sproutPlants = [
-    {
-      tagId: 1,
-      tagName: 'Sprout',
-      tagColor: '#4ade80',   // green-400
-      level: 12,
-      exp: 320,
-      nextExp: 500,
-      imageUrl: '/img/stage01.PNG'
-    },
-    {
-      tagId: 2,
-      tagName: '音楽',
-      tagColor: '#60a5fa',   // blue-400
-      level: 5,
-      exp: 80,
-      nextExp: 200,
-      imageUrl: '/img/stage02.PNG'
-    },
-    {
-      tagId: 3,
-      tagName: '人間関係',
-      tagColor: '#f87171',   // red-400
-      level: 5,
-      exp: 80,
-      nextExp: 200,
-      imageUrl: '/img/stage03.PNG'
-    },
-    {
-      tagId: 2,
-      tagName: '生活',
-      tagColor: '#facc15',   // yellow-400
-      level: 5,
-      exp: 80,
-      nextExp: 200,
-      imageUrl: '/img/stage04.PNG'
-    },
-    {
-      tagId: 2,
-      tagName: '学習',
-      tagColor: '#c084fc',   // purple-400
-      level: 5,
-      exp: 80,
-      nextExp: 200,
-      imageUrl: '/img/stage05.PNG'
-    },
-  ];
-
-  renderSproutList(sproutPlants);
-  initSproutSlider();
+  loadItems();
 });
