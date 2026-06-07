@@ -107,11 +107,11 @@ sprout.tags = (function() {
       `;
     }).join("");
 
-    // 内部 div で上下中央に揃える
+    // 内部 div で上下中央に揃える（ヘッダーと左揃えを合わせる）
     state.el.html(`
-      <div class="sprout-tag-view flex items-center justify-center w-full h-full cursor-pointer">
-        <div class="flex items-center justify-center">
-          ${html || '<span class="tag-empty inline-block w-full h-full">&nbsp;</span>'}
+      <div class="sprout-tag-view flex items-center cursor-pointer">
+        <div class="flex items-center gap-1 flex-wrap">
+          ${html || '<span class="tag-empty">&nbsp;</span>'}
         </div>
       </div>
     `);
