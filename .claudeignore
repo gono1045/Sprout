@@ -1,0 +1,37 @@
+# ─── Sprout .claudeignore ───────────────────────────────────────
+# Claude Code がこのファイルに列挙したパスを読まなくなる。
+# 機密情報・環境固有設定・ビルド成果物を保護する。
+
+# ── 認証情報・環境設定（DBパスワード等を含む）
+src/main/resources/application-local.yml
+src/main/resources/application-prod.yml
+.env
+.env.*
+*.key
+*.pem
+*.keystore
+*.jks
+
+# ── ビルド成果物
+target/
+*.class
+*.jar
+*.war
+
+# ── フロントエンド依存
+node_modules/
+
+# ── IDE・OS メタデータ
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+
+# ── ログ（個人情報を含む可能性）
+logs/
+*.log
+
+# ── バックアップ・一時ファイル
+*.bak
+*.tmp
+*.dump
