@@ -48,6 +48,6 @@ package-lock.json
 .env.*.local
 dist/
 
-# Claude関連【追加】
+# Claude / AI開発支援ツール関連
 CLAUDE.md
 /.claude/*
