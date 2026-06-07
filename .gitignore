@@ -50,4 +50,4 @@ dist/
 
 # Claude / AI開発支援ツール関連
 CLAUDE.md
-.claude/
+/.claude/*
