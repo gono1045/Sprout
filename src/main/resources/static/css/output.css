@@ -90,6 +90,9 @@
     --radius-xl: 0.75rem;
     --radius-2xl: 1rem;
     --radius-3xl: 1.5rem;
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --ease-out: cubic-bezier(0, 0, 0.2, 1);
+    --animate-bounce: bounce 1s infinite;
     --blur-sm: 8px;
     --default-transition-duration: 150ms;
     --default-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
@@ -437,6 +440,12 @@
   }
   .h-screen {
     height: 100vh;
+  }
+  .max-h-40 {
+    max-height: calc(var(--spacing) * 40);
+  }
+  .max-h-full {
+    max-height: 100%;
   }
   .min-h-\[20rem\] {
     min-height: 20rem;
@@ -886,12 +895,16 @@
   .py-6 {
     padding-block: calc(var(--spacing) * 6);
   }
+  .pr-1 {
+    padding-right: calc(var(--spacing) * 1);
   .py-8 {
     padding-block: calc(var(--spacing) * 8);
   }
   .pr-2 {
     padding-right: calc(var(--spacing) * 2);
   }
+  .pr-3 {
+    padding-right: calc(var(--spacing) * 3);
   .pr-4 {
     padding-right: calc(var(--spacing) * 4);
   }
