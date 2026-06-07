@@ -1,159 +1,546 @@
 <!-- modal.html -->
+<style>
+/* =============================================
+   MODAL DESIGN SYSTEM TOKENS
+   ============================================= */
+.modal-root {
+  --font-ui:      'Inter', system-ui, sans-serif;
+  --paper:        #F4F1E9;
+  --card:         #FFFFFF;
+  --card-2:       #FAF7EF;
+  --line:         #E6DFCD;
+  --line-soft:    #EFE9D7;
+  --mist:         #DCEAD6;
+  --mist-soft:    #F0F5EB;
+  --ink:          #1B2A20;
+  --ink-2:        #4A5E4A;
+  --ink-3:        #8E9A8E;
+  --forest:       #1B4332;
+  --moss:         #3E7A52;
+  --moss-2:       #5BA178;
+  --amber-fg:     #9A6610;
+  --ember:        #C85A28;
+  --shadow-modal: 0 8px 40px rgba(20,40,25,.18), 0 2px 8px rgba(20,40,25,.10);
+}
+
+@media (prefers-color-scheme: dark) {
+  .modal-root {
+    --paper:     #1A1F1C;
+    --card:      #232B25;
+    --card-2:    #1E2620;
+    --line:      #2E3B30;
+    --line-soft: #263029;
+    --mist:      #1D3228;
+    --mist-soft: #1F2E22;
+    --ink:       #E8EDE9;
+    --ink-2:     #A8BCA9;
+    --ink-3:     #5E7160;
+    --forest:    #3E9E68;
+    --moss:      #5BA178;
+    --moss-2:    #7DC09A;
+    --amber-fg:  #D4A040;
+    --ember:     #E87A50;
+    --shadow-modal: 0 8px 40px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.30);
+  }
+}
+
+/* =============================================
+   MODAL CARD
+   ============================================= */
+.modal-root {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: var(--shadow-modal);
+  max-width: 680px;
+  width: 100%;
+  overflow: hidden;
+  font-family: var(--font-ui);
+  color: var(--ink);
+}
+
+/* =============================================
+   MODAL HEADER
+   ============================================= */
+.modal-root .m-hdr {
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  height: 60px;
+  border-bottom: 1px solid var(--line);
+  gap: 12px;
+}
+
+.modal-root .m-mode-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  border: 1px solid var(--line);
+}
+.modal-root .m-mode-badge.mode-new  { background: var(--mist-soft); color: var(--moss-2); border-color: var(--mist); }
+.modal-root .m-mode-badge.mode-edit { background: #FFF8E6; color: var(--amber-fg); border-color: #F5E3B0; }
+@media (prefers-color-scheme: dark) {
+  .modal-root .m-mode-badge.mode-edit { background: #2A2310; border-color: #4A3A10; }
+}
+
+.modal-root .m-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: .01em;
+}
+
+.modal-root .m-close {
+  margin-left: auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-3);
+  cursor: pointer;
+  transition: background .12s, color .12s;
+}
+.modal-root .m-close:hover { background: var(--mist-soft); color: var(--ink); }
+
+/* =============================================
+   MODAL BODY
+   ============================================= */
+.modal-root .m-body {
+  padding: 24px 28px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.modal-root .field-row {
+  display: grid;
+  gap: 16px;
+}
+.modal-root .field-row.cols-2 { grid-template-columns: 1fr 1fr; }
+.modal-root .field-row.cols-1 { grid-template-columns: 1fr; }
+
+.modal-root .field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.modal-root .field-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.modal-root .field-label .required { color: var(--ember); font-size: 10px; font-weight: 700; }
+.modal-root .field-label .hint     { font-size: 11px; font-weight: 400; color: var(--ink-3); text-transform: none; letter-spacing: 0; margin-left: auto; }
+
+.modal-root .field-input,
+.modal-root .field-select,
+.modal-root .field-textarea {
+  display: block;
+  width: 100%;
+  background: var(--card-2);
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  font-size: 14px;
+  color: var(--ink);
+  outline: none;
+  transition: border-color .15s, box-shadow .15s, background .12s;
+  -webkit-appearance: none;
+  font-family: var(--font-ui);
+}
+.modal-root .field-input   { height: 44px; padding: 0 14px; }
+.modal-root .field-select  { height: 44px; padding: 0 14px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238E9A8E' stroke-width='2.5' stroke-linecap='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
+.modal-root .field-textarea { padding: 12px 14px; min-height: 100px; resize: vertical; line-height: 1.65; }
+.modal-root .field-input::placeholder,
+.modal-root .field-textarea::placeholder { color: var(--ink-3); }
+.modal-root .field-input:focus,
+.modal-root .field-select:focus,
+.modal-root .field-textarea:focus {
+  border-color: var(--moss-2);
+  box-shadow: 0 0 0 3px rgba(91,161,120,.14);
+  background: var(--card);
+}
+.modal-root .field-input.readonly {
+  background: var(--line-soft);
+  color: var(--ink-3);
+  cursor: default;
+}
+.modal-root .field-input.readonly:focus { border-color: var(--line); box-shadow: none; }
+
+.modal-root .field-err {
+  font-size: 12px;
+  color: var(--ember);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* --- Date input wrapper --- */
+.modal-root .field-date-wrap { position: relative; }
+.modal-root .field-date-wrap .field-input { padding-right: 42px; }
+.modal-root .field-date-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--ink-3);
+  display: flex;
+  align-items: center;
+  transition: color .12s;
+  padding: 4px;
+}
+.modal-root .field-date-icon:hover { color: var(--moss-2); }
+
+/* --- Status chips --- */
+.modal-root .status-group {
+  display: flex;
+  gap: 8px;
+}
+.modal-root .status-chip {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 8px;
+  border-radius: 10px;
+  border: 1.5px solid var(--line);
+  background: var(--card-2);
+  cursor: pointer;
+  transition: all .15s;
+  position: relative;
+  user-select: none;
+}
+.modal-root .status-radio { position: absolute; opacity: 0; width: 0; height: 0; }
+.modal-root .status-chip-label { font-size: 12px; font-weight: 600; letter-spacing: .01em; }
+.modal-root .status-chip.st-pending  { color: var(--ink-3); }
+.modal-root .status-chip.st-progress { color: var(--moss-2); }
+.modal-root .status-chip.st-done     { color: var(--forest); }
+.modal-root .status-chip:has(.status-radio:checked).st-pending  { background: var(--line-soft); border-color: var(--ink-3); box-shadow: 0 0 0 2px rgba(142,154,142,.15); }
+.modal-root .status-chip:has(.status-radio:checked).st-progress { background: var(--mist-soft); border-color: var(--moss-2); box-shadow: 0 0 0 2px rgba(91,161,120,.14); }
+.modal-root .status-chip:has(.status-radio:checked).st-done     { background: var(--mist); border-color: var(--moss); box-shadow: 0 0 0 2px rgba(62,122,82,.14); }
+
+/* --- Priority chips --- */
+.modal-root .priority-group {
+  display: flex;
+  gap: 8px;
+}
+.modal-root .priority-chip {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 8px;
+  border-radius: 10px;
+  border: 1.5px solid var(--line);
+  background: var(--card-2);
+  cursor: pointer;
+  transition: all .15s;
+  font-size: 13px;
+  font-weight: 500;
+  position: relative;
+  user-select: none;
+}
+.modal-root .priority-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+.modal-root .priority-chip.pr-low  { color: var(--ink-3); }
+.modal-root .priority-chip.pr-mid  { color: var(--amber-fg); }
+.modal-root .priority-chip.pr-high { color: var(--ember); }
+.modal-root .priority-chip:has(.status-radio:checked).pr-low  { background: var(--line-soft); border-color: var(--ink-3); box-shadow: 0 0 0 2px rgba(142,154,142,.15); }
+.modal-root .priority-chip:has(.status-radio:checked).pr-mid  { background: #FFF8E6; border-color: #D4A040; box-shadow: 0 0 0 2px rgba(154,102,16,.12); }
+.modal-root .priority-chip:has(.status-radio:checked).pr-high { background: #FEF0E6; border-color: var(--ember); box-shadow: 0 0 0 2px rgba(200,90,40,.12); }
+@media (prefers-color-scheme: dark) {
+  .modal-root .priority-chip:has(.status-radio:checked).pr-mid  { background: #2A2310; border-color: #6A5020; }
+  .modal-root .priority-chip:has(.status-radio:checked).pr-high { background: #2A1E14; border-color: #8A4020; }
+}
+
+/* --- Tag area --- */
+.modal-root .tag-area {
+  min-height: 44px;
+  padding: 8px 12px;
+  background: var(--card-2);
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  cursor: text;
+  transition: border-color .15s, box-shadow .15s;
+  position: relative;
+}
+.modal-root .tag-area:focus-within {
+  border-color: var(--moss-2);
+  box-shadow: 0 0 0 3px rgba(91,161,120,.14);
+  background: var(--card);
+}
+
+/* =============================================
+   MODAL FOOTER
+   ============================================= */
+.modal-root .m-ftr {
+  padding: 20px 28px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+.modal-root .ftr-left  { display: flex; align-items: center; gap: 8px; }
+.modal-root .ftr-right { display: flex; align-items: center; gap: 10px; }
+
+.modal-root .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 18px;
+  height: 40px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  letter-spacing: .02em;
+  transition: opacity .15s, box-shadow .15s;
+  font-family: var(--font-ui);
+}
+.modal-root .btn-cancel {
+  background: var(--card-2);
+  border: 1.5px solid var(--line);
+  color: var(--ink-2);
+}
+.modal-root .btn-cancel:hover { background: var(--line-soft); }
+
+.modal-root .btn-delete {
+  background: #FEF2F2;
+  border: 1.5px solid #FECACA;
+  color: #B91C1C;
+}
+.modal-root .btn-delete:hover { background: #FEE2E2; border-color: #FCA5A5; }
+@media (prefers-color-scheme: dark) {
+  .modal-root .btn-delete { background: #2A1414; border-color: #5A2424; color: #F87171; }
+  .modal-root .btn-delete:hover { background: #341818; border-color: #7A3030; }
+}
+
+.modal-root .btn-submit {
+  background: linear-gradient(135deg, var(--forest), var(--moss));
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(27,67,50,.25);
+}
+.modal-root .btn-submit:hover { opacity: .9; box-shadow: 0 4px 16px rgba(27,67,50,.32); }
+</style>
+
 <!-- モーダル全体 -->
-  <div class="bg-white rounded shadow-lg max-w-4xl w-full dark:bg-gray-800">
-    <!-- モーダルヘッダー -->
-    <div class="flex justify-between items-center p-6">
-      <!-- 画面タイトル -->
-      <h2 class="text-2xl text-gray-800 dark:text-gray-100 leading-none" style="font-size: 1.5rem">
-        <span th:if="${sproutItemListForm.modalFlg == 0}">新規登録</span>
-        <span th:if="${sproutItemListForm.modalFlg == 1}">更新</span>
-      </h2>
-      <!-- 閉じるボタン -->
-      <button
-        id="closeModalBtn"
-        type="button"
-        class="js-modal-close text-3xl leading-none leading-none text-gray-500 hover:text-gray-800 dark:hover:text-gray-200">
-        ×
-      </button>
+<div class="modal-root">
+
+  <!-- モーダルヘッダー -->
+  <div class="m-hdr">
+    <!-- NEW バッジ（新規登録時） -->
+    <div th:if="${sproutItemListForm.modalFlg == 0}" class="m-mode-badge mode-new">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      NEW
     </div>
-    <hr class="border-gray-300 dark:border-gray-700" />
-    <div class="modal-body pb-6">
-      <!-- 予定追加フォーム -->
-      <form id="sproutItemListForm" th:action="@{/add}" th:object="${sproutItemListForm}" method="post"
-        class="space-y-4 bg-white p-10 rounded shadow dark:bg-gray-800">
-        <!-- 隠し項目 -->
-        <input type="hidden" th:field="*{modalFlg}">
-        <input type="hidden" th:field="*{updateAt}">
-        <input type="hidden" th:field="*{id}">
-        <!-- タイトル -->
-        <div class="flex items-center gap-2">
-          <label for="title" class="whitespace-nowrap text-right w-20 block flex items-center h-full font-medium">タイトル：</label>
-          <input type="text" th:field="*{title}" autocomplete="off" required
-          class="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-200" />
-          <div th:if="${#fields.hasErrors('title')}" th:errors="*{title}"
-            class="text-red-600 text-sm mt-1 dark:text-red-400"></div>
-        </div>
-        <!-- タグ -->
-        <div class="flex items-center gap-2">
-          <label class="whitespace-nowrap w-20 block text-sm font-medium">
-            タグ：
+    <!-- EDIT バッジ（更新時） -->
+    <div th:if="${sproutItemListForm.modalFlg == 1}" class="m-mode-badge mode-edit">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+      </svg>
+      EDIT
+    </div>
+    <!-- タイトル -->
+    <h2 class="m-title">
+      <span th:if="${sproutItemListForm.modalFlg == 0}">新規登録</span>
+      <span th:if="${sproutItemListForm.modalFlg == 1}">更新</span>
+    </h2>
+    <!-- 閉じるボタン -->
+    <button id="closeModalBtn" type="button" class="m-close js-modal-close" aria-label="閉じる">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- フォーム -->
+  <form id="sproutItemListForm" th:action="@{/add}" th:object="${sproutItemListForm}" method="post">
+    <input type="hidden" th:field="*{modalFlg}">
+    <input type="hidden" th:field="*{updateAt}">
+    <input type="hidden" th:field="*{id}">
+
+    <div class="m-body">
+
+      <!-- タイトル -->
+      <div class="field-row cols-1">
+        <div class="field">
+          <label class="field-label" for="title">
+            タイトル <span class="required">必須</span>
           </label>
-          <div
-            class="flex-1 min-h-[42px] max-w-[300px]
-                   border border-gray-300 rounded
-                   px-3 py-2
-                   focus-within:ring-2 focus-within:ring-blue-400
-                   dark:bg-gray-900 dark:border-gray-600 relative js-tag-container">
-            <div
-              class="sprout-tag-mount w-full h-full absolute inset-0"
-              th:attr="data-item-id=${sproutItemListForm.id}">
+          <input type="text" th:field="*{title}" id="title" autocomplete="off" required
+                 class="field-input" placeholder="タスクのタイトルを入力"/>
+          <div th:if="${#fields.hasErrors('title')}" th:errors="*{title}" class="field-err"></div>
+        </div>
+      </div>
+
+      <!-- タグ -->
+      <div class="field-row cols-1">
+        <div class="field">
+          <label class="field-label">
+            タグ <span class="hint">Enter で追加</span>
+          </label>
+          <div class="tag-area js-tag-container">
+            <div class="sprout-tag-mount w-full h-full"
+                 th:attr="data-item-id=${sproutItemListForm.id}">
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- ステータス・優先度 -->
+      <div class="field-row cols-2">
         <!-- ステータス -->
-        <div class="flex items-center gap-2">
-          <label class="whitespace-nowrap w-20 block text-sm font-medium">ステータス：</label>
-          <select th:field="*{statusCd}"
-            class="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-200">
-            <option value="1">未着手</option>
-            <option value="2">進行中</option>
-            <option value="3">完了</option>
-          </select>
-        </div>
-        <!-- 優先度 -->
-        <div class="flex items-center gap-2">
-          <label class="whitespace-nowrap w-20 block text-sm font-medium">優先度：</label>
-          <select th:field="*{priorityCd}"
-            class="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-200">
-            <option value="1">低</option>
-            <option value="2">中</option>
-            <option value="3">高</option>
-          </select>
-        </div>
-        <!-- 作成・更新日 -->
-        <div class="flex items-center gap-2">
-          <label for="updateAt" class="whitespace-nowrap text-right w-20 block flex items-center h-full font-medium">更新日：</label>
-          <div class="relative flex-1">
-            <input type="text" th:field="*{updateAtStr}"
-              class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400
-                dark:bg-gray-900 dark:border-gray-600 dark:text-gray-200" readonly/>
+        <div class="field">
+          <label class="field-label">ステータス</label>
+          <div class="status-group" role="radiogroup" aria-label="ステータス">
+            <label class="status-chip st-pending">
+              <input class="status-radio" type="radio" th:field="*{statusCd}" value="1"/>
+              <span class="status-chip-label">未着手</span>
+            </label>
+            <label class="status-chip st-progress">
+              <input class="status-radio" type="radio" th:field="*{statusCd}" value="2"/>
+              <span class="status-chip-label">進行中</span>
+            </label>
+            <label class="status-chip st-done">
+              <input class="status-radio" type="radio" th:field="*{statusCd}" value="3"/>
+              <span class="status-chip-label">完了</span>
+            </label>
           </div>
         </div>
-        <!-- 締切 -->
-        <div class="flex items-center gap-2">
-          <label for="deadline" class="whitespace-nowrap w-20 text-right block flex items-center h-full font-medium">締切：</label>
-          <div class="relative flex-1">
-            <input  type="text" th:field="*{deadline}"
-              class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-200" />
-            <!-- カレンダーアイコン -->
-            <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer hover:text-blue-600" id="deadlineIcon">
-              <!-- Heroicons -->
-              <svg xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                class="w-5 h-5">
-                <path stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M8 7V3m8 4V3m-9 8h10m-11 8h12a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        <!-- 優先度 -->
+        <div class="field">
+          <label class="field-label">優先度</label>
+          <div class="priority-group" role="radiogroup" aria-label="優先度">
+            <label class="priority-chip pr-low">
+              <input class="status-radio" type="radio" th:field="*{priorityCd}" value="1"/>
+              <span class="priority-dot"></span>低
+            </label>
+            <label class="priority-chip pr-mid">
+              <input class="status-radio" type="radio" th:field="*{priorityCd}" value="2"/>
+              <span class="priority-dot"></span>中
+            </label>
+            <label class="priority-chip pr-high">
+              <input class="status-radio" type="radio" th:field="*{priorityCd}" value="3"/>
+              <span class="priority-dot"></span>高
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- 締切・更新日 -->
+      <div class="field-row cols-2">
+        <div class="field">
+          <label class="field-label" for="deadline">
+            締切 <span class="hint">任意</span>
+          </label>
+          <div class="field-date-wrap">
+            <input type="text" th:field="*{deadline}" id="deadline"
+                   class="field-input" placeholder="YYYY/MM/DD"/>
+            <button type="button" class="field-date-icon" id="deadlineIcon" aria-label="カレンダーを開く">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="3"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
               </svg>
             </button>
           </div>
-          <div th:if="${#fields.hasErrors('deadline')}" th:errors="*{deadline}"
-            class="text-red-600 text-sm mt-1 dark:text-red-400"></div>
+          <div th:if="${#fields.hasErrors('deadline')}" th:errors="*{deadline}" class="field-err"></div>
         </div>
-        <!-- 詳細 -->
-        <div class="flex items-start gap-2">
-          <label for="detail" class="whitespace-nowrap text-right w-20 block flex items-start font-medium">詳細：</label>
-          <textarea th:field="*{detail}" autocomplete="off"
-            class="h-40 resize-y flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-200" ></textarea>
-          <div th:if="${#fields.hasErrors('detail')}" th:errors="*{detail}"
-            class="text-red-600 text-sm mt-1 dark:text-red-400"></div>
+        <div class="field">
+          <label class="field-label" for="updateAtStr">更新日</label>
+          <input type="text" th:field="*{updateAtStr}" id="updateAtStr"
+                 class="field-input readonly" readonly/>
         </div>
-      </form>
-    </div>
+      </div>
+
+      <!-- 詳細 -->
+      <div class="field-row cols-1">
+        <div class="field">
+          <label class="field-label" for="detail">
+            詳細 <span class="hint">任意</span>
+          </label>
+          <textarea th:field="*{detail}" id="detail" autocomplete="off"
+                    class="field-textarea" placeholder="作業メモ・参考リンクなど" rows="4"></textarea>
+          <div th:if="${#fields.hasErrors('detail')}" th:errors="*{detail}" class="field-err"></div>
+        </div>
+      </div>
+
+    </div><!-- /.m-body -->
+
     <!-- モーダルフッター -->
-    <hr class="border-gray-300 dark:border-gray-700" />
-    <div class="p-6 flex justify-between">
-      <!-- キャンセル -->
-      <button type="button" id="cancelBtn"
-        class="js-modal-close bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400">
-        キャンセル
-      </button>
-      <!-- フッター右側ボタングループ -->
-      <div class="flex">
+    <div class="m-ftr">
+      <div class="ftr-left">
+        <!-- キャンセル -->
+        <button type="button" id="cancelBtn" class="btn btn-cancel js-modal-close">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+          キャンセル
+        </button>
+      </div>
+      <div class="ftr-right">
         <!-- 削除（更新時のみ） -->
-        <button
-          th:if="${sproutItemListForm.modalFlg == 1}"
-          type="button"
-          id="deleteBtn"
-          class="bg-red-600 text-white px-4 py-2 rounded
-                 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400">
+        <button th:if="${sproutItemListForm.modalFlg == 1}"
+                type="button" id="deleteBtn" class="btn btn-delete">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6l-1 14H6L5 6"/>
+            <path d="M10 11v6"/><path d="M14 11v6"/>
+            <path d="M9 6V4h6v2"/>
+          </svg>
           削除
         </button>
-        <!-- スペーサー -->
-        <span
-          th:if="${sproutItemListForm.modalFlg == 1}"
-          style="width: 16px; display: inline-block;">
-        </span>
-        <!-- 追加 -->
-        <button
-          th:if="${sproutItemListForm.modalFlg == 0}"
-          type="submit"
-          id="submitBtn"
-          class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400">
-          追加
+        <!-- 追加（新規登録時） -->
+        <button th:if="${sproutItemListForm.modalFlg == 0}"
+                type="submit" id="submitBtn" class="btn btn-submit">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          登録
         </button>
-        <!-- 更新 -->
-        <button
-          th:if="${sproutItemListForm.modalFlg == 1}"
-          type="submit"
-          id="submitBtn"
-          class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400">
+        <!-- 更新（更新時） -->
+        <button th:if="${sproutItemListForm.modalFlg == 1}"
+                type="submit" id="submitBtn" class="btn btn-submit">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v14a2 2 0 0 1-2 2z"/>
+            <polyline points="17 21 17 13 7 13 7 21"/>
+            <polyline points="7 3 7 8 15 8"/>
+          </svg>
           更新
         </button>
       </div>
     </div>
-  </div>
+  </form>
+
+</div>
 <!-- モーダルここまで -->
