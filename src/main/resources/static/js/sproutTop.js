@@ -93,6 +93,11 @@ $(function () {
           .addClass('tbl-row tbl-data-row border-b border-gray-100 dark:border-gray-700')
           .attr('data-item-id', item.id);
 
+        var detailText = item.detail ? escapeHtml(item.detail) : '';
+        var detailDisplay = item.detail && item.detail.length > 40
+          ? escapeHtml(item.detail.substring(0, 40)) + '…'
+          : (detailText || '-');
+
         $row.html(
           '<div class="tbl-cell"></div>' +
           '<div class="tbl-cell">' +
@@ -104,11 +109,14 @@ $(function () {
             '<div class="sprout-tag-mount" data-item-id="' + item.id + '"></div>' +
           '</div>' +
           '<div class="tbl-cell">' + renderStatusPill(item.statusCd, item.statusName) + '</div>' +
+          '<div class="tbl-cell">' + renderPriorityPill(item.priorityCd, item.priorityName) + '</div>' +
           '<div class="tbl-cell text-xs text-gray-500">' + deadline + '</div>' +
-          '<div class="tbl-cell text-xs">' + renderPriorityDot(item.priorityCd) + (item.priorityName || '-') + '</div>' +
+          '<div class="tbl-cell text-xs sprout-link" title="' + detailText + '">' + detailDisplay + '</div>' +
           '<div class="tbl-cell text-xs text-gray-500">-</div>' +
           '<div class="tbl-cell">' +
-            '<button class="btn-measure text-sm hover:text-green-600" data-item-id="' + item.id + '">⏱</button>' +
+            '<button class="btn-measure flex items-center justify-center w-7 h-7 rounded hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-400 hover:text-green-600 transition" data-item-id="' + item.id + '" aria-label="工数計測">' +
+              '<i data-lucide="timer" style="width:15px;height:15px;"></i>' +
+            '</button>' +
           '</div>'
         );
 
@@ -121,6 +129,11 @@ $(function () {
         sprout.tags.mount({ el: this, itemId: $el.data('item-id') });
         $el.data('mounted', true);
       });
+
+      // lucide アイコン初期化（動的生成後に必要）
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons({ nodes: $body[0] ? [$body[0]] : [] });
+      }
     }
 
     function renderStatusPill(statusCd, statusName) {
@@ -131,12 +144,12 @@ $(function () {
       return '<span class="' + cls + '">' + escapeHtml(statusName || '-') + '</span>';
     }
 
-    function renderPriorityDot(priorityCd) {
-      var cls = 'priority-dot';
-      if      (priorityCd === 1) cls += ' priority-dot--high';
-      else if (priorityCd === 2) cls += ' priority-dot--mid';
-      else                       cls += ' priority-dot--low';
-      return '<span class="' + cls + '"></span>';
+    function renderPriorityPill(priorityCd, priorityName) {
+      var cls = 'priority-pill';
+      if      (priorityCd === 3) cls += ' priority-pill--high';
+      else if (priorityCd === 2) cls += ' priority-pill--mid';
+      else                       cls += ' priority-pill--low';
+      return '<span class="' + cls + '">' + escapeHtml(priorityName || '-') + '</span>';
     }
 
     function escapeHtml(str) {
@@ -381,6 +394,10 @@ $(function () {
 
   $(document).on('sprout:tag-deleted', function (e, data) {
     console.log('タグ削除イベント受信', data);
+    loadItems();
+  });
+
+  $(document).on('sprout:task-updated', function () {
     loadItems();
   });
 

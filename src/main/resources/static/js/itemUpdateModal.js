@@ -69,10 +69,7 @@ var itemUpdateModal = (function () {
 
     function closeModalCallBack() {
         $modalEl.remove();
-
-        if (window.sproutTopTable) {
-          window.sproutTopTable.ajax.reload(null, false);
-        }
+        $(document).trigger('sprout:task-updated');
     };
 
     // 削除ボタンクリック
