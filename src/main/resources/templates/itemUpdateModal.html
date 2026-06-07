@@ -23,8 +23,7 @@
   --shadow-modal: 0 8px 40px rgba(20,40,25,.18), 0 2px 8px rgba(20,40,25,.10);
 }
 
-@media (prefers-color-scheme: dark) {
-  .modal-root {
+html.dark .modal-root {
     --paper:     #1A1F1C;
     --card:      #232B25;
     --card-2:    #1E2620;
@@ -41,7 +40,6 @@
     --amber-fg:  #D4A040;
     --ember:     #E87A50;
     --shadow-modal: 0 8px 40px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.30);
-  }
 }
 
 /* =============================================
@@ -85,9 +83,7 @@
 }
 .modal-root .m-mode-badge.mode-new  { background: var(--mist-soft); color: var(--moss-2); border-color: var(--mist); }
 .modal-root .m-mode-badge.mode-edit { background: #FFF8E6; color: var(--amber-fg); border-color: #F5E3B0; }
-@media (prefers-color-scheme: dark) {
-  .modal-root .m-mode-badge.mode-edit { background: #2A2310; border-color: #4A3A10; }
-}
+html.dark .modal-root .m-mode-badge.mode-edit { background: #2A2310; border-color: #4A3A10; }
 
 .modal-root .m-title {
   font-size: 17px;
@@ -268,10 +264,8 @@
 .modal-root .priority-chip:has(.status-radio:checked).pr-low  { background: var(--line-soft); border-color: var(--ink-3); box-shadow: 0 0 0 2px rgba(142,154,142,.15); }
 .modal-root .priority-chip:has(.status-radio:checked).pr-mid  { background: #FFF8E6; border-color: #D4A040; box-shadow: 0 0 0 2px rgba(154,102,16,.12); }
 .modal-root .priority-chip:has(.status-radio:checked).pr-high { background: #FEF0E6; border-color: var(--ember); box-shadow: 0 0 0 2px rgba(200,90,40,.12); }
-@media (prefers-color-scheme: dark) {
-  .modal-root .priority-chip:has(.status-radio:checked).pr-mid  { background: #2A2310; border-color: #6A5020; }
-  .modal-root .priority-chip:has(.status-radio:checked).pr-high { background: #2A1E14; border-color: #8A4020; }
-}
+html.dark .modal-root .priority-chip:has(.status-radio:checked).pr-mid  { background: #2A2310; border-color: #6A5020; }
+html.dark .modal-root .priority-chip:has(.status-radio:checked).pr-high { background: #2A1E14; border-color: #8A4020; }
 
 /* --- Tag area --- */
 .modal-root .tag-area {
@@ -336,10 +330,8 @@
   color: #B91C1C;
 }
 .modal-root .btn-delete:hover { background: #FEE2E2; border-color: #FCA5A5; }
-@media (prefers-color-scheme: dark) {
-  .modal-root .btn-delete { background: #2A1414; border-color: #5A2424; color: #F87171; }
-  .modal-root .btn-delete:hover { background: #341818; border-color: #7A3030; }
-}
+html.dark .modal-root .btn-delete { background: #2A1414; border-color: #5A2424; color: #F87171; }
+html.dark .modal-root .btn-delete:hover { background: #341818; border-color: #7A3030; }
 
 .modal-root .btn-submit {
   background: linear-gradient(135deg, var(--forest), var(--moss));

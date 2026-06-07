@@ -64,7 +64,8 @@
 /* ===== カスタムグリッドテーブル ===== */
 .tbl-row {
   display: grid;
-  grid-template-columns: 28px 1fr 220px 100px 80px 80px 90px 38px;
+  /* [empty] [タイトル] [タグ] [ステータス] [優先度] [締切] [詳細] [工数] [timer] */
+  grid-template-columns: 28px 1.8fr 200px 90px 70px 105px 1.2fr 50px 40px;
   align-items: center;
   min-height: 44px;
 }
@@ -99,16 +100,29 @@
 .status-pill--doing { background: #d1fae5; color: #065f46; }
 .status-pill--done  { background: #f3f4f6; color: #6b7280; }
 
-/* 優先度カラードット */
-.priority-dot {
+/* 優先度pill（ステータスと同スタイル） */
+.priority-pill {
   display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-right: 4px;
-  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 600;
 }
-.priority-dot--high { background: #ef4444; }
-.priority-dot--mid  { background: #f59e0b; }
-.priority-dot--low  { background: #6b7280; }
+.priority-pill--high { background: #fee2e2; color: #991b1b; }
+.priority-pill--mid  { background: #fef3c7; color: #92400e; }
+.priority-pill--low  { background: #f3f4f6; color: #6b7280; }
+
+/* ヘッダー行のラベルを各セル幅内で中央揃え */
+.tbl-header .tbl-cell {
+  text-align: center;
+}
+
+/* データ行：タグ(3)・ステータス(4)・優先度(5)・締切(6) を中央揃え */
+.tbl-data-row .tbl-cell:nth-child(3),
+.tbl-data-row .tbl-cell:nth-child(4),
+.tbl-data-row .tbl-cell:nth-child(5),
+.tbl-data-row .tbl-cell:nth-child(6) {
+  text-align: center;
+  justify-items: center;
+}
 
