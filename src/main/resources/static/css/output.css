@@ -320,6 +320,9 @@
   .mx-auto {
     margin-inline: auto;
   }
+  .my-1 {
+    margin-block: calc(var(--spacing) * 1);
+  }
   .my-6 {
     margin-block: calc(var(--spacing) * 6);
   }
@@ -460,6 +463,9 @@
   }
   .min-w-\[160px\] {
     min-width: 160px;
+  }
+  .min-w-\[170px\] {
+    min-width: 170px;
   }
   .min-w-full {
     min-width: 100%;
