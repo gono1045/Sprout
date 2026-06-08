@@ -29,8 +29,35 @@ public interface SproutUserDao {
       @Param("provider") String provider);
 
   /**
+   * ユーザーIDでユーザー取得
+   * @param userId ユーザーID
+   * @return ユーザー情報
+   */
+  Optional<SproutUser> findByUserId(@Param("userId") Long userId);
+
+  /**
    * ユーザー新規登録
    * @param user 登録ユーザー情報
    */
   void insert(SproutUser user);
+
+  /**
+   * ログインID更新
+   * @param userId ユーザーID
+   * @param loginId 新しいログインID
+   */
+  void updateLoginId(@Param("userId") Long userId, @Param("loginId") String loginId);
+
+  /**
+   * パスワード更新
+   * @param userId ユーザーID
+   * @param password ハッシュ化済みパスワード
+   */
+  void updatePassword(@Param("userId") Long userId, @Param("password") String password);
+
+  /**
+   * 論理削除（退会）
+   * @param userId ユーザーID
+   */
+  void deactivate(@Param("userId") Long userId);
 }
