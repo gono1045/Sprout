@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>メール送信完了 — Sprout</title>
+  <link rel="stylesheet" th:href="@{/css/output.css}">
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --forest: #1B4332; --moss: #3E7A52; --paper: #F4F1E9; --line: #E6DFCD;
+      --ink: #1B2A20; --ink-2: #4A5E4A; --ink-3: #8E9A8E; --card: #FFFFFF;
+    }
+    body {
+      background-color: var(--paper); min-height: 100vh;
+      display: flex; align-items: center; justify-content: center; padding: 24px; position: relative;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: radial-gradient(circle, var(--line) 1px, transparent 1px);
+      background-size: 24px 24px; pointer-events: none; z-index: 0;
+    }
+    .card {
+      position: relative; z-index: 1; width: 100%; max-width: 400px;
+      background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+      padding: 40px; box-shadow: 0 2px 16px rgba(27,67,50,.08); text-align: center;
+    }
+    .icon { display: flex; align-items: center; justify-content: center; margin-bottom: 16px; color: var(--moss); }
+    .icon svg { width: 44px; height: 44px; stroke-width: 1.5; }
+    .warn-icon { color: #92400e; flex-shrink: 0; margin-top: 1px; }
+    .warn-icon svg { width: 16px; height: 16px; stroke-width: 2; }
+    .logo { font-family: 'Merriweather', serif; font-size: 24px; font-weight: 700; color: var(--forest); margin-bottom: 16px; }
+    .title { font-size: 16px; font-weight: 700; color: var(--ink); margin-bottom: 12px; }
+    .desc { font-size: 13px; color: var(--ink-3); line-height: 1.8; margin-bottom: 28px; }
+    .back-link {
+      display: inline-flex; align-items: center; justify-content: center;
+      height: 44px; padding: 0 28px; border-radius: 10px; border: 1.5px solid var(--line);
+      background: var(--card); color: var(--ink-2); font-size: 13px; font-weight: 500;
+      text-decoration: none; transition: background .12s;
+    }
+    .back-link:hover { background: #f0f5eb; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon"><i data-lucide="mail"></i></div>
+    <p class="logo">Sprout</p>
+    <p class="title">メールを送信しました</p>
+    <p class="desc">
+      入力されたメールアドレスにパスワードリセット用のリンクをお送りしました。<br>
+      リンクの有効期限は <strong>1時間</strong> です。
+    </p>
+    <p class="desc" style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 14px;color:#92400e;font-size:12px;line-height:1.7;display:flex;align-items:flex-start;gap:8px;text-align:left;">
+      <span class="warn-icon"><i data-lucide="triangle-alert"></i></span>
+      <span>メールが届かない場合は<strong>迷惑メールフォルダ</strong>をご確認ください。<br>
+      送信元: <code style="font-size:11px;">sprout2026.noreply@gmail.com</code></span>
+    </p>
+    <a th:href="@{/login}" class="back-link">ログイン画面へ戻る</a>
+  </div>
+  <script>lucide.createIcons();</script>
+</body>
+</html>

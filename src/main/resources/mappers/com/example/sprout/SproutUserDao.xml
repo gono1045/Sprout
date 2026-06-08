@@ -38,6 +38,39 @@
       AND provider = #{provider}
       AND is_active = true
   </select>
+  <select id="findByUserId" resultType="com.example.sprout.model.SproutUser">
+    SELECT
+      user_id,
+      login_id,
+      email,
+      password,
+      provider,
+      provider_user_id,
+      is_active,
+      created_at,
+      updated_at
+    FROM sprout_user
+    WHERE user_id = #{userId}
+  </select>
+
+  <update id="updateLoginId">
+    UPDATE sprout_user
+    SET login_id = #{loginId}, updated_at = NOW()
+    WHERE user_id = #{userId}
+  </update>
+
+  <update id="updatePassword">
+    UPDATE sprout_user
+    SET password = #{password}, updated_at = NOW()
+    WHERE user_id = #{userId}
+  </update>
+
+  <update id="deactivate">
+    UPDATE sprout_user
+    SET is_active = false, updated_at = NOW()
+    WHERE user_id = #{userId}
+  </update>
+
   <insert id="insert" parameterType="com.example.sprout.model.SproutUser" useGeneratedKeys="true" keyProperty="userId">
     INSERT INTO sprout_user (
       login_id,
