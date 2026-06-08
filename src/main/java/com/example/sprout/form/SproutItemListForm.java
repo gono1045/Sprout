@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
 import com.example.sprout.model.SproutItemListDetail;
 
 public class SproutItemListForm extends SproutAbstractForm<SproutItemListDetail> {
@@ -21,6 +23,7 @@ public class SproutItemListForm extends SproutAbstractForm<SproutItemListDetail>
   /** 優先度 */
   private String priorityName;
   /** 締切 */
+  @DateTimeFormat(pattern = "yyyy/MM/dd")
   private LocalDate deadline;
   /** 詳細 */
   private String detail;

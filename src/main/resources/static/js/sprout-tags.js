@@ -232,38 +232,57 @@ sprout.tags = (function() {
     }
 
     const html = `
-      <ul
-        class="sprout-tag-dropdown-portal fixed bg-white dark:bg-gray-800 border shadow z-[9999]"
-        style="
-          left: ${rect.left + scrollX}px;
-          top: ${rect.bottom + scrollY}px;
-          width: ${rect.width}px;
-        "
-      >
+      <ul class="sprout-tag-dropdown-portal" style="
+        position: fixed;
+        left: ${rect.left + scrollX}px;
+        top: ${rect.bottom + scrollY + 4}px;
+        width: ${rect.width}px;
+        background: var(--card, #fff);
+        border: 1px solid var(--line, #E6DFCD);
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(27,67,50,0.14);
+        z-index: 99999;
+        padding: 4px 0;
+        margin: 0;
+        list-style: none;
+        overflow: hidden;
+      ">
       ${selectableTags.map((tag, index) => `
-          <li
-            class="sprout-tag-option group flex items-center gap-2 px-2 py-1 text-sm hover:bg-gray-100 cursor-pointer
-              ${index === state.dropdownIndex ? 'bg-gray-100' : 'hover:bg-gray-100'}"
-            data-tag-id="${tag.tagId}"
-            data-index="${index}"
-          >
-            <div class="flex flex-col text-gray-400 text-xs leading-none select-none">
-              <span class="sprout-tag-move-up cursor-pointer hover:text-black">▲</span>
-              <span class="sprout-tag-move-down cursor-pointer hover:text-black">▼</span>
-            </div>
-
-            <div
-              class="min-w-0 max-w-[60%] mx-auto px-2 py-1 rounded text-white truncate flex items-center justify-center min-h-[24px] ${tag.tagColor}"
-            >
-              ${tag.tagName}
-            </div>
-            <div class="sprout-tag-gear text-gray-400 cursor-pointer select-none">⚙</div>
-          </li>
-        `).join('')}
+        <li
+          class="sprout-tag-option"
+          style="
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            cursor: pointer;
+            ${index === state.dropdownIndex ? 'background: rgba(167,243,200,0.2);' : ''}
+          "
+          data-tag-id="${tag.tagId}"
+          data-index="${index}"
+        >
+          <div style="display:flex;flex-direction:column;gap:1px;opacity:0.45;user-select:none;">
+            <span class="sprout-tag-move-up" style="cursor:pointer;font-size:9px;line-height:1.2;">▲</span>
+            <span class="sprout-tag-move-down" style="cursor:pointer;font-size:9px;line-height:1.2;">▼</span>
+          </div>
+          <span
+            class="tag-chip ${tag.tagColor}"
+            style="flex:1;padding:3px 10px;border-radius:9999px;color:#fff;font-size:12px;font-weight:500;
+              overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;"
+          >${tag.tagName}</span>
+          <button class="sprout-tag-gear" style="background:none;border:none;padding:2px 3px;cursor:pointer;
+            opacity:0.4;display:flex;align-items:center;" title="編集">
+            <i data-lucide="settings-2" style="width:13px;height:13px;"></i>
+          </button>
+        </li>
+      `).join('')}
       </ul>
     `;
 
     $('body').append(html);
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons({ nodes: [$('.sprout-tag-dropdown-portal')[0]] });
+    }
   }
 
   /**
@@ -277,33 +296,39 @@ sprout.tags = (function() {
 
     const html = `
       <div
-        class="sprout-tag-action-popup fixed bg-white dark:bg-gray-800 border shadow z-[10000]"
+        class="sprout-tag-action-popup"
         data-tag-id="${tagId}"
         style="
-          left: ${dropdownRect.right}px;
+          position: fixed;
+          left: ${dropdownRect.right + 4}px;
           top: ${liRect.top}px;
+          background: var(--card, #fff);
+          border: 1px solid var(--line, #E6DFCD);
+          border-radius: 10px;
+          box-shadow: 0 4px 20px rgba(27,67,50,0.14);
+          z-index: 99999;
+          padding: 10px;
+          min-width: 160px;
         "
       >
-        <!-- カラーパレット（最初から表示） -->
-        <div class="sprout-tag-color-palette grid grid-cols-6 gap-1 p-2">
+        <div class="sprout-tag-color-palette" style="display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin-bottom:10px;">
           ${TAG_COLORS.map(color => `
             <div
-              class="sprout-tag-color-item w-6 h-6 rounded cursor-pointer ${color}"
+              class="sprout-tag-color-item ${color}"
               data-tag-id="${tagId}"
               data-color="${color}"
+              style="width:22px;height:22px;border-radius:50%;cursor:pointer;"
             ></div>
           `).join('')}
         </div>
-
-        <div class="px-2 pb-2">
-          <div
-            class="sprout-tag-action-item w-full text-center cursor-pointer rounded
-            px-2 py-1 text-sm bg-red-500 hover:bg-red-600 text-white"
-            data-action="delete"
-          >
-            削除
-          </div>
-        </div>
+        <button
+          class="sprout-tag-action-item"
+          data-action="delete"
+          style="
+            width:100%;padding:6px 0;border-radius:8px;border:none;
+            background:#fee2e2;color:#991b1b;font-size:12px;font-weight:600;cursor:pointer;
+          "
+        >削除</button>
       </div>
     `;
 
@@ -670,10 +695,12 @@ sprout.tags = (function() {
       .done(function () {
         fetchItemTags(currentState.itemId).done(function (tags) {
           currentState.tags = tags;
-          currentState.originalTagIds = tags.map(t => t.tagId); // ★ 状態更新
+          currentState.originalTagIds = tags.map(t => t.tagId);
           currentState.mode = 'view';
           currentState.finishing = false;
           renderView(currentState);
+          // Grove（マイガーデン）再描画トリガー
+          $(document).trigger('sprout:tags-updated');
         });
       });
   }
