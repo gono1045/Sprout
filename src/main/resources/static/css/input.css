@@ -1,20 +1,42 @@
 @import "tailwindcss";
 
 :root {
-    --paper: #F4F1E9;
+    --paper:  #F4F1E9;
     --forest: #1B4332;
-    --moss: #3E7A52;
+    --moss:   #3E7A52;
     --moss-2: #5BA178;
+    --card:   #FFFFFF;
+    --line:   #E6DFCD;
+    --ink:    #1B2A20;
+    --ink-2:  #4A5E4A;
+    --ink-3:  #8E9A8E;
     --text-primary: var(--forest);
     --text-secondary: #4a7c60;
     --border-subtle: rgba(27, 67, 50, 0.15);
 }
 
-/* ダークモード */
-[data-theme="dark"] {
-    --paper: #1a2e24;
+/* ダークモード（html.dark クラスで切り替え） */
+html.dark {
+    --paper:  #1a2e24;
     --forest: #a7f3c8;
-    --moss: #6ee7a8;
+    --moss:   #6ee7a8;
+    --card:   #1e3a2a;
+    --line:   #2d4a38;
+    --ink:    #e8f5ee;
+    --ink-2:  #a7d4b8;
+    --ink-3:  #6aaa88;
+}
+
+/* 後方互換: data-theme="dark" でも変数を切り替える */
+[data-theme="dark"] {
+    --paper:  #1a2e24;
+    --forest: #a7f3c8;
+    --moss:   #6ee7a8;
+    --card:   #1e3a2a;
+    --line:   #2d4a38;
+    --ink:    #e8f5ee;
+    --ink-2:  #a7d4b8;
+    --ink-3:  #6aaa88;
 }
 
 /* ===== テーマカラー テキスト ===== */
@@ -124,5 +146,177 @@
 .tbl-data-row .tbl-cell:nth-child(6) {
   text-align: center;
   justify-items: center;
+}
+
+/* タイトルセル ホバーで表示する「モーダルを開く」ボタン */
+.btn-open-modal {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s, border-color 0.15s, color 0.15s;
+  padding: 3px 5px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--moss-2, #5BA178);
+  border-radius: 5px;
+}
+
+/* ライトモード：行ホバー時に緑の実色ボタンとして表示 */
+.tbl-cell:hover .btn-open-modal,
+.tbl-data-row:hover .btn-open-modal {
+  opacity: 1;
+  background: var(--moss, #3E7A52);
+  border-color: var(--forest, #1B4332);
+  color: #fff;
+}
+.btn-open-modal:hover {
+  background: var(--forest, #1B4332) !important;
+  border-color: var(--forest, #1B4332) !important;
+  color: #fff !important;
+}
+
+/* ダークモード：グラス調スタイルに上書き */
+html.dark .tbl-cell:hover .btn-open-modal,
+html.dark .tbl-data-row:hover .btn-open-modal {
+  background: rgba(110, 231, 168, 0.18);
+  border-color: rgba(110, 231, 168, 0.45);
+  color: var(--moss, #6ee7a8);
+}
+html.dark .btn-open-modal:hover {
+  background: rgba(110, 231, 168, 0.32) !important;
+  border-color: rgba(110, 231, 168, 0.7) !important;
+  color: var(--moss, #6ee7a8) !important;
+}
+
+/* タグ input の placeholder 色 */
+.sprout-tag-input::placeholder {
+  color: rgba(167, 243, 200, 0.45);
+}
+
+/* ===== インライン編集 ===== */
+
+/* 編集可能セル：ホバーで薄いハイライト */
+.tbl-cell[data-inline-field] {
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.1s;
+}
+.tbl-cell[data-inline-field]:hover {
+  background: rgba(167, 243, 200, 0.15);
+}
+
+/* テキスト入力 */
+.inline-edit-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid var(--moss-2, #5BA178);
+  outline: none;
+  font-size: 13px;
+  color: #a7f3c8;
+  padding: 2px 0;
+  box-sizing: border-box;
+}
+.inline-edit-input::placeholder {
+  color: rgba(167, 243, 200, 0.4);
+}
+/* flatpickr インラインデート — デザイン統一カスタマイズ */
+.flatpickr-calendar {
+  background: var(--card, #1e3a2a) !important;
+  border: 1px solid var(--line, #2d4a38) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 6px 24px rgba(27, 67, 50, 0.3) !important;
+  font-family: inherit !important;
+  font-size: 12px !important;
+  /* コンパクトサイズ: 7列 × 32px = 224px + padding */
+  width: 236px !important;
+}
+.flatpickr-days,
+.dayContainer {
+  width: 220px !important;
+  min-width: 220px !important;
+  max-width: 220px !important;
+}
+.flatpickr-day {
+  max-width: 30px !important;
+  height: 30px !important;
+  line-height: 30px !important;
+}
+.flatpickr-weekday {
+  max-width: 30px !important;
+  height: 26px !important;
+  line-height: 26px !important;
+  font-size: 11px !important;
+}
+.flatpickr-months .flatpickr-month {
+  height: 34px !important;
+  line-height: 34px !important;
+}
+.flatpickr-current-month {
+  font-size: 13px !important;
+  padding-top: 6px !important;
+}
+.flatpickr-months {
+  background: transparent !important;
+}
+.flatpickr-month {
+  color: var(--ink, #e8f5ee) !important;
+  fill: var(--ink, #e8f5ee) !important;
+}
+.flatpickr-current-month .numInputWrapper span.arrowUp::after,
+.flatpickr-current-month .numInputWrapper span.arrowDown::after {
+  border-bottom-color: var(--moss, #6ee7a8) !important;
+  border-top-color: var(--moss, #6ee7a8) !important;
+}
+.flatpickr-weekday {
+  color: var(--ink-3, #6aaa88) !important;
+  background: transparent !important;
+  font-weight: 600 !important;
+}
+.flatpickr-day {
+  color: var(--ink, #e8f5ee) !important;
+  border-radius: 6px !important;
+}
+.flatpickr-day:hover,
+.flatpickr-day:focus {
+  background: rgba(110, 231, 168, 0.18) !important;
+  border-color: transparent !important;
+}
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover {
+  background: var(--moss, #3E7A52) !important;
+  border-color: var(--moss, #3E7A52) !important;
+  color: #fff !important;
+}
+.flatpickr-day.today {
+  border-color: var(--moss-2, #5BA178) !important;
+}
+.flatpickr-day.today:hover {
+  background: rgba(91, 161, 120, 0.2) !important;
+}
+.flatpickr-day.flatpickr-disabled,
+.flatpickr-day.prevMonthDay,
+.flatpickr-day.nextMonthDay {
+  color: var(--ink-3, #6aaa88) !important;
+  opacity: 0.4 !important;
+}
+.flatpickr-prev-month svg,
+.flatpickr-next-month svg {
+  fill: var(--ink-2, #a7d4b8) !important;
+}
+.flatpickr-prev-month:hover svg,
+.flatpickr-next-month:hover svg {
+  fill: var(--moss, #6ee7a8) !important;
+}
+.numInputWrapper:hover {
+  background: rgba(110, 231, 168, 0.08) !important;
+}
+.flatpickr-current-month input.cur-year {
+  color: var(--ink, #e8f5ee) !important;
 }
 
