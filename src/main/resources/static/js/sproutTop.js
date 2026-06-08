@@ -93,25 +93,30 @@ $(function () {
           .addClass('tbl-row tbl-data-row border-b border-gray-100 dark:border-gray-700')
           .attr('data-item-id', item.id);
 
-        var detailText = item.detail ? escapeHtml(item.detail) : '';
-        var detailDisplay = item.detail && item.detail.length > 40
-          ? escapeHtml(item.detail.substring(0, 40)) + '…'
-          : (detailText || '-');
+        var detailText = item.detail || '';
+        var detailDisplay = detailText.length > 40
+          ? escapeHtml(detailText.substring(0, 40)) + '…'
+          : (escapeHtml(detailText) || '-');
 
         $row.html(
           '<div class="tbl-cell"></div>' +
-          '<div class="tbl-cell">' +
-            '<a href="javascript:void(0)" class="sprout-link hover:text-green-700" data-row-id="' + item.id + '">' +
-              escapeHtml(item.title) +
-            '</a>' +
+          '<div class="tbl-cell" data-inline-field="title" style="position:relative;">' +
+            '<span class="sprout-link" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:20px;">' + escapeHtml(item.title) + '</span>' +
+            '<button class="btn-open-modal" data-row-id="' + item.id + '" title="詳細を開く">' +
+              '<i data-lucide="arrow-up-right" style="width:15px;height:15px;"></i>' +
+            '</button>' +
           '</div>' +
           '<div class="tbl-cell">' +
             '<div class="sprout-tag-mount" data-item-id="' + item.id + '"></div>' +
           '</div>' +
-          '<div class="tbl-cell">' + renderStatusPill(item.statusCd, item.statusName) + '</div>' +
-          '<div class="tbl-cell">' + renderPriorityPill(item.priorityCd, item.priorityName) + '</div>' +
-          '<div class="tbl-cell text-xs text-gray-500">' + deadline + '</div>' +
-          '<div class="tbl-cell text-xs sprout-link" title="' + detailText + '">' + detailDisplay + '</div>' +
+          '<div class="tbl-cell" data-inline-field="statusCd">' +
+            renderStatusPill(item.statusCd, item.statusName) +
+          '</div>' +
+          '<div class="tbl-cell" data-inline-field="priorityCd">' +
+            renderPriorityPill(item.priorityCd, item.priorityName) +
+          '</div>' +
+          '<div class="tbl-cell text-xs text-gray-500" data-inline-field="deadline">' + deadline + '</div>' +
+          '<div class="tbl-cell text-xs sprout-link" data-inline-field="detail" title="' + escapeHtml(detailText) + '">' + detailDisplay + '</div>' +
           '<div class="tbl-cell text-xs text-gray-500">-</div>' +
           '<div class="tbl-cell">' +
             '<button class="btn-measure flex items-center justify-center w-7 h-7 rounded hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-400 hover:text-green-600 transition" data-item-id="' + item.id + '" aria-label="工数計測">' +
@@ -372,29 +377,33 @@ $(function () {
       });
     });
 
-  // 更新モーダル
+  // 更新モーダル（タイトル右端のホバーボタンから開く）
   $(_this.tableId)
     .off('click.openUpdateModal')
-    .on('click.openUpdateModal', '.sprout-link', function () {
-
+    .on('click.openUpdateModal', '.btn-open-modal', function (e) {
+      e.stopPropagation();
       const itemId = $(this).data('row-id');
-
+      if (!itemId) return;
       sprout.util.openModal({
         modalId: 'itemUpdateModal',
         url: '/modal/update',
-        data: {
-          modalFlg: 1,
-          id: itemId
-        },
-        callBack: function ($modalEl) {
-          itemUpdateModal.init($modalEl);
-        }
+        data: { modalFlg: 1, id: itemId },
+        callBack: function ($modalEl) { itemUpdateModal.init($modalEl); }
       });
     });
 
   $(document).on('sprout:tag-deleted', function (e, data) {
-    console.log('タグ削除イベント受信', data);
     loadItems();
+    $.getJSON('/tags/all', function(tagData) {
+      initGrove(tagData.tagList || []);
+    });
+  });
+
+  // タグ付け変更後（追加・選択解除）にGroveを再描画
+  $(document).on('sprout:tags-updated', function() {
+    $.getJSON('/tags/all', function(tagData) {
+      initGrove(tagData.tagList || []);
+    });
   });
 
   $(document).on('sprout:task-updated', function () {
@@ -468,6 +477,265 @@ $(function () {
       });
     });
   }
+
+  // ===== インライン編集 =====
+
+  var INLINE_STATUS_OPTS = [
+    { cd: 1, name: '未着手', cls: 'status-pill status-pill--todo' },
+    { cd: 2, name: '進行中', cls: 'status-pill status-pill--doing' },
+    { cd: 3, name: '完了',   cls: 'status-pill status-pill--done' }
+  ];
+  var INLINE_PRIORITY_OPTS = [
+    { cd: 3, name: '高', cls: 'priority-pill priority-pill--high' },
+    { cd: 2, name: '中', cls: 'priority-pill priority-pill--mid' },
+    { cd: 1, name: '低', cls: 'priority-pill priority-pill--low' }
+  ];
+
+  // DBに保存（全フィールド送信）
+  function inlineSave(item, changes) {
+    var updated = $.extend({}, item, changes);
+    var deadlineStr = '';
+    if (updated.deadline) {
+      deadlineStr = dayjs(updated.deadline).format('YYYY/MM/DD');
+    }
+    return $.ajax({
+      url: '/task/update',
+      type: 'POST',
+      data: {
+        id: updated.id,
+        title: updated.title || '',
+        statusCd: updated.statusCd,
+        priorityCd: updated.priorityCd,
+        deadline: deadlineStr,
+        detail: updated.detail || ''
+      }
+    }).done(function() {
+      var idx = _allItems.findIndex(function(i) { return i.id === item.id; });
+      if (idx !== -1) $.extend(_allItems[idx], changes);
+      sprout.message.toast({ message: '保存しました', type: 'success' });
+    }).fail(function() {
+      sprout.message.toast({ message: '保存に失敗しました', type: 'error' });
+    });
+  }
+
+  // テキスト系インライン編集（タイトル・詳細）
+  function startTextEdit($cell, currentVal, onSave, onCancel) {
+    var $input = $('<input type="text" class="inline-edit-input">').val(currentVal || '');
+    $cell.html($input);
+    $input.focus().select();
+    var committed = false;
+
+    function doSave() {
+      if (committed) return;
+      committed = true;
+      $input.off('blur.inlineEdit');
+      onSave($input.val());
+    }
+    function doCancel() {
+      if (committed) return;
+      committed = true;
+      $input.off('blur.inlineEdit');
+      onCancel();
+    }
+
+    $input
+      .on('blur.inlineEdit', function() { doSave(); })
+      .on('keydown.inlineEdit', function(e) {
+        if (e.key === 'Escape') { doCancel(); }
+        else if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); doSave(); }
+      });
+  }
+
+  // ドロップダウン選択（ステータス・優先度）
+  function startDropdownEdit($cell, options, onSave) {
+    var rect = $cell[0].getBoundingClientRect();
+    var scrollX = window.pageXOffset;
+    var scrollY = window.pageYOffset;
+
+    var optHtml = options.map(function(opt) {
+      return '<div class="sprout-inline-opt" data-cd="' + opt.cd + '" ' +
+        'style="padding:5px 10px;cursor:pointer;border-radius:7px;">' +
+        '<span class="' + opt.cls + '">' + opt.name + '</span></div>';
+    }).join('');
+
+    var $dd = $('<div id="sprout-inline-dropdown" style="' +
+      'position:fixed;' +
+      'left:' + (rect.left + scrollX) + 'px;' +
+      'top:' + (rect.bottom + scrollY + 2) + 'px;' +
+      'z-index:99999;' +
+      'background:var(--card,#fff);' +
+      'border:1px solid var(--line,#E6DFCD);' +
+      'border-radius:10px;' +
+      'box-shadow:0 4px 20px rgba(27,67,50,0.12);' +
+      'padding:6px;' +
+      'display:flex;flex-direction:column;gap:3px;' +
+    '">' + optHtml + '</div>');
+    $('body').append($dd);
+
+    function closeDropdown() {
+      $dd.remove();
+      $(document).off('click.inlineDropdown keydown.inlineDropdownEsc');
+    }
+
+    $(document)
+      .off('click.inlineDropdown')
+      .on('click.inlineDropdown', function(e) {
+        var $opt = $(e.target).closest('.sprout-inline-opt');
+        if ($opt.length) {
+          var cd = Number($opt.data('cd'));
+          closeDropdown();
+          onSave(cd);
+          return;
+        }
+        if (!$(e.target).closest('#sprout-inline-dropdown').length) {
+          closeDropdown();
+        }
+      });
+
+    $(document)
+      .off('keydown.inlineDropdownEsc')
+      .on('keydown.inlineDropdownEsc', function(e) {
+        if (e.key === 'Escape') { closeDropdown(); }
+      });
+  }
+
+  // 日付インライン編集（flatpickr）
+  function startDateEdit($cell, currentDeadline, onSave, onCancel) {
+    var defaultDate = currentDeadline ? dayjs(currentDeadline).toDate() : null;
+    var $input = $('<input type="text" class="inline-edit-input" readonly placeholder="日付を選択">');
+    $cell.html($input);
+    var committed = false;
+
+    var fp = flatpickr($input[0], {
+      locale: 'ja',
+      dateFormat: 'Y/m/d',
+      defaultDate: defaultDate,
+      disableMobile: true,
+      allowInput: false,
+      onClose: function(selectedDates) {
+        if (committed) return;
+        committed = true;
+        fp.destroy();
+        if (selectedDates.length > 0) {
+          onSave(dayjs(selectedDates[0]).format('YYYY-MM-DD'));
+        } else {
+          onCancel();
+        }
+      }
+    });
+
+    $input.on('keydown.inlineEdit', function(e) {
+      if (e.key === 'Escape') {
+        if (committed) return;
+        committed = true;
+        fp.close();
+        fp.destroy();
+        onCancel();
+      }
+    });
+
+    fp.open();
+  }
+
+  // インライン編集クリックハンドラー
+  $(_this.tableId)
+    .off('click.inlineEdit')
+    .on('click.inlineEdit', '.tbl-cell[data-inline-field]', function(e) {
+      e.stopPropagation();
+
+      // モーダルオープンボタンがクリックされた場合は無視
+      if ($(e.target).closest('.btn-open-modal').length) return;
+      // 既に編集中のセルなら無視
+      if ($(this).find('input, textarea').length) return;
+      // ドロップダウンが開いていれば閉じるだけ
+      if ($('#sprout-inline-dropdown').length) {
+        $('#sprout-inline-dropdown').remove();
+        $(document).off('click.inlineDropdown keydown.inlineDropdownEsc');
+        return;
+      }
+
+      var field = $(this).data('inline-field');
+      var $cell = $(this);
+      var itemId = Number($cell.closest('.tbl-data-row').data('item-id'));
+      var item = _allItems.find(function(i) { return i.id === itemId; });
+      if (!item) return;
+
+      var origHtml = $cell.html();
+
+      switch (field) {
+        case 'title':
+          startTextEdit($cell, item.title,
+            function(newVal) {
+              if (!newVal.trim()) { $cell.html(origHtml); return; }
+              inlineSave(item, { title: newVal.trim() })
+                .done(function() {
+                  var u = _allItems.find(function(i) { return i.id === itemId; });
+                  $cell.html('<span class="sprout-link">' + escapeHtml(u.title) + '</span>');
+                })
+                .fail(function() { $cell.html(origHtml); });
+            },
+            function() { $cell.html(origHtml); }
+          );
+          break;
+
+        case 'detail':
+          startTextEdit($cell, item.detail || '',
+            function(newVal) {
+              inlineSave(item, { detail: newVal })
+                .done(function() {
+                  var u = _allItems.find(function(i) { return i.id === itemId; });
+                  var dt = u.detail || '';
+                  var disp = dt.length > 40 ? escapeHtml(dt.substring(0, 40)) + '…' : (escapeHtml(dt) || '-');
+                  $cell.html('<span title="' + escapeHtml(dt) + '">' + disp + '</span>');
+                  $cell.attr('title', escapeHtml(dt));
+                })
+                .fail(function() { $cell.html(origHtml); });
+            },
+            function() { $cell.html(origHtml); }
+          );
+          break;
+
+        case 'statusCd':
+          startDropdownEdit($cell, INLINE_STATUS_OPTS, function(newCd) {
+            var opt = INLINE_STATUS_OPTS.find(function(o) { return o.cd === newCd; });
+            inlineSave(item, { statusCd: newCd, statusName: opt ? opt.name : '' })
+              .done(function() {
+                // 完了フィルターに引っかかる可能性があるためテーブル全体を再描画
+                renderTable(getFilteredItems());
+              })
+              .fail(function() { $cell.html(origHtml); });
+          });
+          break;
+
+        case 'priorityCd':
+          startDropdownEdit($cell, INLINE_PRIORITY_OPTS, function(newCd) {
+            var opt = INLINE_PRIORITY_OPTS.find(function(o) { return o.cd === newCd; });
+            inlineSave(item, { priorityCd: newCd, priorityName: opt ? opt.name : '' })
+              .done(function() {
+                var u = _allItems.find(function(i) { return i.id === itemId; });
+                $cell.html(renderPriorityPill(u.priorityCd, u.priorityName));
+              })
+              .fail(function() { $cell.html(origHtml); });
+          });
+          break;
+
+        case 'deadline':
+          startDateEdit($cell, item.deadline,
+            function(newIsoDate) {
+              inlineSave(item, { deadline: newIsoDate })
+                .done(function() {
+                  var u = _allItems.find(function(i) { return i.id === itemId; });
+                  $cell.html(u.deadline ? dayjs(u.deadline).format('MM/DD') : '-');
+                })
+                .fail(function() { $cell.html(origHtml); });
+            },
+            function() { $cell.html(origHtml); }
+          );
+          break;
+      }
+    });
+
+  // ===== インライン編集ここまで =====
 
   $.getJSON('/tags/all', function(data) {
     var tagList = data.tagList || [];
