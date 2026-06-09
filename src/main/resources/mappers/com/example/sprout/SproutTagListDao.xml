@@ -114,6 +114,15 @@
       AND it.tag_id = #{tagId}
       AND i.user_id = #{userId}
 </delete>
+<update id="updateExp">
+  UPDATE sprout_tag
+  SET
+      exp = #{exp}
+    , lv  = #{lv}
+  WHERE
+    tag_id  = #{tagId}
+    AND user_id = #{userId}
+</update>
 <delete id="deleteItemTagsByItemId">
   DELETE FROM
     sprout_item_tag it
