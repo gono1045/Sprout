@@ -193,6 +193,13 @@ html.dark .btn-open-modal:hover {
   color: var(--moss, #6ee7a8) !important;
 }
 
+/* タグエリア — 読み取り専用（更新モーダルのみ） */
+.tag-area--readonly {
+  cursor: default;
+  opacity: 0.75;
+  pointer-events: none;
+}
+
 /* タグ input の placeholder 色 */
 .sprout-tag-input::placeholder {
   color: rgba(167, 243, 200, 0.45);

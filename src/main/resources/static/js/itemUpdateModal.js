@@ -104,7 +104,8 @@ var itemUpdateModal = (function () {
 
         sprout.tags.mount({
           el: this,
-          itemId: itemId || null
+          itemId: itemId || null,
+          readonly: $(this).data('readonly') === true
         });
 
         $(this).data('mounted', true);
