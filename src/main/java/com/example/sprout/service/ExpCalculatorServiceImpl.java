@@ -1,5 +1,6 @@
 package com.example.sprout.service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.sprout.dao.SproutTagListDao;
 import com.example.sprout.model.SproutTagList;
+import com.example.sprout.model.TagExpResult;
 
 /**
  * EXP計算・タグへの分配を担うサービス実装。
@@ -50,6 +52,13 @@ public class ExpCalculatorServiceImpl implements ExpCalculatorService {
 
   @Override
   @Transactional
+  public List<TagExpResult> distributeExp(Long userId, List<Long> tagIds, int totalExp) {
+    List<TagExpResult> results = new ArrayList<>();
+    if (tagIds == null || tagIds.isEmpty()) return results;
+
+    // 均等割り（端数切り捨て）
+    int perTag = totalExp / tagIds.size();
+    if (perTag <= 0) return results;
   public void distributeExp(Long userId, List<Long> tagIds, int totalExp) {
     if (tagIds == null || tagIds.isEmpty()) return;
 
@@ -61,6 +70,22 @@ public class ExpCalculatorServiceImpl implements ExpCalculatorService {
       SproutTagList tag = tagListDao.selectByTagId(tagId, userId);
       if (tag == null) continue;
 
+      int oldLv  = tag.getLv();
+      int newExp = tag.getExp() + perTag;
+      int newLv  = calcLv(newExp);
+      tagListDao.updateExp(tagId, userId, newExp, newLv);
+
+      TagExpResult r = new TagExpResult();
+      r.setTagId(tagId);
+      r.setTagName(tag.getTagName());
+      r.setTagColor(tag.getTagColor());
+      r.setExpGained(perTag);
+      r.setNewExp(newExp);
+      r.setNewLv(newLv);
+      r.setLeveledUp(newLv > oldLv);
+      results.add(r);
+    }
+    return results;
       int newExp = tag.getExp() + perTag;
       int newLv  = calcLv(newExp);
       tagListDao.updateExp(tagId, userId, newExp, newLv);
