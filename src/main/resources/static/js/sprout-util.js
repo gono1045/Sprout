@@ -130,11 +130,13 @@ sprout.util = (function() {
           // prefix付与
           sprout.util.applyScreenIdPrefix($modalEl, modalId);
 
-          // フォーム存在チェック
-          const $form = $modalEl.find('#' + modalId + '_sproutItemListForm');
-          if ($form.length === 0) {
-            console.error('フォームが見つかりません');
-            return;
+          // フォーム存在チェック（skipFormCheck: true の場合はスキップ）
+          if (!params.skipFormCheck) {
+            const $form = $modalEl.find('#' + modalId + '_sproutItemListForm');
+            if ($form.length === 0) {
+              console.error('フォームが見つかりません');
+              return;
+            }
           }
 
           // コールバック実行

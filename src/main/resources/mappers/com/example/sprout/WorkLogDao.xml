@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.sprout.dao.WorkLogDao">
+
+  <insert id="insert" parameterType="SproutWorkLog" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO sprout_work_log (
+        item_id
+      , user_id
+      , started_at
+      , ended_at
+      , duration_min
+      , satisfaction
+      , memo
+      , exp_total
+      , created_at
+    ) VALUES (
+        #{itemId}
+      , #{userId}
+      , #{startedAt}
+      , #{endedAt}
+      , #{durationMin}
+      , #{satisfaction}
+      , #{memo}
+      , #{expTotal}
+      , #{createdAt}
+    )
+  </insert>
+
+</mapper>

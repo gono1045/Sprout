@@ -119,9 +119,14 @@ $(function () {
           '<div class="tbl-cell text-xs sprout-link" data-inline-field="detail" title="' + escapeHtml(detailText) + '">' + detailDisplay + '</div>' +
           '<div class="tbl-cell text-xs text-gray-500">-</div>' +
           '<div class="tbl-cell">' +
-            '<button class="btn-measure flex items-center justify-center w-7 h-7 rounded hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-400 hover:text-green-600 transition" data-item-id="' + item.id + '" aria-label="工数計測">' +
-              '<i data-lucide="timer" style="width:15px;height:15px;"></i>' +
-            '</button>' +
+            (item._tagIds && item._tagIds.length > 0
+              ? '<button class="btn-measure flex items-center justify-center w-7 h-7 rounded hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-400 hover:text-green-600 transition" data-item-id="' + item.id + '" data-item-title="' + escapeHtml(item.title) + '" aria-label="工数計測" title="工数を計測する">' +
+                  '<i data-lucide="timer" style="width:15px;height:15px;"></i>' +
+                '</button>'
+              : '<button class="btn-measure flex items-center justify-center w-7 h-7 rounded text-gray-300 dark:text-gray-600 cursor-not-allowed" disabled aria-label="工数計測（タグなし）" title="タグを設定すると計測できます">' +
+                  '<i data-lucide="timer" style="width:15px;height:15px;"></i>' +
+                '</button>'
+            ) +
           '</div>'
         );
 
@@ -389,6 +394,44 @@ $(function () {
         url: '/modal/update',
         data: { modalFlg: 1, id: itemId },
         callBack: function ($modalEl) { itemUpdateModal.init($modalEl); }
+      });
+    });
+
+  // タイマーモーダル起動
+  $(_this.tableId)
+    .off('click.openTimerModal')
+    .on('click.openTimerModal', '.btn-measure:not([disabled])', function (e) {
+      e.stopPropagation();
+
+      var itemId    = $(this).data('item-id');
+      var itemTitle = $(this).data('item-title');
+      if (!itemId) return;
+
+      sprout.util.openModal({
+        modalId:       'timerModal',
+        url:           '/work-log/modal',
+        data:          { itemId: itemId, itemTitle: itemTitle },
+        skipFormCheck: true,
+        callBack:      function ($modalEl) {
+          // デフォルトのクローズハンドラーを上書き:
+          // 計測前(idle)のみ背景クリック・Esc で閉じられる
+          $modalEl.off('click.modal-bg').on('click.modal-bg', function(ev) {
+            if (ev.target !== this) return;
+            var state = localStorage.getItem('sprout_timer_state') || 'idle';
+            if (state === 'idle') { $modalEl.remove(); }
+          });
+          $(document).off('keydown.modal').on('keydown.modal', function(ev) {
+            if (ev.key !== 'Escape') return;
+            var state = localStorage.getItem('sprout_timer_state') || 'idle';
+            if (state === 'idle') {
+              $(document).off('keydown.modal');
+              $modalEl.remove();
+            }
+          });
+
+          // タイマーモーダル初期化（ID プレフィックス付与後に呼ぶ）
+          timerModal.init($modalEl);
+        }
       });
     });
 
