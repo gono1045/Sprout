@@ -397,12 +397,28 @@ html.dark .modal-root .btn-delete:hover { background: #341818; border-color: #7A
       <!-- タグ -->
       <div class="field-row cols-1">
         <div class="field">
-          <label class="field-label">
-            タグ <span class="hint">Enter で追加</span>
-          </label>
-          <div class="tag-area js-tag-container">
-            <div class="sprout-tag-mount w-full h-full"
-                 th:attr="data-item-id=${sproutItemListForm.id}">
+          <!-- 新規作成：タグ編集可能 -->
+          <div th:if="${sproutItemListForm.modalFlg == 0}">
+            <label class="field-label">
+              タグ <span class="hint">Enter で追加</span>
+            </label>
+            <div class="tag-area js-tag-container">
+              <div class="sprout-tag-mount w-full h-full"
+                   th:attr="data-item-id=${sproutItemListForm.id}">
+              </div>
+            </div>
+          </div>
+          <!-- 更新：タグ変更不可（EXP保護） -->
+          <div th:if="${sproutItemListForm.modalFlg == 1}">
+            <label class="field-label">
+              タグ
+              <span class="hint" style="color:var(--ink-3,#8E9A8E);">※ 保存後は変更できません</span>
+            </label>
+            <div class="tag-area js-tag-container tag-area--readonly">
+              <div class="sprout-tag-mount w-full h-full"
+                   th:attr="data-item-id=${sproutItemListForm.id}"
+                   data-readonly="true">
+              </div>
             </div>
           </div>
         </div>
