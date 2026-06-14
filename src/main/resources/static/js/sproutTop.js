@@ -136,7 +136,7 @@ $(function () {
       $body.find('.sprout-tag-mount').each(function() {
         var $el = $(this);
         if ($el.data('mounted')) return;
-        sprout.tags.mount({ el: this, itemId: $el.data('item-id') });
+        sprout.tags.mount({ el: this, itemId: $el.data('item-id'), readonly: true });
         $el.data('mounted', true);
       });
 

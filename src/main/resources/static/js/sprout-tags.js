@@ -18,7 +18,8 @@ sprout.tags = (function() {
       mode: 'view',
       allTags: [],
       finishing: false,
-      dropdownIndex: -1
+      dropdownIndex: -1,
+      readonly: options.readonly === true
     };
 
     state.el.data('sproutTagsState', state);
@@ -116,12 +117,17 @@ sprout.tags = (function() {
       </div>
     `);
 
-    $base
-      .off('click.sproutTags')
-      .on('click.sproutTags', '.sprout-tag-view', function (e) {
-        e.stopPropagation();
-        renderEdit(state);
-      });
+    // readonly モードではクリックしても編集モードに入らない
+    if (!state.readonly) {
+      $base
+        .off('click.sproutTags')
+        .on('click.sproutTags', '.sprout-tag-view', function (e) {
+          e.stopPropagation();
+          renderEdit(state);
+        });
+    } else {
+      $base.off('click.sproutTags').removeClass('cursor-pointer').addClass('cursor-default');
+    }
   }
 
   /**
@@ -456,10 +462,11 @@ sprout.tags = (function() {
       }
 
       if (action === 'delete') {
-        console.log('削除', tagId);
 
         sprout.message.confirmExec({
-          messageId: "WARN001",
+          message: 'このタグを削除すると、蓄積したEXP・Lvが失われます。\n本当に削除しますか？',
+          okText: '削除する',
+          danger: true,
           onOk: function() {
             $.ajax({
               url: '/tags/delete',

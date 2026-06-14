@@ -59,6 +59,12 @@ public class ExpCalculatorServiceImpl implements ExpCalculatorService {
     // 均等割り（端数切り捨て）
     int perTag = totalExp / tagIds.size();
     if (perTag <= 0) return results;
+  public void distributeExp(Long userId, List<Long> tagIds, int totalExp) {
+    if (tagIds == null || tagIds.isEmpty()) return;
+
+    // 均等割り（端数切り捨て）
+    int perTag = totalExp / tagIds.size();
+    if (perTag <= 0) return;
 
     for (Long tagId : tagIds) {
       SproutTagList tag = tagListDao.selectByTagId(tagId, userId);
@@ -80,6 +86,10 @@ public class ExpCalculatorServiceImpl implements ExpCalculatorService {
       results.add(r);
     }
     return results;
+      int newExp = tag.getExp() + perTag;
+      int newLv  = calcLv(newExp);
+      tagListDao.updateExp(tagId, userId, newExp, newLv);
+    }
   }
 
   // ===== private helpers =====
