@@ -2,6 +2,8 @@ package com.example.sprout.service;
 
 import java.util.List;
 
+import com.example.sprout.model.TagExpResult;
+
 /**
  * EXP計算・タグへの分配を担うサービス。
  * <p>
@@ -33,6 +35,9 @@ public interface ExpCalculatorService {
    * @param userId   ログインユーザーID
    * @param tagIds   付与対象のタグIDリスト
    * @param totalExp 付与するEXP合計
+   * @return タグ別の EXP 付与結果リスト
+   */
+  List<TagExpResult> distributeExp(Long userId, List<Long> tagIds, int totalExp);
    */
   void distributeExp(Long userId, List<Long> tagIds, int totalExp);
 }
