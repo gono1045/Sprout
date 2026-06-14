@@ -97,4 +97,14 @@ public interface SproutTagListDao {
    */
   void deleteItemTagsByItemId(@Param("itemId") Long itemId,
       @Param("userId") Long userId);
+
+  /**
+   * タグの exp / lv を更新する
+   * @param tagId  タグID
+   * @param userId ユーザーID
+   * @param exp    更新後の累積EXP
+   * @param lv     更新後のレベル
+   */
+  void updateExp(@Param("tagId") Long tagId, @Param("userId") Long userId,
+      @Param("exp") int exp, @Param("lv") int lv);
 }
