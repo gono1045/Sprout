@@ -53,6 +53,18 @@
     WHERE user_id = #{userId}
   </select>
 
+  <select id="existsByLoginIdAnyStatus" resultType="boolean">
+    SELECT EXISTS (
+      SELECT 1 FROM sprout_user WHERE login_id = #{loginId}
+    )
+  </select>
+
+  <select id="existsByEmailAnyStatus" resultType="boolean">
+    SELECT EXISTS (
+      SELECT 1 FROM sprout_user WHERE email = #{email}
+    )
+  </select>
+
   <update id="updateLoginId">
     UPDATE sprout_user
     SET login_id = #{loginId}, updated_at = NOW()

@@ -36,6 +36,20 @@ public interface SproutUserDao {
   Optional<SproutUser> findByUserId(@Param("userId") Long userId);
 
   /**
+   * ログインIDの使用状況チェック（is_active状態を問わず、DBのUNIQUE制約と同じ範囲でチェックする）
+   * @param loginId ログインID
+   * @return 既に使用されている場合 true
+   */
+  boolean existsByLoginIdAnyStatus(@Param("loginId") String loginId);
+
+  /**
+   * メールアドレスの使用状況チェック（is_active状態を問わず、DBのUNIQUE制約と同じ範囲でチェックする）
+   * @param email メールアドレス
+   * @return 既に使用されている場合 true
+   */
+  boolean existsByEmailAnyStatus(@Param("email") String email);
+
+  /**
    * ユーザー新規登録
    * @param user 登録ユーザー情報
    */
