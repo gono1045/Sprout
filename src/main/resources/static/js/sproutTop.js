@@ -40,8 +40,23 @@ $(function () {
     _this.featNameId = sprout.util.getId(SCREEN_ID, 'sproutTopFeatName');
 
     // カスタムテーブル用変数
-    var _allItems    = [];
-    var _activeTagId = null;
+    var _allItems        = [];
+    var _activeTagId     = null;
+    var _selectedFeatTag = null; // Featured パネルで選択中のタグ ID
+    var _allTagData      = null; // /tags/all レスポンスキャッシュ
+    var _selectedTagIds  = new Set(); // タグフィルター
+    var _activeInlineClose = null; // 現在開いているインライン編集（テキスト/ドロップダウン/日付）を確定保存して閉じる関数
+
+    function _closeActiveInline() {
+      if (_activeInlineClose) {
+        var fn = _activeInlineClose;
+        _activeInlineClose = null;
+        fn();
+      }
+    }
+
+    // sprout-tags.js から呼べるように公開（タグ編集開始時に他のインライン編集を閉じるため）
+    window.sproutTopInline = { closeActive: _closeActiveInline };
 
     // データロード（タグをアイテムごとにプリフェッチして item._tagIds にセット）
     function loadItems() {
@@ -83,6 +98,7 @@ $(function () {
         $body.append(
           '<div class="text-center py-8 text-gray-400 text-sm">タスクがありません</div>'
         );
+        _appendAddRow($body);
         return;
       }
 
@@ -144,6 +160,89 @@ $(function () {
       if (typeof lucide !== 'undefined') {
         lucide.createIcons({ nodes: $body[0] ? [$body[0]] : [] });
       }
+
+      // 「+ タスクを追加」行
+      _appendAddRow($body);
+    }
+
+    function _appendAddRow($body) {
+      var $addRow = $('<div></div>')
+        .addClass('tbl-row border-b border-gray-100 dark:border-gray-700 tbl-add-row')
+        .css('cursor', 'pointer');
+
+      $addRow.html(
+        '<div class="tbl-cell"></div>' +
+        '<div class="tbl-cell" style="grid-column: 2 / span 8;">' +
+          '<span class="tbl-add-placeholder text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1.5 select-none">' +
+            '<i data-lucide="plus" style="width:13px;height:13px;"></i> タスクを追加' +
+          '</span>' +
+          '<input type="text" class="tbl-add-input inline-edit-input hidden" ' +
+                 'placeholder="タスク名を入力して Enter" style="width:100%;max-width:400px;" />' +
+        '</div>'
+      );
+
+      $body.append($addRow);
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons({ nodes: [$addRow[0]] });
+      }
+
+      // クリックで入力欄を表示
+      $addRow.off('click.addRow').on('click.addRow', function(e) {
+        if ($(e.target).is('input')) return;
+        $addRow.find('.tbl-add-placeholder').addClass('hidden');
+        var $inp = $addRow.find('.tbl-add-input').removeClass('hidden').focus();
+
+        $inp.off('keydown.addRow').on('keydown.addRow', function(ev) {
+          if (ev.key === 'Enter' && !ev.isComposing) {
+            ev.preventDefault();
+            _quickCreateTask($inp.val().trim());
+          }
+          if (ev.key === 'Escape') {
+            $inp.val('').addClass('hidden');
+            $addRow.find('.tbl-add-placeholder').removeClass('hidden');
+          }
+        });
+
+        $inp.off('blur.addRow').on('blur.addRow', function() {
+          var title = $inp.val().trim();
+          if (title) {
+            _quickCreateTask(title);
+          } else {
+            $inp.addClass('hidden');
+            $addRow.find('.tbl-add-placeholder').removeClass('hidden');
+          }
+        });
+      });
+    }
+
+    function _quickCreateTask(title) {
+      if (!title) return;
+
+      // フィルター中のタグ ID を取得
+      var tagIds = [];
+      _selectedTagIds.forEach(function(id) { tagIds.push(id); });
+
+      $.ajax({
+        url: '/task/new',
+        type: 'POST',
+        data: { title: title, statusCd: 1, priorityCd: 1 }
+      })
+      .done(function(res) {
+        var itemId = res.id;
+        var afterLoad = function() {
+          sprout.message.toast({ message: 'タスクを追加しました', type: 'success' });
+        };
+        if (itemId && tagIds.length > 0) {
+          $.post('/items/' + itemId + '/tags', { tagIds: tagIds })
+            .always(function() { loadItems(); afterLoad(); });
+        } else {
+          loadItems();
+          afterLoad();
+        }
+      })
+      .fail(function() {
+        sprout.message.toast({ message: 'タスクの追加に失敗しました', type: 'error' });
+      });
     }
 
     function renderStatusPill(statusCd, statusName) {
@@ -200,8 +299,8 @@ $(function () {
     $list.empty();
     
     $.each(tagList, function(i, tag) {
-      // Lv.内のExp進捗(%) ExpやLvが0のときは0%表示
-      var expPct = (tag.exp && tag.lv) ? Math.min(100, ((tag.exp % 100) / 100) * 100) : 0;
+      // Lv.内のExp進捗(%) 実際のステージ閾値ベースで計算
+      var expPct = _calcExpPct(tag.exp || 0, tag.lv || 1);
       var $card = $('<li></li>').addClass('grove-card flex-none bg-white/80 dark:bg-gray-800/80 ' +
         'rounded-xl p-2.5 shadow cursor-pointer hover:shadow-md transition border border-transparent ' +
         'hover:border-gray-200 dark:hover:border-gray-600')
@@ -215,7 +314,7 @@ $(function () {
                'style="width:68px;height:68px;" class="object-contain" />' +
         '</div>' +
         '<p class="text-center text-xs font-semibold truncate mb-0.5 text-sprout-content">' + escapeHtml(tag.tagName) + '</p>' +
-        '<p class="text-center text-xs text-sprout-content opacity-70">Lv.' + (tag.lv || 1) + ' / ' + escapeHtml(tag.stage || '種') + '</p>' +
+        '<p class="text-center text-xs text-sprout-content opacity-70">Lv.' + (tag.lv || 1) + ' / ' + escapeHtml(tag.stageName || '種') + '</p>' +
         '<div class="w-full h-0.5 bg-gray-200 dark:bg-gray-700 rounded-full mt-1.5 overflow-hidden">' +
           '<div class="h-full bg-green-400 rounded-full" style="width:' + expPct + '%"></div>' +
         '</div>'
@@ -227,9 +326,12 @@ $(function () {
     // GroveカードクリックでFeature反映＋タグフィルター
     $list.off('click.grove').on('click.grove', '.grove-card', function() {
       var tagId = $(this).data('tag-id');
-      var tag = tagList.find(function(t) { return t.tagId === tagId; });
+      // 最新データ (_allTagData) から検索して常に最新 EXP を取得
+      var currentList = (_allTagData && _allTagData.tagList) ? _allTagData.tagList : tagList;
+      var tag = currentList.find(function(t) { return t.tagId === tagId; });
       if (!tag) return;
 
+      _selectedFeatTag = tag.tagId;
       updateFeatured(tag);
 
       if (typeof filterByTag === 'function') {
@@ -238,18 +340,44 @@ $(function () {
     });
   }
 
+  // ステージ閾値（SproutStage enum と同値）
+  var _STAGE_THRESHOLDS = [0, 300, 1000, 2500, 5000, 9500, 15600, 23000, 32000, 47000];
+
+  /** 累計 EXP と現 Lv から、現レベル内の進捗(%)を返す */
+  function _calcExpPct(exp, lv) {
+    var idx = Math.min(Math.max(lv, 1), 10) - 1; // 0-based
+    var cur  = _STAGE_THRESHOLDS[idx];
+    var next = idx < 9 ? _STAGE_THRESHOLDS[idx + 1] : null;
+    if (!next) return 100; // Lv10 は常に満タン
+    return Math.min(100, Math.max(0, ((exp - cur) / (next - cur)) * 100));
+  }
+
+  /** 現 Lv 内の EXP（表示用）を返す */
+  function _expInLv(exp, lv) {
+    var idx = Math.min(Math.max(lv, 1), 10) - 1;
+    return exp - _STAGE_THRESHOLDS[idx];
+  }
+
+  /** 次 Lv に必要な EXP 幅（表示用）を返す */
+  function _expToNext(lv) {
+    var idx = Math.min(Math.max(lv, 1), 10) - 1;
+    if (idx >= 9) return null; // Lv10 以上
+    return _STAGE_THRESHOLDS[idx + 1] - _STAGE_THRESHOLDS[idx];
+  }
+
   // Featured更新
   function updateFeatured(tag) {
-    var EXP_PER_LV = 100;
     var exp = tag.exp || 0;
-    var lv = tag.lv || 1;
-    var expInLv = exp % EXP_PER_LV;
-    var expPct = (expInLv / EXP_PER_LV) * 100;
+    var lv  = tag.lv || 1;
+    var expPct     = _calcExpPct(exp, lv);
+    var inLv       = _expInLv(exp, lv);
+    var toNext     = _expToNext(lv);
+    var expDisplay = toNext != null ? (inLv + ' / ' + toNext) : ('MAX (' + exp + ')');
     var circumference = 427.3; // 2π × r(68)
 
     $(_this.featNameId).text(tag.tagName).css('color', '');
-    $(_this.featStageId).text(tag.stage || '種');
-    $(_this.featExpId).text(expInLv + ' / ' + EXP_PER_LV);
+    $(_this.featStageId).text(tag.stageName || '種');
+    $(_this.featExpId).text(expDisplay);
     $(_this.featBarId).css('width', expPct + '%');
     $(_this.featImgId).attr('src', '/img/plant_lv' + lv + '.png')
       .off('error.feat').on('error.feat', function() {
@@ -265,9 +393,10 @@ $(function () {
   $(_this.featClearId).off('click.clearFeatured').on('click.clearFeatured', function() {
     $(_this.featNameId).text('タグを選択してください').css('color', '');
     $(_this.featStageId).text('---');
-    $(_this.featExpId).text('— / —');
+    $(_this.featExpId).text('— / —'); // eslint-disable-line no-irregular-whitespace
     $(_this.featBarId).css('width', '0%');
     $(_this.arcRingId).css('stroke-dashoffset', 427.3);
+    _selectedFeatTag = null;
     $(this).addClass('hidden');
     if (typeof clearTagFilter === 'function') {
         clearTagFilter();
@@ -289,8 +418,6 @@ $(function () {
   });
 
   // タグフィルター状態
-  var _selectedTagIds = new Set();
-
   // タグでフィルタリング
   function filterByTag(tagId) {
     _selectedTagIds.clear();
@@ -369,15 +496,21 @@ $(function () {
     .off('click.openCreateModal')
     .on('click.openCreateModal', function () {
 
-      console.log('新規登録ボタンが押下されました');
+      // フィルター中のタグがあれば取得（複数選択の場合は全て渡す）
+      var presetTagObjs = [];
+      if (_selectedTagIds.size > 0 && typeof _allTagData !== 'undefined' && _allTagData) {
+        _selectedTagIds.forEach(function(tid) {
+          var tag = (_allTagData.tagList || []).find(function(t) { return String(t.tagId) === String(tid); });
+          if (tag) presetTagObjs.push(tag);
+        });
+      }
 
       sprout.util.openModal({
         modalId: 'itemUpdateModal',
         url: '/modal/update',
         data: { modalFlg: 0 },
         callBack: function ($modalEl) {
-          console.log('モーダル表示成功', $modalEl[0]);
-          itemUpdateModal.init($modalEl);
+          itemUpdateModal.init($modalEl, { presetTags: presetTagObjs });
         }
       });
     });
@@ -435,18 +568,28 @@ $(function () {
       });
     });
 
+  function loadGrove() {
+    return $.ajax({ url: '/tags/all', type: 'GET', dataType: 'json', cache: false })
+      .done(function(tagData) {
+        _allTagData = tagData;
+        var tagList = tagData.tagList || [];
+        initGrove(tagList);
+        // 選択中タグの Featured パネルも更新
+        if (_selectedFeatTag) {
+          var updated = tagList.find(function(t) { return t.tagId === _selectedFeatTag; });
+          if (updated) updateFeatured(updated);
+        }
+      });
+  }
+
   $(document).on('sprout:tag-deleted', function (e, data) {
     loadItems();
-    $.getJSON('/tags/all', function(tagData) {
-      initGrove(tagData.tagList || []);
-    });
+    loadGrove();
   });
 
   // タグ付け変更後（追加・選択解除）にGroveを再描画
   $(document).on('sprout:tags-updated', function() {
-    $.getJSON('/tags/all', function(tagData) {
-      initGrove(tagData.tagList || []);
-    });
+    loadGrove();
   });
 
   $(document).on('sprout:task-updated', function () {
@@ -571,15 +714,19 @@ $(function () {
     function doSave() {
       if (committed) return;
       committed = true;
+      _activeInlineClose = null;
       $input.off('blur.inlineEdit');
       onSave($input.val());
     }
     function doCancel() {
       if (committed) return;
       committed = true;
+      _activeInlineClose = null;
       $input.off('blur.inlineEdit');
       onCancel();
     }
+
+    _activeInlineClose = doSave;
 
     $input
       .on('blur.inlineEdit', function() { doSave(); })
@@ -592,8 +739,6 @@ $(function () {
   // ドロップダウン選択（ステータス・優先度）
   function startDropdownEdit($cell, options, onSave) {
     var rect = $cell[0].getBoundingClientRect();
-    var scrollX = window.pageXOffset;
-    var scrollY = window.pageYOffset;
 
     var optHtml = options.map(function(opt) {
       return '<div class="sprout-inline-opt" data-cd="' + opt.cd + '" ' +
@@ -601,10 +746,20 @@ $(function () {
         '<span class="' + opt.cls + '">' + opt.name + '</span></div>';
     }).join('');
 
+    // position:fixed はビューポート基準のため scroll 量を加算しない。
+    // 画面下端をはみ出す場合は行の上側に表示してスクロール可能にする。
+    var maxHeight = 220;
+    var top = rect.bottom + 2;
+    if (top + maxHeight > window.innerHeight) {
+      top = Math.max(8, rect.top - maxHeight - 2);
+    }
+
     var $dd = $('<div id="sprout-inline-dropdown" style="' +
       'position:fixed;' +
-      'left:' + (rect.left + scrollX) + 'px;' +
-      'top:' + (rect.bottom + scrollY + 2) + 'px;' +
+      'left:' + rect.left + 'px;' +
+      'top:' + top + 'px;' +
+      'max-height:' + maxHeight + 'px;' +
+      'overflow-y:auto;' +
       'z-index:99999;' +
       'background:var(--card,#fff);' +
       'border:1px solid var(--line,#E6DFCD);' +
@@ -616,9 +771,12 @@ $(function () {
     $('body').append($dd);
 
     function closeDropdown() {
+      if (_activeInlineClose === closeDropdown) _activeInlineClose = null;
       $dd.remove();
       $(document).off('click.inlineDropdown keydown.inlineDropdownEsc');
     }
+
+    _activeInlineClose = closeDropdown;
 
     $(document)
       .off('click.inlineDropdown')
@@ -658,6 +816,7 @@ $(function () {
       onClose: function(selectedDates) {
         if (committed) return;
         committed = true;
+        _activeInlineClose = null;
         fp.destroy();
         if (selectedDates.length > 0) {
           onSave(dayjs(selectedDates[0]).format('YYYY-MM-DD'));
@@ -667,10 +826,16 @@ $(function () {
       }
     });
 
+    _activeInlineClose = function() {
+      if (committed) return;
+      fp.close();
+    };
+
     $input.on('keydown.inlineEdit', function(e) {
       if (e.key === 'Escape') {
         if (committed) return;
         committed = true;
+        _activeInlineClose = null;
         fp.close();
         fp.destroy();
         onCancel();
@@ -688,13 +853,14 @@ $(function () {
 
       // モーダルオープンボタンがクリックされた場合は無視
       if ($(e.target).closest('.btn-open-modal').length) return;
-      // 既に編集中のセルなら無視
+      // 既に編集中のセルなら無視（継続して入力させる）
       if ($(this).find('input, textarea').length) return;
-      // ドロップダウンが開いていれば閉じるだけ
-      if ($('#sprout-inline-dropdown').length) {
-        $('#sprout-inline-dropdown').remove();
-        $(document).off('click.inlineDropdown keydown.inlineDropdownEsc');
-        return;
+
+      // 他のインライン編集（テキスト/日付/ドロップダウン）が開いていれば確定保存して閉じる
+      _closeActiveInline();
+      // タグ編集が開いていれば確定保存して閉じる
+      if (typeof sprout !== 'undefined' && sprout.tags && typeof sprout.tags.closeActiveEdit === 'function') {
+        sprout.tags.closeActiveEdit();
       }
 
       var field = $(this).data('inline-field');
@@ -780,9 +946,6 @@ $(function () {
 
   // ===== インライン編集ここまで =====
 
-  $.getJSON('/tags/all', function(data) {
-    var tagList = data.tagList || [];
-    initGrove(tagList);
-  });
+  loadGrove();
   loadItems();
 });
