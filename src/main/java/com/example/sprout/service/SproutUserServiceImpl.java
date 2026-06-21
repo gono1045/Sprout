@@ -39,16 +39,20 @@ public class SproutUserServiceImpl implements SproutUserService {
    */
   @Override
   public boolean existsByLoginId(String loginId) {
-    return sproutUserDao.findByLoginIdAndProvider(loginId, "LOCAL").isPresent();
+    // DBのUNIQUE制約はis_activeを問わず適用されるため、
+    // 退会済み（is_active=false）アカウントも重複として検出する
+    return sproutUserDao.existsByLoginIdAnyStatus(loginId);
   }
 
   /**
-   * メールアドレス存在チェック（LOCALユーザー限定）
+   * メールアドレス存在チェック
    * @param email メールアドレス
    * @return 存在する場合 true
    */
   @Override
   public boolean existsByEmail(String email) {
-    return sproutUserDao.findByEmailAndProvider(email, "LOCAL").isPresent();
+    // DBのUNIQUE制約はis_activeを問わず適用されるため、
+    // 退会済み（is_active=false）アカウントも重複として検出する
+    return sproutUserDao.existsByEmailAnyStatus(email);
   }
 }
