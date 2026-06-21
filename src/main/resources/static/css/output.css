@@ -507,6 +507,9 @@
   .gap-1 {
     gap: calc(var(--spacing) * 1);
   }
+  .gap-1\.5 {
+    gap: calc(var(--spacing) * 1.5);
+  }
   .gap-2 {
     gap: calc(var(--spacing) * 2);
   }
@@ -976,6 +979,10 @@
     --tw-outline-style: none;
     outline-style: none;
   }
+  .select-none {
+    -webkit-user-select: none;
+    user-select: none;
+  }
   .hover\:border-gray-200 {
     &:hover {
       @media (hover: hover) {
@@ -1176,6 +1183,11 @@
       color: var(--color-gray-300);
     }
   }
+  .dark\:text-gray-500 {
+    @media (prefers-color-scheme: dark) {
+      color: var(--color-gray-500);
+    }
+  }
   .dark\:text-gray-600 {
     @media (prefers-color-scheme: dark) {
       color: var(--color-gray-600);
@@ -1340,6 +1352,17 @@ html.dark {
 .tbl-cell:has(.sprout-tag-mount), .tbl-cell:has(.sprout-tag-view) {
   white-space: normal;
   overflow: visible;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.1s;
+}
+.tbl-cell:has(.sprout-tag-mount):hover, .tbl-cell:has(.sprout-tag-view):hover {
+  background: rgba(167, 243, 200, 0.15);
+}
+.sprout-tag-mount {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 .tbl-data-row:hover {
   background-color: rgba(209, 250, 229, 0.3);
@@ -1450,6 +1473,19 @@ html.dark .btn-open-modal:hover {
 }
 .inline-edit-input::placeholder {
   color: rgba(167, 243, 200, 0.4);
+}
+.tbl-add-row {
+  min-height: 36px;
+}
+.tbl-add-row:hover .tbl-add-placeholder {
+  color: #6b7280;
+}
+html.dark .tbl-add-row:hover .tbl-add-placeholder {
+  color: #9ca3af;
+}
+.tbl-add-row .tbl-add-input {
+  color: inherit;
+  border-bottom-color: var(--moss-2, #5BA178);
 }
 .flatpickr-calendar {
   background: var(--card, #1e3a2a) !important;

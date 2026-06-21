@@ -2,6 +2,8 @@ package com.example.sprout.model;
 
 import java.time.LocalDateTime;
 
+import com.example.sprout.enums.SproutStage;
+
 /**
  * タグ情報を表すModel
  */
@@ -204,5 +206,10 @@ public class SproutTagList {
    */
   public void setLv(int lv) {
     this.lv = lv;
+  }
+
+  /** lv からステージ名を導出して返す（DBカラム非対応・JSON自動シリアライズ用）。 */
+  public String getStageName() {
+    return SproutStage.fromLv(lv).getStageName();
   }
 }
