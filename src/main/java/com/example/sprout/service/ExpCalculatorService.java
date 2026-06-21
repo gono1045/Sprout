@@ -38,6 +38,4 @@ public interface ExpCalculatorService {
    * @return タグ別の EXP 付与結果リスト
    */
   List<TagExpResult> distributeExp(Long userId, List<Long> tagIds, int totalExp);
-   */
-  void distributeExp(Long userId, List<Long> tagIds, int totalExp);
 }

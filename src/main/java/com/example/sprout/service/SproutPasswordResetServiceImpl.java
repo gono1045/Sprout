@@ -51,14 +51,12 @@ public class SproutPasswordResetServiceImpl implements SproutPasswordResetServic
    */
   @Override
   public void sendResetMail(String email) {
-    Optional<SproutUser> userOpt = sproutUserDao.findByEmailAndProvider(email, "LOCAL");
+    SproutUser user = sproutUserDao.findByEmailAndProvider(email, "LOCAL");
 
     // ユーザーが存在しない場合も正常終了（ユーザー存在確認を防ぐため）
-    if (userOpt.isEmpty()) {
+    if (user == null) {
       return;
     }
-
-    SproutUser user = userOpt.get();
 
     // 既存の未使用トークンを無効化
     tokenRepository.invalidateAllByUserId(user.getUserId());
