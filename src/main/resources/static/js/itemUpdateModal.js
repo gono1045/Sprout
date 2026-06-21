@@ -107,6 +107,7 @@ var itemUpdateModal = (function () {
           el: this,
           itemId: itemId || null,
           presetTags: (itemId ? [] : (options.presetTags || []))
+          readonly: $(this).data('readonly') === true
         });
 
         $(this).data('mounted', true);
