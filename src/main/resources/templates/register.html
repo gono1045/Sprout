@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja" class="h-screen">
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
   <title>Sprout Register</title>
@@ -11,113 +11,234 @@
         http-equiv="refresh"
         content="3;url=/">
 
+  <style>
+    :root {
+      --forest: #1B4332;
+      --moss:   #3E7A52;
+      --moss-2: #5BA178;
+      --paper:  #F4F1E9;
+      --line:   #E6DFCD;
+      --ink:    #1B2A20;
+      --ink-2:  #4A5E4A;
+      --ink-3:  #8E9A8E;
+      --card:   #FFFFFF;
+    }
+
+    body {
+      background-color: var(--paper);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle, var(--line) 1px, transparent 1px);
+      background-size: 24px 24px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .login-card {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 400px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 48px 40px 40px;
+      text-align: center;
+      box-shadow: 0 2px 16px rgba(27, 67, 50, 0.08);
+    }
+
+    .login-logo {
+      font-family: 'Merriweather', serif;
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--forest);
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .login-subtitle {
+      font-size: 13px;
+      color: var(--ink-3);
+      margin-bottom: 28px;
+    }
+
+    .login-error {
+      color: #C85A5A;
+      font-size: 13px;
+      margin-top: 4px;
+      text-align: left;
+    }
+
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      text-align: left;
+    }
+
+    .login-input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--card);
+      color: var(--ink);
+      font-size: 15px;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+      box-sizing: border-box;
+    }
+
+    .login-input::placeholder {
+      color: var(--ink-3);
+    }
+
+    .login-input:focus {
+      border-color: var(--moss-2);
+      box-shadow: 0 0 0 3px rgba(91, 161, 120, 0.15);
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 48px;
+      background: linear-gradient(135deg, var(--forest), var(--moss));
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: opacity .15s, box-shadow .15s;
+      box-shadow: 0 2px 10px rgba(27, 67, 50, 0.28);
+      margin-top: 4px;
+    }
+
+    .btn-primary:hover {
+      opacity: .9;
+      box-shadow: 0 4px 16px rgba(27, 67, 50, 0.35);
+    }
+
+    .login-divider {
+      display: flex;
+      align-items: center;
+      margin: 20px 0;
+      gap: 12px;
+    }
+
+    .login-divider::before,
+    .login-divider::after {
+      content: '';
+      flex: 1;
+      border-top: 1px solid var(--line);
+    }
+
+    .login-divider span {
+      font-size: 12px;
+      color: var(--ink-3);
+    }
+
+    .login-register {
+      font-size: 13px;
+      color: var(--moss);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .login-register:hover {
+      color: var(--forest);
+      text-decoration: underline;
+    }
+
+    .login-success {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #166534;
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 14px;
+    }
+
+    .login-success p {
+      font-size: 12px;
+      color: var(--moss);
+      margin-top: 8px;
+    }
+  </style>
 </head>
 
-<body class="flex items-center justify-center min-h-screen p-6
-             bg-gradient-to-br from-green-100 via-emerald-200 to-teal-200">
+<body>
 
-<div class="w-full max-w-sm
-            bg-white/60 backdrop-blur-sm
-            p-10 rounded-3xl
-            shadow-lg text-center">
+  <div class="login-card">
+    <span class="login-logo">Sprout</span>
+    <p class="login-subtitle" th:unless="${successMessage}">アカウント作成</p>
 
-  <!-- タイトル -->
-  <h1 class="text-4xl text-emerald-700 mb-8"
-  style="font-family: 'Merriweather', serif;">
-    Sprout
-  </h1>
+    <form th:unless="${successMessage}"
+          th:action="@{/register}"
+          th:object="${sproutUserForm}"
+          method="post"
+          class="login-form">
 
-  <p class="text-emerald-600 text-sm mb-6">アカウント作成</p>
+      <div>
+        <input type="text"
+               th:field="*{loginId}"
+               placeholder="Login ID"
+               class="login-input"/>
+        <p class="login-error" th:if="${#fields.hasErrors('loginId')}" th:errors="*{loginId}"></p>
+      </div>
 
-  <!-- 成功時はフォームを隠す -->
-  <form th:unless="${successMessage}"
-        th:action="@{/register}"
-        th:object="${sproutUserForm}"
-        method="post"
-        class="space-y-4">
+      <div>
+        <input type="email"
+               th:field="*{email}"
+               placeholder="Email"
+               class="login-input"/>
+        <p class="login-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></p>
+      </div>
 
-    <!-- ログインID -->
-    <div class="text-left">
-      <input type="text"
-             th:field="*{loginId}"
-             placeholder="Login ID"
-             class="w-full px-4 py-3 rounded-xl bg-white border border-emerald-100
-                    placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition"/>
+      <div>
+        <input type="password"
+               th:field="*{password}"
+               placeholder="Password"
+               class="login-input"/>
+        <p class="login-error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></p>
+      </div>
 
-      <p class="text-red-500 text-xs mt-1"
-         th:if="${#fields.hasErrors('loginId')}"
-         th:errors="*{loginId}"></p>
+      <div>
+        <input type="password"
+               th:field="*{confirmPassword}"
+               placeholder="Confirm Password"
+               class="login-input"/>
+        <p class="login-error" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></p>
+      </div>
+
+      <button type="submit" class="btn-primary">
+        Create Account
+      </button>
+    </form>
+
+    <div th:unless="${successMessage}" class="login-divider"><span>OR</span></div>
+
+    <a th:unless="${successMessage}" th:href="@{/login}" class="login-register">
+      既にアカウントをお持ちの方はこちら
+    </a>
+
+    <div th:if="${successMessage}" class="login-success">
+      <span th:text="${successMessage}"></span>
+      <p>数秒後にSproutへ移動します...</p>
     </div>
-
-    <!-- メール -->
-    <div class="text-left">
-      <input type="email"
-             th:field="*{email}"
-             placeholder="Email"
-             class="w-full px-4 py-3 rounded-xl bg-white border border-emerald-100
-                    placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition"/>
-
-      <p class="text-red-500 text-xs mt-1"
-         th:errors="*{email}"></p>
-    </div>
-
-    <!-- パスワード -->
-    <div class="text-left">
-      <input type="password"
-             th:field="*{password}"
-             placeholder="Password"
-             class="w-full px-4 py-3 rounded-xl bg-white border border-emerald-100
-                    placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition"/>
-
-      <p class="text-red-500 text-xs mt-1"
-         th:errors="*{password}"></p>
-    </div>
-
-    <!-- パスワード確認 -->
-    <div class="text-left">
-      <input type="password"
-             th:field="*{confirmPassword}"
-             placeholder="Confirm Password"
-             class="w-full px-4 py-3 rounded-xl bg-white border border-emerald-100
-                    placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition"/>
-
-      <p class="text-red-500 text-xs mt-1"
-         th:errors="*{confirmPassword}"></p>
-    </div>
-
-    <!-- 登録ボタン -->
-    <button type="submit"
-            class="w-full bg-emerald-400 text-white py-3 rounded-xl hover:bg-emerald-500
-                   transition font-semibold shadow-sm">
-      Create Account
-    </button>
-
-  </form>
-
-  <!-- 区切り線（成功時は非表示） -->
-  <div th:unless="${successMessage}" class="flex items-center my-6">
-    <div class="flex-grow border-t border-emerald-100"></div>
-    <span class="px-3 text-emerald-300 text-sm">OR</span>
-    <div class="flex-grow border-t border-emerald-100"></div>
   </div>
-
-  <!-- ログインリンク（成功時は非表示） -->
-  <a th:unless="${successMessage}"
-     th:href="@{/login}"
-     class="text-sm text-emerald-600 hover:underline">
-    既にアカウントをお持ちの方はこちら
-  </a>
-
-  <!-- 成功メッセージ（中央表示） -->
-  <div th:if="${successMessage}"
-       class="p-4 rounded-xl bg-emerald-100 text-emerald-700 text-sm">
-    <span th:text="${successMessage}"></span>
-    <p class="text-xs text-emerald-600 mt-2">
-      数秒後にSproutへ移動します...
-    </p>
-  </div>
-
-</div>
 
 </body>
 </html>
