@@ -18,7 +18,10 @@ sprout.tags = (function() {
       mode: 'view',
       allTags: [],
       finishing: false,
-      dropdownIndex: -1
+      dropdownIndex: -1,
+      readonly: options.readonly || false,
+      presetTags: options.presetTags || []
+      readonly: options.readonly === true
     };
 
     state.el.data('sproutTagsState', state);
@@ -60,6 +63,10 @@ sprout.tags = (function() {
           console.error("タグ取得失敗 itemId:", state.itemId);
         });
     } else {
+      // 新規作成時: presetTags が指定されていれば初期値として設定
+      if (state.presetTags && state.presetTags.length > 0) {
+        state.tags = state.presetTags.slice();
+      }
       renderView(state);
     }
   }
@@ -107,11 +114,13 @@ sprout.tags = (function() {
       `;
     }).join("");
 
-    // 内部 div で上下中央に揃える
+    // 内部 div で上下中央に揃える（ヘッダーと左揃えを合わせる）
+    // padding はセル側（.tbl-cell）の標準値に揃え、ここでは w-full / h-full で
+    // セルの content box を満たすだけにする（タグなし時もクリック領域を広く確保）
     state.el.html(`
-      <div class="sprout-tag-view flex items-center justify-center w-full h-full cursor-pointer">
-        <div class="flex items-center justify-center">
-          ${html || '<span class="tag-empty inline-block w-full h-full">&nbsp;</span>'}
+      <div class="sprout-tag-view flex items-center cursor-pointer w-full h-full">
+        <div class="flex items-center gap-1 flex-wrap w-full">
+          ${html || '<span class="tag-empty">&nbsp;</span>'}
         </div>
       </div>
     `);
@@ -120,8 +129,23 @@ sprout.tags = (function() {
       .off('click.sproutTags')
       .on('click.sproutTags', '.sprout-tag-view', function (e) {
         e.stopPropagation();
+        // 他のインライン編集（テキスト/ドロップダウン/日付）が開いていれば確定保存して閉じる
+        if (window.sproutTopInline && typeof window.sproutTopInline.closeActive === 'function') {
+          window.sproutTopInline.closeActive();
+        }
         renderEdit(state);
       });
+    // readonly モードではクリックしても編集モードに入らない
+    if (!state.readonly) {
+      $base
+        .off('click.sproutTags')
+        .on('click.sproutTags', '.sprout-tag-view', function (e) {
+          e.stopPropagation();
+          renderEdit(state);
+        });
+    } else {
+      $base.off('click.sproutTags').removeClass('cursor-pointer').addClass('cursor-default');
+    }
   }
 
   /**
@@ -219,8 +243,6 @@ sprout.tags = (function() {
     $('.sprout-tag-dropdown-portal').remove();
 
     const rect = state.anchorEl.getBoundingClientRect();
-    const scrollX = window.pageXOffset;
-    const scrollY = window.pageYOffset;
 
     const selectableTags = getSelectableTags(state)
       .filter(tag => tag.tagName.toLowerCase().includes(filterText.toLowerCase()));
@@ -231,39 +253,67 @@ sprout.tags = (function() {
       state.dropdownIndex = -1;
     }
 
-    const html = `
-      <ul
-        class="sprout-tag-dropdown-portal fixed bg-white dark:bg-gray-800 border shadow z-[9999]"
-        style="
-          left: ${rect.left + scrollX}px;
-          top: ${rect.bottom + scrollY}px;
-          width: ${rect.width}px;
-        "
-      >
-      ${selectableTags.map((tag, index) => `
-          <li
-            class="sprout-tag-option group flex items-center gap-2 px-2 py-1 text-sm hover:bg-gray-100 cursor-pointer
-              ${index === state.dropdownIndex ? 'bg-gray-100' : 'hover:bg-gray-100'}"
-            data-tag-id="${tag.tagId}"
-            data-index="${index}"
-          >
-            <div class="flex flex-col text-gray-400 text-xs leading-none select-none">
-              <span class="sprout-tag-move-up cursor-pointer hover:text-black">▲</span>
-              <span class="sprout-tag-move-down cursor-pointer hover:text-black">▼</span>
-            </div>
+    // position:fixed はビューポート基準のため scroll 量を加算しない。
+    // 画面下端をはみ出す場合は行の上側に表示してスクロール可能にする。
+    var maxHeight = 240;
+    var top = rect.bottom + 4;
+    if (top + maxHeight > window.innerHeight) {
+      top = Math.max(8, rect.top - maxHeight - 4);
+    }
 
-            <div
-              class="min-w-0 max-w-[60%] mx-auto px-2 py-1 rounded text-white truncate flex items-center justify-center min-h-[24px] ${tag.tagColor}"
-            >
-              ${tag.tagName}
-            </div>
-            <div class="sprout-tag-gear text-gray-400 cursor-pointer select-none">⚙</div>
-          </li>
-        `).join('')}
+    const html = `
+      <ul class="sprout-tag-dropdown-portal" style="
+        position: fixed;
+        left: ${rect.left}px;
+        top: ${top}px;
+        width: ${rect.width}px;
+        max-height: ${maxHeight}px;
+        overflow-y: auto;
+        background: var(--card, #fff);
+        border: 1px solid var(--line, #E6DFCD);
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(27,67,50,0.14);
+        z-index: 99999;
+        padding: 4px 0;
+        margin: 0;
+        list-style: none;
+      ">
+      ${selectableTags.map((tag, index) => `
+        <li
+          class="sprout-tag-option"
+          style="
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            cursor: pointer;
+            ${index === state.dropdownIndex ? 'background: rgba(167,243,200,0.2);' : ''}
+          "
+          data-tag-id="${tag.tagId}"
+          data-index="${index}"
+        >
+          <div style="display:flex;flex-direction:column;gap:1px;opacity:0.45;user-select:none;">
+            <span class="sprout-tag-move-up" style="cursor:pointer;font-size:9px;line-height:1.2;">▲</span>
+            <span class="sprout-tag-move-down" style="cursor:pointer;font-size:9px;line-height:1.2;">▼</span>
+          </div>
+          <span
+            class="tag-chip ${tag.tagColor}"
+            style="flex:1;padding:3px 10px;border-radius:9999px;color:#fff;font-size:12px;font-weight:500;
+              overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;"
+          >${tag.tagName}</span>
+          <button class="sprout-tag-gear" style="background:none;border:none;padding:2px 3px;cursor:pointer;
+            opacity:0.4;display:flex;align-items:center;" title="編集">
+            <i data-lucide="settings-2" style="width:13px;height:13px;"></i>
+          </button>
+        </li>
+      `).join('')}
       </ul>
     `;
 
     $('body').append(html);
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons({ nodes: [$('.sprout-tag-dropdown-portal')[0]] });
+    }
   }
 
   /**
@@ -277,33 +327,39 @@ sprout.tags = (function() {
 
     const html = `
       <div
-        class="sprout-tag-action-popup fixed bg-white dark:bg-gray-800 border shadow z-[10000]"
+        class="sprout-tag-action-popup"
         data-tag-id="${tagId}"
         style="
-          left: ${dropdownRect.right}px;
+          position: fixed;
+          left: ${dropdownRect.right + 4}px;
           top: ${liRect.top}px;
+          background: var(--card, #fff);
+          border: 1px solid var(--line, #E6DFCD);
+          border-radius: 10px;
+          box-shadow: 0 4px 20px rgba(27,67,50,0.14);
+          z-index: 99999;
+          padding: 10px;
+          min-width: 160px;
         "
       >
-        <!-- カラーパレット（最初から表示） -->
-        <div class="sprout-tag-color-palette grid grid-cols-6 gap-1 p-2">
+        <div class="sprout-tag-color-palette" style="display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin-bottom:10px;">
           ${TAG_COLORS.map(color => `
             <div
-              class="sprout-tag-color-item w-6 h-6 rounded cursor-pointer ${color}"
+              class="sprout-tag-color-item ${color}"
               data-tag-id="${tagId}"
               data-color="${color}"
+              style="width:22px;height:22px;border-radius:50%;cursor:pointer;"
             ></div>
           `).join('')}
         </div>
-
-        <div class="px-2 pb-2">
-          <div
-            class="sprout-tag-action-item w-full text-center cursor-pointer rounded
-            px-2 py-1 text-sm bg-red-500 hover:bg-red-600 text-white"
-            data-action="delete"
-          >
-            削除
-          </div>
-        </div>
+        <button
+          class="sprout-tag-action-item"
+          data-action="delete"
+          style="
+            width:100%;padding:6px 0;border-radius:8px;border:none;
+            background:#fee2e2;color:#991b1b;font-size:12px;font-weight:600;cursor:pointer;
+          "
+        >削除</button>
       </div>
     `;
 
@@ -431,10 +487,11 @@ sprout.tags = (function() {
       }
 
       if (action === 'delete') {
-        console.log('削除', tagId);
 
         sprout.message.confirmExec({
-          messageId: "WARN001",
+          message: 'このタグを削除すると、蓄積したEXP・Lvが失われます。\n本当に削除しますか？',
+          okText: '削除する',
+          danger: true,
           onOk: function() {
             $.ajax({
               url: '/tags/delete',
@@ -667,14 +724,34 @@ sprout.tags = (function() {
       return;
     }
 
-    saveItemTags(currentState.itemId, currentIds)
+    var targetState = currentState;
+
+    saveItemTags(targetState.itemId, currentIds)
       .done(function () {
-        fetchItemTags(currentState.itemId).done(function (tags) {
-          currentState.tags = tags;
-          currentState.originalTagIds = tags.map(t => t.tagId); // ★ 状態更新
-          currentState.mode = 'view';
-          currentState.finishing = false;
-          renderView(currentState);
+        fetchItemTags(targetState.itemId).done(function (tags) {
+          targetState.tags = tags;
+          targetState.originalTagIds = tags.map(t => t.tagId);
+          targetState.mode = 'view';
+          targetState.finishing = false;
+          renderView(targetState);
+          // Grove（マイガーデン）再描画トリガー
+          $(document).trigger('sprout:tags-updated');
+          // タグ件数の変化でタイマーボタンの活性状態が変わるためテーブルも再読込
+          $(document).trigger('sprout:task-updated');
+        });
+      })
+      .fail(function () {
+        targetState.finishing = false;
+        sprout.message.toast({
+          message: 'タグの保存に失敗しました',
+          type: 'error'
+        });
+        // サーバーの実際の状態を再取得して表示を復元する
+        fetchItemTags(targetState.itemId).done(function (tags) {
+          targetState.tags = tags;
+          targetState.originalTagIds = tags.map(t => t.tagId);
+          targetState.mode = 'view';
+          renderView(targetState);
         });
       });
   }
@@ -722,13 +799,6 @@ sprout.tags = (function() {
       // 選択状態にも追加
       currentState.tags.push(tag);
 
-      if (currentState.itemId) {
-        saveItemTags(
-          currentState.itemId,
-          currentState.tags.map(t => t.tagId)
-        );
-      }
-
       // originalを更新
       currentState.originalTagIds =
           currentState.tags.map(t => t.tagId);
@@ -736,6 +806,19 @@ sprout.tags = (function() {
       // 再描画（閉じない）
       renderEdit(currentState);
       renderDropdown(currentState);
+
+      // 新規タグをマイガーデンに即時反映
+      $(document).trigger('sprout:tags-updated');
+
+      if (currentState.itemId) {
+        saveItemTags(
+          currentState.itemId,
+          currentState.tags.map(t => t.tagId)
+        ).done(function () {
+          // タグ件数の変化でタイマーボタンの活性状態が変わるためテーブルも再読込
+          $(document).trigger('sprout:task-updated');
+        });
+      }
     })
     .fail(function () {
       sprout.message.toast({
@@ -762,8 +845,18 @@ sprout.tags = (function() {
     });
   }
 
+  /**
+   * 他コンポーネントから呼ばれる: 現在タグ編集中なら確定保存して閉じる
+   */
+  function closeActiveEdit() {
+    if (currentState && currentState.mode === 'edit') {
+      finishEdit();
+    }
+  }
+
   return {
-    mount: mount
+    mount: mount,
+    closeActiveEdit: closeActiveEdit
   };
 
 })();

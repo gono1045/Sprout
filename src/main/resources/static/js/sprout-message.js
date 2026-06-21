@@ -52,48 +52,48 @@ sprout.message = (function () {
 
         /* dialog */
         const dialog = document.createElement('div');
-        dialog.className =
-          'bg-white dark:bg-gray-800 rounded-lg shadow-lg flex flex-col';
-          dialog.style.width = '500px';
-          dialog.style.height = '350px'
+        dialog.style.cssText =
+          'background:var(--card,#fff);border:1px solid var(--line,#E6DFCD);border-radius:16px;' +
+          'box-shadow:0 8px 40px rgba(27,67,50,0.18);min-width:300px;max-width:380px;overflow:hidden;';
 
         /* ===== header ===== */
         const header = document.createElement('div');
-        header.className =
-          'flex justify-between items-center px-4 py-3 border-b dark:border-gray-700';
+        header.style.cssText =
+          'display:flex;justify-content:space-between;align-items:center;padding:18px 20px 12px;';
 
         const title = document.createElement('h3');
-        title.className =
-          'text-lg font-semibold text-gray-800 dark:text-gray-100';
+        title.style.cssText = 'font-size:15px;font-weight:700;color:var(--forest,#1B4332);margin:0;';
         title.textContent = params.title || params.messageId || '確認';
 
         const closeBtn = document.createElement('button');
-        closeBtn.className =
-          'text-xl text-gray-500 hover:text-gray-800 dark:hover:text-gray-200';
+        closeBtn.style.cssText =
+          'background:none;border:none;cursor:pointer;color:var(--ink-3,#8E9A8E);font-size:18px;padding:0;line-height:1;';
         closeBtn.textContent = '×';
 
         header.append(title, closeBtn);
 
         /* ===== body ===== */
         const body = document.createElement('div');
-        body.className =
-          'flex-1 px-6 text-base text-gray-800 dark:text-gray-100 whitespace-pre-wrap text-center flex items-center justify-center text-center border-b dark:border-gray-700';
+        body.style.cssText =
+          'padding:8px 20px 20px;font-size:14px;color:var(--ink-2,#4A5E4A);line-height:1.7;' +
+          'border-top:1px solid var(--line,#E6DFCD);border-bottom:1px solid var(--line,#E6DFCD);';
         body.textContent = params.message;
 
         /* ===== footer ===== */
         const footer = document.createElement('div');
-        footer.className =
-          'flex justify-between items-center p-6 border-t dark:border-gray-700';
+        footer.style.cssText = 'display:flex;justify-content:flex-end;gap:8px;padding:14px 20px;';
 
         const cancelBtn = document.createElement('button');
-        cancelBtn.className =
-          'px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100';
+        cancelBtn.style.cssText =
+          'padding:7px 18px;border-radius:8px;border:1.5px solid var(--line,#E6DFCD);' +
+          'background:var(--card,#fff);color:var(--ink-2,#4A5E4A);font-size:13px;font-weight:500;cursor:pointer;';
         cancelBtn.textContent = params.cancelText || 'キャンセル';
 
         const okBtn = document.createElement('button');
-        okBtn.className = params.danger !== false
-          ? 'px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700'
-          : 'px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700';
+        const _isDanger = params.danger !== false;
+        okBtn.style.cssText = _isDanger
+          ? 'padding:7px 18px;border-radius:8px;border:none;background:#fee2e2;color:#991b1b;font-size:13px;font-weight:600;cursor:pointer;'
+          : 'padding:7px 18px;border-radius:8px;border:none;background:linear-gradient(135deg,var(--forest,#1B4332),var(--moss,#3E7A52));color:#fff;font-size:13px;font-weight:600;cursor:pointer;';
         okBtn.textContent = params.okText || 'OK';
 
         footer.append(cancelBtn, okBtn);

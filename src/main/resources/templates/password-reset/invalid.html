@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>リンクが無効です — Sprout</title>
+  <link rel="stylesheet" th:href="@{/css/output.css}">
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --forest: #1B4332; --moss: #3E7A52; --paper: #F4F1E9; --line: #E6DFCD;
+      --ink: #1B2A20; --ink-2: #4A5E4A; --card: #FFFFFF;
+    }
+    body {
+      background-color: var(--paper); min-height: 100vh;
+      display: flex; align-items: center; justify-content: center; padding: 24px; position: relative;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: radial-gradient(circle, var(--line) 1px, transparent 1px);
+      background-size: 24px 24px; pointer-events: none; z-index: 0;
+    }
+    .card {
+      position: relative; z-index: 1; width: 100%; max-width: 400px;
+      background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+      padding: 40px; box-shadow: 0 2px 16px rgba(27,67,50,.08); text-align: center;
+    }
+    .logo { font-family: 'Merriweather', serif; font-size: 24px; font-weight: 700; color: var(--forest); margin-bottom: 16px; }
+    .error-msg { font-size: 13px; color: #991b1b; background: #fff5f5; border: 1px solid #fecaca; border-radius: 10px; padding: 14px; margin-bottom: 24px; line-height: 1.7; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      height: 44px; padding: 0 24px; border-radius: 10px; border: none; cursor: pointer;
+      background: linear-gradient(135deg, var(--forest), var(--moss));
+      color: #fff; font-size: 13px; font-weight: 600; text-decoration: none;
+      transition: opacity .15s; margin: 4px;
+    }
+    .btn:hover { opacity: .9; }
+    .btn-secondary {
+      background: var(--card); border: 1.5px solid var(--line); color: var(--ink-2);
+    }
+    .btn-secondary:hover { background: #f0f5eb; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <p class="logo">Sprout</p>
+    <div class="error-msg" th:text="${errorMessage}">このリンクは無効または期限切れです。</div>
+    <a th:href="@{/password-reset/request}" class="btn">再度リセットを申し込む</a>
+    <a th:href="@{/login}" class="btn btn-secondary">ログインへ戻る</a>
+  </div>
+</body>
+</html>

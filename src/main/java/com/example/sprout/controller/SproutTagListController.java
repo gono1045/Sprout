@@ -85,7 +85,8 @@ public class SproutTagListController {
    */
   @PostMapping("/items/{itemId}/tags")
   @ResponseBody
-  public void updateItemTags(@PathVariable Long itemId, @RequestParam("tagIds") List<Long> tagIds) {
+  public void updateItemTags(@PathVariable Long itemId,
+      @RequestParam(value = "tagIds", required = false) List<Long> tagIds) {
     sproutTagListService.updateItemTags(itemId, tagIds);
   }
 

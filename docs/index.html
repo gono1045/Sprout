@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sprout — タスク管理Webアプリ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green-deep: #1c3d2e;
+      --green-mid: #2e6b48;
+      --green-accent: #4a9e6b;
+      --green-light: #d4ede0;
+      --bg: #f5f4f0;
+      --white: #ffffff;
+      --text: #1a1a1a;
+      --text-muted: #6b7280;
+      --border: #e4e2de;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Noto Sans JP', 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      font-size: 15px;
+    }
+
+    /* ===== HEADER ===== */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--green-deep);
+      padding: 0 48px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-family: 'Inter', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: 0.04em;
+    }
+    .logo span { color: var(--green-accent); }
+
+    nav a {
+      color: rgba(255,255,255,0.75);
+      text-decoration: none;
+      font-size: 13px;
+      margin-left: 28px;
+      transition: color 0.2s ease;
+    }
+    nav a:hover { color: var(--white); }
+
+    /* ===== HERO ===== */
+    .hero {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 80px 48px 64px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+    }
+
+    .hero-eyebrow {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      color: var(--green-accent);
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .hero h1 {
+      font-size: 42px;
+      font-weight: 700;
+      line-height: 1.25;
+      color: var(--green-deep);
+      margin-bottom: 20px;
+    }
+
+    .hero p {
+      font-size: 16px;
+      color: var(--text-muted);
+      line-height: 1.8;
+      margin-bottom: 32px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--green-mid);
+      color: var(--white);
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background 0.2s ease, transform 0.15s ease;
+    }
+    .btn-primary:hover { background: var(--green-deep); transform: translateY(-1px); }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      color: var(--green-mid);
+      padding: 12px 24px;
+      border-radius: 6px;
+      border: 1.5px solid var(--green-mid);
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background 0.2s ease, transform 0.15s ease;
+    }
+    .btn-secondary:hover { background: var(--green-light); transform: translateY(-1px); }
+
+    .hero-image {
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 16px 48px rgba(28, 61, 46, 0.15);
+      border: 1px solid var(--border);
+    }
+    .hero-image img {
+      width: 100%;
+      display: block;
+    }
+    .hero-image-placeholder {
+      width: 100%;
+      aspect-ratio: 16/10;
+      background: linear-gradient(135deg, var(--green-deep) 0%, var(--green-mid) 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255,255,255,0.5);
+      font-size: 13px;
+      gap: 8px;
+    }
+
+    /* ===== DIVIDER ===== */
+    .section-divider {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 48px;
+    }
+    .section-divider hr { border: none; border-top: 1px solid var(--border); }
+
+    /* ===== TECH STACK ===== */
+    .tech-section {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 64px 48px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 32px;
+    }
+
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+
+    .tech-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .tech-card:hover {
+      border-color: var(--green-accent);
+      box-shadow: 0 2px 12px rgba(74, 158, 107, 0.1);
+    }
+
+    .tech-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green-accent);
+      margin-top: 6px;
+      flex-shrink: 0;
+    }
+
+    .tech-card-content { flex: 1; }
+    .tech-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+    .tech-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* ===== FEATURES ===== */
+    .features-section {
+      background: var(--white);
+      padding: 64px 48px;
+    }
+
+    .features-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .features-header {
+      margin-bottom: 40px;
+    }
+
+    .features-header h2 {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--green-deep);
+      margin-top: 8px;
+    }
+
+    .features-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .feature-item {
+      padding: 24px;
+      border-left: 3px solid var(--green-accent);
+      background: var(--bg);
+      border-radius: 0 8px 8px 0;
+    }
+
+    .feature-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .feature-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    /* ===== GALLERY ===== */
+    .gallery-section {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 64px 48px;
+    }
+
+    .gallery-section h2 {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--green-deep);
+      margin-bottom: 32px;
+      margin-top: 8px;
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .gallery-item {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(28, 61, 46, 0.06);
+    }
+
+    .gallery-item img {
+      width: 100%;
+      display: block;
+    }
+
+    .gallery-caption {
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+    }
+
+    /* ===== LEARNINGS ===== */
+    .learnings-section {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 64px 48px;
+    }
+
+    .learnings-section h2 {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--green-deep);
+      margin-bottom: 32px;
+      margin-top: 8px;
+    }
+
+    .learning-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      list-style: none;
+    }
+
+    .learning-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .learning-list li::before {
+      content: '';
+      display: block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green-accent);
+      margin-top: 8px;
+      flex-shrink: 0;
+    }
+
+    /* ===== FOOTER ===== */
+    footer {
+      background: var(--green-deep);
+      color: rgba(255,255,255,0.6);
+      padding: 32px 48px;
+      text-align: center;
+      font-size: 13px;
+    }
+
+    footer a {
+      color: rgba(255,255,255,0.8);
+      text-decoration: none;
+    }
+    footer a:hover { color: var(--white); }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      header { padding: 0 20px; }
+      nav { display: none; }
+
+      .hero {
+        grid-template-columns: 1fr;
+        padding: 48px 24px 40px;
+        gap: 40px;
+      }
+      .hero h1 { font-size: 30px; }
+      .hero-image { order: -1; }
+
+      .tech-section,
+      .learnings-section,
+      .gallery-section { padding: 48px 24px; }
+      .features-section { padding: 48px 24px; }
+      .section-divider { padding: 0 24px; }
+
+      .features-list,
+      .learning-list,
+      .gallery-grid { grid-template-columns: 1fr; }
+      footer { padding: 32px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">Spr<span>o</span>ut</div>
+    <nav>
+      <a href="#tech">技術スタック</a>
+      <a href="#features">機能</a>
+      <a href="#gallery">スクリーンショット</a>
+      <a href="#learnings">学んだこと</a>
+      <a href="https://github.com/gono1045/Sprout" target="_blank">GitHub →</a>
+    </nav>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-text">
+      <span class="hero-eyebrow">Portfolio Project</span>
+      <h1>タスクを育てる、<br>管理Webアプリ</h1>
+      <p>Sprout は、タスクに費やした工数を「EXP」として植物に与え、タスクをこなすほど植物が育っていくタスク管理アプリです。Spring Boot + Thymeleaf を基盤に、ゲーミフィケーション要素・状態管理・アーキテクチャ設計など実務に近い技術を組み合わせて開発しました。</p>
+      <div class="hero-actions">
+        <a href="https://github.com/gono1045/Sprout" target="_blank" class="btn-primary">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          GitHubで見る
+        </a>
+        <a href="#features" class="btn-secondary">機能を見る</a>
+      </div>
+    </div>
+    <div class="hero-image">
+      <img src="images/top.png" alt="Sprout トップ画面のスクリーンショット" onerror="this.parentElement.innerHTML='<div class=&quot;hero-image-placeholder&quot;><svg width=&quot;40&quot; height=&quot;40&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.5&quot;><rect x=&quot;3&quot; y=&quot;3&quot; width=&quot;18&quot; height=&quot;18&quot; rx=&quot;2&quot;/><path d=&quot;M3 9h18M9 21V9&quot;/></svg><span>スクリーンショット準備中</span></div>'">
+    </div>
+  </section>
+
+  <div class="section-divider"><hr></div>
+
+  <!-- TECH STACK -->
+  <section class="tech-section" id="tech">
+    <div class="section-label">Tech Stack</div>
+    <div class="tech-grid">
+      <div class="tech-card">
+        <div class="tech-dot"></div>
+        <div class="tech-card-content">
+          <div class="tech-name">Java 17 + Spring Boot 3.5</div>
+          <div class="tech-desc">バックエンド基盤、MVC構成</div>
+        </div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-dot"></div>
+        <div class="tech-card-content">
+          <div class="tech-name">Spring Security</div>
+          <div class="tech-desc">認証・認可、カスタムUserDetails</div>
+        </div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-dot"></div>
+        <div class="tech-card-content">
+          <div class="tech-name">JPA + MyBatis</div>
+          <div class="tech-desc">ORM併用、用途に応じて使い分け</div>
+        </div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-dot"></div>
+        <div class="tech-card-content">
+          <div class="tech-name">PostgreSQL</div>
+          <div class="tech-desc">リレーショナルDB、JPA自動スキーマ</div>
+        </div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-dot"></div>
+        <div class="tech-card-content">
+          <div class="tech-name">Thymeleaf</div>
+          <div class="tech-desc">サーバーサイドレンダリング</div>
+        </div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-dot"></div>
+        <div class="tech-card-content">
+          <div class="tech-name">Tailwind CSS 4.x</div>
+          <div class="tech-desc">ユーティリティファーストCSS</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"><hr></div>
+
+  <!-- FEATURES -->
+  <section class="features-section" id="features">
+    <div class="features-inner">
+      <div class="features-header">
+        <div class="section-label">Features</div>
+        <h2>主な機能</h2>
+      </div>
+      <div class="features-list">
+        <div class="feature-item">
+          <div class="feature-title">工数計測タイマー</div>
+          <div class="feature-desc">タスクごとに作業時間を計測。一時停止・再開に対応し、終了後に作業ログとして記録。</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-title">EXP / レベルアップシステム</div>
+          <div class="feature-desc">記録した工数をタグの EXP に変換し、植物（種 〜 大樹・全10段階）が成長していく独自のゲーミフィケーション要素。</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-title">インライン編集</div>
+          <div class="feature-desc">テーブル上でタイトル・タグ・ステータス・優先度・締切をその場で編集。複数項目の同時編集を防ぐ排他制御を実装。</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-title">タスク管理（CRUD）</div>
+          <div class="feature-desc">タスクの作成・編集・削除・複製・完了切り替え。モーダルとテーブル両方から操作可能。</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-title">タグ管理・マイガーデン</div>
+          <div class="feature-desc">カラー付きタグでタスクを分類し、タグ別の植物育成状況を一覧表示（横スクロール対応）。</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-title">ユーザー認証・アカウント管理</div>
+          <div class="feature-desc">Spring Security によるセキュアなログイン。パスワード変更・リセットにも対応。</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-title">アクセス制御</div>
+          <div class="feature-desc">他ユーザーのタスク・タグへのアクセスを制御する AccessControlService を実装。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GALLERY -->
+  <section class="gallery-section" id="gallery">
+    <div class="section-label">Screenshots</div>
+    <h2>スクリーンショット</h2>
+    <div class="gallery-grid">
+      <div class="gallery-item">
+        <img src="images/grove.png" alt="マイガーデン">
+        <div class="gallery-caption">マイガーデン — タグ別の植物育成（横スクロール対応）</div>
+      </div>
+      <div class="gallery-item">
+        <img src="images/timer.png" alt="工数計測タイマー">
+        <div class="gallery-caption">工数計測タイマー — 計測中</div>
+      </div>
+      <div class="gallery-item">
+        <img src="images/timer-result.png" alt="EXP獲得結果">
+        <div class="gallery-caption">計測完了 → EXP獲得・LVアップ通知</div>
+      </div>
+      <div class="gallery-item">
+        <img src="images/inline-tag-edit.png" alt="インライン編集">
+        <div class="gallery-caption">インライン編集 — タグ・ステータス・優先度をその場で変更</div>
+      </div>
+      <div class="gallery-item">
+        <img src="images/task-modal.png" alt="タスク新規作成モーダル">
+        <div class="gallery-caption">タスク新規作成モーダル</div>
+      </div>
+      <div class="gallery-item">
+        <img src="images/login.png" alt="ログイン画面">
+        <div class="gallery-caption">ログイン画面</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LEARNINGS -->
+  <section class="learnings-section" id="learnings">
+    <div class="section-label">What I Learned</div>
+    <h2>この開発で学んだこと</h2>
+    <ul class="learning-list">
+      <li>Spring Security のカスタム認証フローと UserDetailsService 実装</li>
+      <li>JPA と MyBatis の使い分け（基本CRUDはJPA、複雑なJOIN・動的更新はMyBatis）</li>
+      <li>レイヤードアーキテクチャ（Controller → Service Interface + Impl → DAO）</li>
+      <li>複数のインライン編集UIが競合しないよう、編集中項目をBlur相当で確定保存してから次を開く排他制御の設計</li>
+      <li>jQueryカスタムイベントによるコンポーネント間の疎結合な状態同期</li>
+      <li>position:fixedなUIにおけるスクロール量の扱いに起因するバグの調査・修正</li>
+      <li>@RequestParamの空配列送信時の挙動（jQuery traditional:trueの落とし穴）</li>
+      <li>Enumによる定数の一元管理（SproutStageでLv閾値・ステージ名を集約）</li>
+      <li>Tailwind CSS 4.x を npm ビルドで組み込むフロントエンド構成</li>
+      <li>Docker を使ったコンテナ化とデプロイ準備</li>
+    </ul>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>Built by <a href="https://github.com/gono1045" target="_blank">@gono1045</a> &nbsp;·&nbsp; <a href="https://github.com/gono1045/sprout" target="_blank">View on GitHub</a></p>
+  </footer>
+
+</body>
+</html>

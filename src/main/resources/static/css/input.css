@@ -1,3 +1,351 @@
 @import "tailwindcss";
 
+:root {
+    --paper:  #F4F1E9;
+    --forest: #1B4332;
+    --moss:   #3E7A52;
+    --moss-2: #5BA178;
+    --card:   #FFFFFF;
+    --line:   #E6DFCD;
+    --ink:    #1B2A20;
+    --ink-2:  #4A5E4A;
+    --ink-3:  #8E9A8E;
+    --text-primary: var(--forest);
+    --text-secondary: #4a7c60;
+    --border-subtle: rgba(27, 67, 50, 0.15);
+}
+
+/* ダークモード（html.dark クラスで切り替え） */
+html.dark {
+    --paper:  #1a2e24;
+    --forest: #a7f3c8;
+    --moss:   #6ee7a8;
+    --card:   #1e3a2a;
+    --line:   #2d4a38;
+    --ink:    #e8f5ee;
+    --ink-2:  #a7d4b8;
+    --ink-3:  #6aaa88;
+}
+
+/* 後方互換: data-theme="dark" でも変数を切り替える */
+[data-theme="dark"] {
+    --paper:  #1a2e24;
+    --forest: #a7f3c8;
+    --moss:   #6ee7a8;
+    --card:   #1e3a2a;
+    --line:   #2d4a38;
+    --ink:    #e8f5ee;
+    --ink-2:  #a7d4b8;
+    --ink-3:  #6aaa88;
+}
+
+/* ===== テーマカラー テキスト ===== */
+.text-theme-primary   { color: var(--text-primary); }
+.text-theme-secondary { color: var(--text-secondary); }
+
+/* ロゴ */
+.sprout-logo-text {
+  color: #047857; /* emerald-700 — ライト */
+}
+.dark .sprout-logo-text {
+  color: #a7f3d0; /* ダーク */
+}
+
+/* コンテンツ主要テキスト：テーブルラベル・タスクタイトル・グローブ名（ライト/ダーク共通） */
+.text-sprout-content {
+  color: #a7f3c8;
+}
+
+/* タスクタイトルリンク（ライト/ダーク共通） */
+.sprout-link {
+  color: #a7f3c8;
+}
+.sprout-link:hover {
+  color: #6ee7b7;
+}
+
+/* Heroエリアのラベル（FEATURED タグ / マイガーデン） */
+.hero-label {
+  color: var(--text-secondary);
+  font-size: 0.625rem;   /* 10px */
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* タグフィルターチップ */
+.tag-chip {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.tag-chip:active {
+  transform: scale(0.95);
+}
+
+/* ===== カスタムグリッドテーブル ===== */
+.tbl-row {
+  display: grid;
+  /* [empty] [タイトル] [タグ] [ステータス] [優先度] [締切] [詳細] [工数] [timer] */
+  grid-template-columns: 28px 1.8fr 200px 90px 70px 105px 1.2fr 50px 40px;
+  align-items: center;
+  min-height: 44px;
+}
+
+.tbl-cell {
+  padding: 6px 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* タグセルはwrap許可。他のインライン編集セル（data-inline-field）と
+   見た目・ホバー領域を揃える（角丸4px・padding はセル側のまま） */
+.tbl-cell:has(.sprout-tag-mount),
+.tbl-cell:has(.sprout-tag-view) {
+  white-space: normal;
+  overflow: visible;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.1s;
+}
+.tbl-cell:has(.sprout-tag-mount):hover,
+.tbl-cell:has(.sprout-tag-view):hover {
+  background: rgba(167, 243, 200, 0.15);
+}
+.sprout-tag-mount {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.tbl-data-row:hover {
+  background-color: rgba(209, 250, 229, 0.3);
+}
+
+/* ステータスpillバッジ */
+.status-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+.status-pill--todo  { background: #e0e7ff; color: #3730a3; }
+.status-pill--doing { background: #d1fae5; color: #065f46; }
+.status-pill--done  { background: #f3f4f6; color: #6b7280; }
+
+/* 優先度pill（ステータスと同スタイル） */
+.priority-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+.priority-pill--high { background: #fee2e2; color: #991b1b; }
+.priority-pill--mid  { background: #fef3c7; color: #92400e; }
+.priority-pill--low  { background: #f3f4f6; color: #6b7280; }
+
+/* ヘッダー行のラベルを各セル幅内で中央揃え */
+.tbl-header .tbl-cell {
+  text-align: center;
+}
+
+/* データ行：タグ(3)・ステータス(4)・優先度(5)・締切(6) を中央揃え */
+.tbl-data-row .tbl-cell:nth-child(3),
+.tbl-data-row .tbl-cell:nth-child(4),
+.tbl-data-row .tbl-cell:nth-child(5),
+.tbl-data-row .tbl-cell:nth-child(6) {
+  text-align: center;
+  justify-items: center;
+}
+
+/* タイトルセル ホバーで表示する「モーダルを開く」ボタン */
+.btn-open-modal {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s, border-color 0.15s, color 0.15s;
+  padding: 3px 5px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--moss-2, #5BA178);
+  border-radius: 5px;
+}
+
+/* ライトモード：行ホバー時に緑の実色ボタンとして表示 */
+.tbl-cell:hover .btn-open-modal,
+.tbl-data-row:hover .btn-open-modal {
+  opacity: 1;
+  background: var(--moss, #3E7A52);
+  border-color: var(--forest, #1B4332);
+  color: #fff;
+}
+.btn-open-modal:hover {
+  background: var(--forest, #1B4332) !important;
+  border-color: var(--forest, #1B4332) !important;
+  color: #fff !important;
+}
+
+/* ダークモード：グラス調スタイルに上書き */
+html.dark .tbl-cell:hover .btn-open-modal,
+html.dark .tbl-data-row:hover .btn-open-modal {
+  background: rgba(110, 231, 168, 0.18);
+  border-color: rgba(110, 231, 168, 0.45);
+  color: var(--moss, #6ee7a8);
+}
+html.dark .btn-open-modal:hover {
+  background: rgba(110, 231, 168, 0.32) !important;
+  border-color: rgba(110, 231, 168, 0.7) !important;
+  color: var(--moss, #6ee7a8) !important;
+}
+
+/* タグエリア — 読み取り専用（更新モーダルのみ） */
+.tag-area--readonly {
+  cursor: default;
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+/* タグ input の placeholder 色 */
+.sprout-tag-input::placeholder {
+  color: rgba(167, 243, 200, 0.45);
+}
+
+/* ===== インライン編集 ===== */
+
+/* 編集可能セル：ホバーで薄いハイライト */
+.tbl-cell[data-inline-field] {
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.1s;
+}
+.tbl-cell[data-inline-field]:hover {
+  background: rgba(167, 243, 200, 0.15);
+}
+
+/* テキスト入力 */
+.inline-edit-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid var(--moss-2, #5BA178);
+  outline: none;
+  font-size: 13px;
+  color: #a7f3c8;
+  padding: 2px 0;
+  box-sizing: border-box;
+}
+.inline-edit-input::placeholder {
+  color: rgba(167, 243, 200, 0.4);
+}
+
+/* 追加行 */
+.tbl-add-row { min-height: 36px; }
+.tbl-add-row:hover .tbl-add-placeholder { color: #6b7280; }
+html.dark .tbl-add-row:hover .tbl-add-placeholder { color: #9ca3af; }
+.tbl-add-row .tbl-add-input {
+  color: inherit;
+  border-bottom-color: var(--moss-2, #5BA178);
+}
+/* flatpickr インラインデート — デザイン統一カスタマイズ */
+.flatpickr-calendar {
+  background: var(--card, #1e3a2a) !important;
+  border: 1px solid var(--line, #2d4a38) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 6px 24px rgba(27, 67, 50, 0.3) !important;
+  font-family: inherit !important;
+  font-size: 12px !important;
+  /* コンパクトサイズ: 7列 × 32px = 224px + padding */
+  width: 236px !important;
+}
+.flatpickr-days,
+.dayContainer {
+  width: 220px !important;
+  min-width: 220px !important;
+  max-width: 220px !important;
+}
+.flatpickr-day {
+  max-width: 30px !important;
+  height: 30px !important;
+  line-height: 30px !important;
+}
+.flatpickr-weekday {
+  max-width: 30px !important;
+  height: 26px !important;
+  line-height: 26px !important;
+  font-size: 11px !important;
+}
+.flatpickr-months .flatpickr-month {
+  height: 34px !important;
+  line-height: 34px !important;
+}
+.flatpickr-current-month {
+  font-size: 13px !important;
+  padding-top: 6px !important;
+}
+.flatpickr-months {
+  background: transparent !important;
+}
+.flatpickr-month {
+  color: var(--ink, #e8f5ee) !important;
+  fill: var(--ink, #e8f5ee) !important;
+}
+.flatpickr-current-month .numInputWrapper span.arrowUp::after,
+.flatpickr-current-month .numInputWrapper span.arrowDown::after {
+  border-bottom-color: var(--moss, #6ee7a8) !important;
+  border-top-color: var(--moss, #6ee7a8) !important;
+}
+.flatpickr-weekday {
+  color: var(--ink-3, #6aaa88) !important;
+  background: transparent !important;
+  font-weight: 600 !important;
+}
+.flatpickr-day {
+  color: var(--ink, #e8f5ee) !important;
+  border-radius: 6px !important;
+}
+.flatpickr-day:hover,
+.flatpickr-day:focus {
+  background: rgba(110, 231, 168, 0.18) !important;
+  border-color: transparent !important;
+}
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover {
+  background: var(--moss, #3E7A52) !important;
+  border-color: var(--moss, #3E7A52) !important;
+  color: #fff !important;
+}
+.flatpickr-day.today {
+  border-color: var(--moss-2, #5BA178) !important;
+}
+.flatpickr-day.today:hover {
+  background: rgba(91, 161, 120, 0.2) !important;
+}
+.flatpickr-day.flatpickr-disabled,
+.flatpickr-day.prevMonthDay,
+.flatpickr-day.nextMonthDay {
+  color: var(--ink-3, #6aaa88) !important;
+  opacity: 0.4 !important;
+}
+.flatpickr-prev-month svg,
+.flatpickr-next-month svg {
+  fill: var(--ink-2, #a7d4b8) !important;
+}
+.flatpickr-prev-month:hover svg,
+.flatpickr-next-month:hover svg {
+  fill: var(--moss, #6ee7a8) !important;
+}
+.numInputWrapper:hover {
+  background: rgba(110, 231, 168, 0.08) !important;
+}
+.flatpickr-current-month input.cur-year {
+  color: var(--ink, #e8f5ee) !important;
+}
 

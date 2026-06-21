@@ -2,6 +2,8 @@ package com.example.sprout.model;
 
 import java.time.LocalDateTime;
 
+import com.example.sprout.enums.SproutStage;
+
 /**
  * タグ情報を表すModel
  */
@@ -25,6 +27,10 @@ public class SproutTagList {
   private Long userId;
   /** 更新ユーザー **/
   private String updateUser;
+  /** 累積EXP */
+  private int exp;
+  /** レベル */
+  private int lv;
 
   /**
    * タグIDを取得する
@@ -168,5 +174,42 @@ public class SproutTagList {
    */
   public void setUpdateUser(String updateUser) {
     this.updateUser = updateUser;
+  }
+
+  /**
+   * 累積EXPを取得する
+   * @return exp
+   */
+  public int getExp() {
+    return exp;
+  }
+
+  /**
+   * 累積EXPを設定する
+   * @param exp 累積EXP
+   */
+  public void setExp(int exp) {
+    this.exp = exp;
+  }
+
+  /**
+   * レベルを取得する
+   * @return lv
+   */
+  public int getLv() {
+    return lv;
+  }
+
+  /**
+   * レベルを設定する
+   * @param lv レベル
+   */
+  public void setLv(int lv) {
+    this.lv = lv;
+  }
+
+  /** lv からステージ名を導出して返す（DBカラム非対応・JSON自動シリアライズ用）。 */
+  public String getStageName() {
+    return SproutStage.fromLv(lv).getStageName();
   }
 }
