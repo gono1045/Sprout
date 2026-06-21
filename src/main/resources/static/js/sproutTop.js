@@ -58,18 +58,22 @@ $(function () {
     // sprout-tags.js から呼べるように公開（タグ編集開始時に他のインライン編集を閉じるため）
     window.sproutTopInline = { closeActive: _closeActiveInline };
 
-    // データロード（タグをアイテムごとにプリフェッチして item._tagIds にセット）
+    // データロード（タグ紐付けを一括取得して item._tagIds にセット）
+    // タスク件数分の個別リクエストを送るとN+1になり、本番環境で初回表示が
+    // 遅延・失敗しやすくなるため、一括APIで1リクエストにまとめる。
     function loadItems() {
-      $.getJSON('/task/list', function (data) {
-        _allItems = data || [];
-        var requests = _allItems.map(function(item) {
-          return $.getJSON('/items/' + item.id + '/tags').then(function(tags) {
-            item._tagIds = (tags || []).map(function(t) { return String(t.tagId); });
-          });
+      $.when(
+        $.getJSON('/task/list'),
+        $.ajax({ url: '/items/tags/all', type: 'GET', dataType: 'json', cache: false })
+      ).done(function(itemsRes, tagsRes) {
+        _allItems = (itemsRes && itemsRes[0]) || [];
+        var itemTagMap = (tagsRes && tagsRes[0]) || {};
+        _allItems.forEach(function(item) {
+          item._tagIds = itemTagMap[item.id] || [];
         });
-        $.when.apply($, requests).always(function() {
-          renderTable(getFilteredItems());
-        });
+        renderTable(getFilteredItems());
+      }).fail(function() {
+        sprout.message.toast({ message: 'タスクの読み込みに失敗しました', type: 'error' });
       });
     }
 

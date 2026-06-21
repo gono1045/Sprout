@@ -30,6 +30,17 @@
     t2.item_id = #{itemId}
     AND t1.user_id = #{userId}
 </select>
+<select id="selectAllItemTags" resultType="SproutItemTag">
+  SELECT
+      it.item_id AS itemId
+    , it.tag_id  AS tagId
+  FROM
+    sprout_item_tag it
+    INNER JOIN sprout_item i
+      ON it.item_id = i.id
+  WHERE
+    i.user_id = #{userId}
+</select>
 <insert id="insert" parameterType="SproutTagList" useGeneratedKeys="true" keyProperty="tagId">
   INSERT INTO sprout_tag (
       tag_name

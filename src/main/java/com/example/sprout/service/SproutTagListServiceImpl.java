@@ -1,7 +1,10 @@
 package com.example.sprout.service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -75,6 +78,18 @@ public class SproutTagListServiceImpl implements SproutTagListService {
     Long userId = accessControlService.getLoginUserId();
 
     return tagListDao.selectTagsByItemId(itemId, userId);
+  }
+
+  @Override
+  public Map<Long, List<String>> selectAllItemTagIds() {
+    Long userId = accessControlService.getLoginUserId();
+
+    Map<Long, List<String>> result = new HashMap<>();
+    for (SproutItemTag itemTag : tagListDao.selectAllItemTags(userId)) {
+      result.computeIfAbsent(itemTag.getItemId(), k -> new ArrayList<>())
+          .add(String.valueOf(itemTag.getTagId()));
+    }
+    return result;
   }
 
   /**
