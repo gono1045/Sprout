@@ -1,6 +1,7 @@
 package com.example.sprout.service;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.ibatis.annotations.Param;
 
@@ -45,6 +46,13 @@ public interface SproutTagListService {
    * @return
    */
   List<SproutTagList> selectTagsByItemId(Long itemId);
+
+  /**
+   * ログインユーザーの全タスク分のタスクID→タグIDリストを一括取得する
+   * （タスク件数分の個別取得によるN+1クエリを避けるため）
+   * @return タスクIDをキーとしたタグID文字列リストのマップ
+   */
+  Map<Long, List<String>> selectAllItemTagIds();
 
   /**
    * タスクに紐づくタグを更新する

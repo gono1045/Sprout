@@ -70,6 +70,14 @@ public interface SproutTagListDao {
   List<SproutTagList> selectTagsByItemId(@Param("itemId") Long itemId, @Param("userId") Long userId);
 
   /**
+   * ユーザーの全タスク分のタスク・タグ紐付けを一括取得する
+   * （タスク件数分のN+1クエリを避けるための一括取得用）
+   * @param userId ユーザーID
+   * @return タスクID・タグIDの紐付けリスト
+   */
+  List<SproutItemTag> selectAllItemTags(@Param("userId") Long userId);
+
+  /**
    * タスクとタグの紐付け登録
    * @param model タスクIDとタグID
    */

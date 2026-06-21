@@ -1,6 +1,7 @@
 package com.example.sprout.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -76,6 +77,16 @@ public class SproutTagListController {
   @ResponseBody
   public List<SproutTagList> getItemTags(@PathVariable Long itemId) {
     return sproutTagListService.selectTagsByItemId(itemId);
+  }
+
+  /**
+   * ログインユーザーの全タスク分のタスクID→タグIDリストを一括取得する
+   * （Top画面初期表示時のN+1クエリ回避用）
+   */
+  @GetMapping("/items/tags/all")
+  @ResponseBody
+  public Map<Long, List<String>> getAllItemTags() {
+    return sproutTagListService.selectAllItemTagIds();
   }
 
   /**
