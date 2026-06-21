@@ -12,7 +12,8 @@ var itemUpdateModal = (function () {
    * 初期化
    * @param {jQuery} $modalEl - openModal から渡されるモーダル要素
    */
-  function init($modalEl) {
+  function init($modalEl, options) {
+    options = options || {};
     console.log('itemUpdateModal.init called', $modalEl?.[0]);
 
     if (!$modalEl || !$modalEl.length) {
@@ -105,6 +106,7 @@ var itemUpdateModal = (function () {
         sprout.tags.mount({
           el: this,
           itemId: itemId || null,
+          presetTags: (itemId ? [] : (options.presetTags || []))
           readonly: $(this).data('readonly') === true
         });
 

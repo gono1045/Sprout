@@ -262,7 +262,7 @@ var timerModal = (function () {
     '今日の努力は確実に根を張っています。',
     '着実に成長しています。この調子で！',
     '一歩一歩が大きな木になる。お疲れさまでした！',
-    'よく頑張りました！あなたのスキルが育っています🌿'
+    'よく頑張りました！あなたのスキルが育っています。'
   ];
 
   /** レベルに対応するラベル */
@@ -355,6 +355,20 @@ var timerModal = (function () {
 
       $tagsEl.append(rowHtml);
     });
+
+    // LV UP トースト（Lv アップしたタグがあれば通知）
+    var leveledUpTags = tagResults.filter(function(t) { return t.leveledUp; });
+    if (leveledUpTags.length > 0) {
+      setTimeout(function() {
+        leveledUpTags.forEach(function(t) {
+          var stageName = _LV_NAMES[t.newLv] || ('Lv' + t.newLv);
+          sprout.message.toast({
+            message: '「' + t.tagName + '」が ' + stageName + ' にレベルアップしました！',
+            type: 'success'
+          });
+        });
+      }, 800);
+    }
 
     // バーアニメーション（少し遅らせてから）
     setTimeout(function() {

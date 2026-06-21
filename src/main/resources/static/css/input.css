@@ -99,11 +99,24 @@ html.dark {
   white-space: nowrap;
 }
 
-/* タグセルはwrap許可 */
+/* タグセルはwrap許可。他のインライン編集セル（data-inline-field）と
+   見た目・ホバー領域を揃える（角丸4px・padding はセル側のまま） */
 .tbl-cell:has(.sprout-tag-mount),
 .tbl-cell:has(.sprout-tag-view) {
   white-space: normal;
   overflow: visible;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.1s;
+}
+.tbl-cell:has(.sprout-tag-mount):hover,
+.tbl-cell:has(.sprout-tag-view):hover {
+  background: rgba(167, 243, 200, 0.15);
+}
+.sprout-tag-mount {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .tbl-data-row:hover {
@@ -231,6 +244,15 @@ html.dark .btn-open-modal:hover {
 }
 .inline-edit-input::placeholder {
   color: rgba(167, 243, 200, 0.4);
+}
+
+/* 追加行 */
+.tbl-add-row { min-height: 36px; }
+.tbl-add-row:hover .tbl-add-placeholder { color: #6b7280; }
+html.dark .tbl-add-row:hover .tbl-add-placeholder { color: #9ca3af; }
+.tbl-add-row .tbl-add-input {
+  color: inherit;
+  border-bottom-color: var(--moss-2, #5BA178);
 }
 /* flatpickr インラインデート — デザイン統一カスタマイズ */
 .flatpickr-calendar {
