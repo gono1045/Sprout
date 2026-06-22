@@ -1242,10 +1242,10 @@ html.dark {
   color: #a7f3c8;
 }
 .sprout-link {
-  color: var(--ink, #1B2A20);
+  color: #a7f3c8;
 }
 .sprout-link:hover {
-  color: var(--moss, #3E7A52);
+  color: #6ee7b7;
 }
 .hero-label {
   color: var(--text-secondary);
@@ -1397,12 +1397,12 @@ html.dark .btn-open-modal:hover {
   border-bottom: 1.5px solid var(--moss-2, #5BA178);
   outline: none;
   font-size: 13px;
-  color: var(--ink, #1B2A20);
+  color: #a7f3c8;
   padding: 2px 0;
   box-sizing: border-box;
 }
 .inline-edit-input::placeholder {
-  color: var(--ink-3, #8E9A8E);
+  color: rgba(167, 243, 200, 0.4);
 }
 .tbl-add-row {
   min-height: 36px;
