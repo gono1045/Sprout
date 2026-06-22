@@ -156,7 +156,22 @@ $(function () {
       $body.find('.sprout-tag-mount').each(function() {
         var $el = $(this);
         if ($el.data('mounted')) return;
-        sprout.tags.mount({ el: this, itemId: $el.data('item-id'), readonly: true });
+        var itemId = $el.data('item-id');
+        var item = _allItems.find(function(i) { return i.id === itemId; });
+
+        // _allTagData（マイガーデン用に取得済みの全タグ一覧）が使える場合は
+        // それと item._tagIds から完全なタグ情報を組み立て、行ごとの
+        // 個別フェッチ（N+1）を避ける
+        var initialTags = null;
+        if (item && item._tagIds && _allTagData && _allTagData.tagList) {
+          initialTags = item._tagIds
+            .map(function(tagId) {
+              return _allTagData.tagList.find(function(t) { return String(t.tagId) === String(tagId); });
+            })
+            .filter(Boolean);
+        }
+
+        sprout.tags.mount({ el: this, itemId: itemId, initialTags: initialTags });
         $el.data('mounted', true);
       });
 
@@ -778,6 +793,7 @@ $(function () {
       if (_activeInlineClose === closeDropdown) _activeInlineClose = null;
       $dd.remove();
       $(document).off('click.inlineDropdown keydown.inlineDropdownEsc');
+      document.removeEventListener('scroll', closeDropdown, true);
     }
 
     _activeInlineClose = closeDropdown;
@@ -802,6 +818,11 @@ $(function () {
       .on('keydown.inlineDropdownEsc', function(e) {
         if (e.key === 'Escape') { closeDropdown(); }
       });
+
+    // position:fixed のため、トリガー要素の位置が動くスクロールが起きたら
+    // 位置ズレを起こす前にドロップダウンを閉じる（capture: true で内側の
+    // スクロール可能要素のスクロールイベントも検知する）
+    document.addEventListener('scroll', closeDropdown, true);
   }
 
   // 日付インライン編集（flatpickr）
@@ -950,6 +971,7 @@ $(function () {
 
   // ===== インライン編集ここまで =====
 
-  loadGrove();
-  loadItems();
+  // loadGrove完了後にloadItemsを呼ぶことで、_allTagDataを使った
+  // タグ表示の一括初期化（N+1回避）を確実に効かせる
+  loadGrove().always(loadItems);
 });
