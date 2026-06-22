@@ -20,7 +20,10 @@ sprout.tags = (function() {
       finishing: false,
       dropdownIndex: -1,
       readonly: options.readonly === true,
-      presetTags: options.presetTags || []
+      presetTags: options.presetTags || [],
+      // 呼び出し元が既にタグ情報を持っている場合（テーブル一覧の一括取得結果など）に
+      // 渡すと、行ごとの個別フェッチ（N+1）を回避できる
+      initialTags: options.initialTags || null
     };
 
     state.el.data('sproutTagsState', state);
@@ -52,6 +55,13 @@ sprout.tags = (function() {
 
     // DBに紐づく既存タグがあれば取得
     if (state.itemId) {
+      if (state.initialTags) {
+        // 呼び出し元から渡された一括取得済みデータを使う（個別フェッチを省略）
+        state.tags = state.initialTags;
+        state.originalTagIds = state.initialTags.map(t => t.tagId);
+        renderView(state);
+        return;
+      }
       fetchItemTags(state.itemId)
         .done(function(tags) {
           state.tags = tags;
@@ -228,6 +238,14 @@ sprout.tags = (function() {
     .on('click.sproutTagEditInner', '.sprout-tag-edit', function (e) {
       e.stopPropagation();
     });
+
+  // position:fixed のドロップダウンはスクロールで位置がズレるため、
+  // スクロール発生時（内側のスクロール可能要素も含む）は閉じて編集を確定する
+  document.addEventListener('scroll', function() {
+    if ($('.sprout-tag-dropdown-portal').length) {
+      $('.sprout-tag-dropdown-portal').remove();
+    }
+  }, true);
 
   /**
    * ドロップダウンリスト描画
@@ -719,6 +737,48 @@ sprout.tags = (function() {
 
     var targetState = currentState;
 
+    // 既存タスク（originalTagIdsが存在＝EXP付与済みの可能性あり）のタグを変更する場合は、
+    // 以後のEXPが切り替え先のタグに蓄積されることを警告する
+    if (originalIds.length > 0) {
+      var addedTags = currentState.tags.filter(t => !originalIds.includes(t.tagId));
+      var addedNames = addedTags.map(t => t.tagName).join('、');
+      var warnMessage = addedNames
+        ? `タグを変更すると、今後の工数計測で得られるEXPは「${addedNames}」に蓄積されます。よろしいですか？`
+        : 'タグを変更すると、今後の工数計測で得られるEXPは変更後のタグに蓄積されます。よろしいですか？';
+
+      sprout.message.confirmExec({
+        message: warnMessage,
+        okText: '変更する',
+        cancelText: 'キャンセル',
+        onOk: function () { _saveTagChange(targetState, currentIds); },
+        onCancel: function () {
+          // 変更前のタグ状態に戻す
+          targetState.tags = (targetState.allTags || []).filter(t => originalIds.includes(t.tagId));
+          if (!targetState.tags.length) {
+            // allTagsに無ければサーバーから再取得して復元
+            fetchItemTags(targetState.itemId).done(function (tags) {
+              targetState.tags = tags;
+              targetState.mode = 'view';
+              targetState.finishing = false;
+              renderView(targetState);
+            });
+            return;
+          }
+          targetState.mode = 'view';
+          targetState.finishing = false;
+          renderView(targetState);
+        }
+      });
+      return;
+    }
+
+    _saveTagChange(targetState, currentIds);
+  }
+
+  /**
+   * タグ紐付けをサーバーに保存し、画面を更新する
+   */
+  function _saveTagChange(targetState, currentIds) {
     saveItemTags(targetState.itemId, currentIds)
       .done(function () {
         fetchItemTags(targetState.itemId).done(function (tags) {
