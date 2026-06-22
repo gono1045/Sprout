@@ -19,9 +19,8 @@ sprout.tags = (function() {
       allTags: [],
       finishing: false,
       dropdownIndex: -1,
-      readonly: options.readonly || false,
+      readonly: options.readonly === true,
       presetTags: options.presetTags || []
-      readonly: options.readonly === true
     };
 
     state.el.data('sproutTagsState', state);
