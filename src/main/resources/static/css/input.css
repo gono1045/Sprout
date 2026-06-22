@@ -56,12 +56,12 @@ html.dark {
   color: #a7f3c8;
 }
 
-/* タスクタイトルリンク（表示時・インライン編集時で同じ色になるようテーマ変数を使用） */
+/* タスクタイトルリンク（テーブルは常にダーク基調の背景のため、ライト/ダーク共通で薄緑） */
 .sprout-link {
-  color: var(--ink, #1B2A20);
+  color: #a7f3c8;
 }
 .sprout-link:hover {
-  color: var(--moss, #3E7A52);
+  color: #6ee7b7;
 }
 
 /* Heroエリアのラベル（FEATURED タグ / マイガーデン） */
@@ -230,7 +230,7 @@ html.dark .btn-open-modal:hover {
   background: rgba(167, 243, 200, 0.15);
 }
 
-/* テキスト入力 */
+/* テキスト入力（テーブルが常にダーク基調のため、表示時のsprout-linkと同じ薄緑で統一） */
 .inline-edit-input {
   width: 100%;
   background: transparent;
@@ -238,12 +238,12 @@ html.dark .btn-open-modal:hover {
   border-bottom: 1.5px solid var(--moss-2, #5BA178);
   outline: none;
   font-size: 13px;
-  color: var(--ink, #1B2A20);
+  color: #a7f3c8;
   padding: 2px 0;
   box-sizing: border-box;
 }
 .inline-edit-input::placeholder {
-  color: var(--ink-3, #8E9A8E);
+  color: rgba(167, 243, 200, 0.4);
 }
 
 /* 追加行 */
