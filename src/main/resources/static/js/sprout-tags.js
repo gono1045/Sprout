@@ -124,9 +124,13 @@ sprout.tags = (function() {
       </div>
     `);
 
-    $base
-      .off('click.sproutTags')
-      .on('click.sproutTags', '.sprout-tag-view', function (e) {
+    $base.off('click.sproutTags');
+
+    // readonly モードではクリックしても編集モードに入らない
+    if (state.readonly) {
+      $base.removeClass('cursor-pointer').addClass('cursor-default');
+    } else {
+      $base.on('click.sproutTags', '.sprout-tag-view', function (e) {
         e.stopPropagation();
         // 他のインライン編集（テキスト/ドロップダウン/日付）が開いていれば確定保存して閉じる
         if (window.sproutTopInline && typeof window.sproutTopInline.closeActive === 'function') {
@@ -134,16 +138,6 @@ sprout.tags = (function() {
         }
         renderEdit(state);
       });
-    // readonly モードではクリックしても編集モードに入らない
-    if (!state.readonly) {
-      $base
-        .off('click.sproutTags')
-        .on('click.sproutTags', '.sprout-tag-view', function (e) {
-          e.stopPropagation();
-          renderEdit(state);
-        });
-    } else {
-      $base.off('click.sproutTags').removeClass('cursor-pointer').addClass('cursor-default');
     }
   }
 
