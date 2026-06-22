@@ -5,6 +5,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -20,6 +22,17 @@ public class SecurityConfig {
     this.userDetailsService = userDetailsService;
   }
 
+  /**
+   * 静的リソースをSpring Securityのフィルターチェーンから除外する。
+   * フィルターチェーンを通すとデフォルトでCache-Control: no-storeが付与され、
+   * ブラウザキャッシュが一切効かずパフォーマンスが悪化するため。
+   */
+  @Bean
+  public WebSecurityCustomizer webSecurityCustomizer() {
+    return (WebSecurity web) -> web.ignoring()
+        .requestMatchers("/css/**", "/js/**", "/img/**", "/webjars/**");
+  }
+
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
@@ -32,11 +45,7 @@ public class SecurityConfig {
                 "/login",
                 "/register",
                 "/password-reset/**",
-                "/error",
-                "/css/**",
-                "/js/**",
-                "/img/**",
-                "/webjars/**")
+                "/error")
             .permitAll()
 
             .anyRequest().authenticated())

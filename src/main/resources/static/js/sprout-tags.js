@@ -127,8 +127,8 @@ sprout.tags = (function() {
     // padding はセル側（.tbl-cell）の標準値に揃え、ここでは w-full / h-full で
     // セルの content box を満たすだけにする（タグなし時もクリック領域を広く確保）
     state.el.html(`
-      <div class="sprout-tag-view flex items-center cursor-pointer w-full h-full">
-        <div class="flex items-center gap-1 flex-wrap w-full">
+      <div class="sprout-tag-view flex items-center justify-center cursor-pointer w-full h-full">
+        <div class="flex items-center justify-center gap-1 flex-wrap w-full">
           ${html || '<span class="tag-empty">&nbsp;</span>'}
         </div>
       </div>
@@ -239,12 +239,15 @@ sprout.tags = (function() {
       e.stopPropagation();
     });
 
-  // position:fixed のドロップダウンはスクロールで位置がズレるため、
-  // スクロール発生時（内側のスクロール可能要素も含む）は閉じて編集を確定する
-  document.addEventListener('scroll', function() {
-    if ($('.sprout-tag-dropdown-portal').length) {
-      $('.sprout-tag-dropdown-portal').remove();
-    }
+  // position:fixed のドロップダウンはページ側のスクロールで位置がズレるため閉じる。
+  // ただしドロップダウン自身の内部スクロール（候補が多い場合）では閉じない。
+  // 単に portal を消すだけだと編集モードが宙に浮いて再編集できなくなるため、
+  // finishEdit() で編集状態ごと正しく終了させる。
+  document.addEventListener('scroll', function(e) {
+    var $portal = $('.sprout-tag-dropdown-portal');
+    if (!$portal.length) return;
+    if ($portal[0].contains(e.target)) return;
+    finishEdit();
   }, true);
 
   /**

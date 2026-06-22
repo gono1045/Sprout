@@ -35,6 +35,13 @@ spring:
             enable: true
             required: true
 
+  # 静的リソースのブラウザキャッシュ期間（同一ファイルの再取得を減らし表示を高速化）
+  web:
+    resources:
+      cache:
+        cachecontrol:
+          max-age: 7d
+
 app:
   base-url: ${APP_BASE_URL:https://sprout-i5mi.onrender.com}
   mail:
@@ -48,3 +55,8 @@ mybatis:
 
 server:
   port: ${PORT:8080}
+
+logging:
+  level:
+    org.mybatis: WARN
+    org.mybatis.spring: WARN
