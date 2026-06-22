@@ -12,21 +12,21 @@
     <!-- favicon -->
     <link rel="icon" type="image/png" th:href="@{/img/favicon.ico}">
     <!-- icon -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide@latest" defer></script>
     <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" defer></script>
     <!-- Day.js -->
-    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js" defer></script>
     <!-- flatpickr -->
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ja.js"></script>
-    <!-- 自作JS -->
-    <script th:src="@{/js/sprout-util.js}"></script>
-    <script th:src="@{/js/sprout-message.js}"></script>
-    <script th:src="@{/js/sprout-tags.js}"></script>
-    <script th:src="@{/js/itemUpdateModal.js}"></script>
-    <script th:src="@{/js/timerModal.js}"></script>
-    <script th:src="@{/js/sproutTop.js}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ja.js" defer></script>
+    <!-- 自作JS（defer指定によりHTML解析をブロックしないようにし、表示の重さを軽減） -->
+    <script th:src="@{/js/sprout-util.js}" defer></script>
+    <script th:src="@{/js/sprout-message.js}" defer></script>
+    <script th:src="@{/js/sprout-tags.js}" defer></script>
+    <script th:src="@{/js/itemUpdateModal.js}" defer></script>
+    <script th:src="@{/js/timerModal.js}" defer></script>
+    <script th:src="@{/js/sproutTop.js}" defer></script>
   </head>
 <body class="font-body min-h-screen"
       style="background-color: var(--paper); color: var(--text-primary);">

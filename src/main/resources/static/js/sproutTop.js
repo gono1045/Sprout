@@ -135,8 +135,8 @@ $(function () {
           '<div class="tbl-cell" data-inline-field="priorityCd">' +
             renderPriorityPill(item.priorityCd, item.priorityName) +
           '</div>' +
-          '<div class="tbl-cell text-xs text-gray-500" data-inline-field="deadline">' + deadline + '</div>' +
-          '<div class="tbl-cell text-xs sprout-link" data-inline-field="detail" title="' + escapeHtml(detailText) + '">' + detailDisplay + '</div>' +
+          '<div class="tbl-cell sprout-link" data-inline-field="deadline">' + deadline + '</div>' +
+          '<div class="tbl-cell sprout-link" data-inline-field="detail" title="' + escapeHtml(detailText) + '">' + detailDisplay + '</div>' +
           '<div class="tbl-cell text-xs text-gray-500">-</div>' +
           '<div class="tbl-cell">' +
             (item._tagIds && item._tagIds.length > 0
@@ -211,12 +211,25 @@ $(function () {
         $addRow.find('.tbl-add-placeholder').addClass('hidden');
         var $inp = $addRow.find('.tbl-add-input').removeClass('hidden').focus();
 
+        // Enter送信とblur送信が同じ入力内容で二重に発火しないようにするガード。
+        // submitted を立てた直後に値もクリアすることで、後続のblurが
+        // 「入力なし」として無視されるようにする（setTimeout等は使わない）。
+        var submitted = false;
+
+        function submit(title) {
+          if (submitted) return;
+          submitted = true;
+          $inp.val('');
+          _quickCreateTask(title);
+        }
+
         $inp.off('keydown.addRow').on('keydown.addRow', function(ev) {
           if (ev.key === 'Enter' && !ev.isComposing) {
             ev.preventDefault();
-            _quickCreateTask($inp.val().trim());
+            submit($inp.val().trim());
           }
           if (ev.key === 'Escape') {
+            submitted = true;
             $inp.val('').addClass('hidden');
             $addRow.find('.tbl-add-placeholder').removeClass('hidden');
           }
@@ -225,8 +238,8 @@ $(function () {
         $inp.off('blur.addRow').on('blur.addRow', function() {
           var title = $inp.val().trim();
           if (title) {
-            _quickCreateTask(title);
-          } else {
+            submit(title);
+          } else if (!submitted) {
             $inp.addClass('hidden');
             $addRow.find('.tbl-add-placeholder').removeClass('hidden');
           }
@@ -793,7 +806,14 @@ $(function () {
       if (_activeInlineClose === closeDropdown) _activeInlineClose = null;
       $dd.remove();
       $(document).off('click.inlineDropdown keydown.inlineDropdownEsc');
-      document.removeEventListener('scroll', closeDropdown, true);
+      document.removeEventListener('scroll', onScroll, true);
+    }
+
+    // ドロップダウン自身の内部スクロール（選択肢が多い場合）では閉じない。
+    // ページ側のスクロールでトリガー要素の位置が動いた場合のみ閉じる。
+    function onScroll(e) {
+      if ($dd[0].contains(e.target)) return;
+      closeDropdown();
     }
 
     _activeInlineClose = closeDropdown;
@@ -822,7 +842,7 @@ $(function () {
     // position:fixed のため、トリガー要素の位置が動くスクロールが起きたら
     // 位置ズレを起こす前にドロップダウンを閉じる（capture: true で内側の
     // スクロール可能要素のスクロールイベントも検知する）
-    document.addEventListener('scroll', closeDropdown, true);
+    document.addEventListener('scroll', onScroll, true);
   }
 
   // 日付インライン編集（flatpickr）

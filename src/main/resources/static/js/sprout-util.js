@@ -100,6 +100,16 @@ sprout.util = (function() {
       const modalId = params.modalId;
       const seq = ++modalSeq;
 
+      // 開いたままのインライン編集（ドロップダウン・タグ編集）があれば
+      // モーダルより手前に残ってしまうため、先に確定して閉じる
+      if (window.sproutTopInline && typeof window.sproutTopInline.closeActive === 'function') {
+        window.sproutTopInline.closeActive();
+      }
+      if (window.sprout && window.sprout.tags && typeof window.sprout.tags.closeActiveEdit === 'function') {
+        window.sprout.tags.closeActiveEdit();
+      }
+      $('#sprout-inline-dropdown, .sprout-tag-dropdown-portal').remove();
+
       // 既存モーダルは必ず破棄
       $('#' + modalId).remove();
       $(document).off('keydown.modal');

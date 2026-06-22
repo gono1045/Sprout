@@ -238,12 +238,12 @@ html.dark .btn-open-modal:hover {
   border-bottom: 1.5px solid var(--moss-2, #5BA178);
   outline: none;
   font-size: 13px;
-  color: #a7f3c8;
+  color: var(--ink, #1B2A20);
   padding: 2px 0;
   box-sizing: border-box;
 }
 .inline-edit-input::placeholder {
-  color: rgba(167, 243, 200, 0.4);
+  color: var(--ink-3, #8E9A8E);
 }
 
 /* 追加行 */
