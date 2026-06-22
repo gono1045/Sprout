@@ -8,6 +8,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -32,6 +33,16 @@ public class GlobalExceptionHandler {
   public String handleIllegalState(IllegalStateException ex) {
 
     return "redirect:/login";
+  }
+
+  /**
+   * 静的リソースが見つからない（favicon.ico等のブラウザ自動リクエストを含む）
+   * 想定内のため警告ログのみとし、404を返す
+   */
+  @ExceptionHandler(NoResourceFoundException.class)
+  @ResponseStatus(HttpStatus.NOT_FOUND)
+  public void handleNoResourceFound(NoResourceFoundException ex) {
+    // ログ出力不要（favicon.ico等のノイズになるため）
   }
 
   /**
