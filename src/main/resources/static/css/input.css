@@ -56,12 +56,12 @@ html.dark {
   color: #a7f3c8;
 }
 
-/* タスクタイトルリンク（ライト/ダーク共通） */
+/* タスクタイトルリンク（表示時・インライン編集時で同じ色になるようテーマ変数を使用） */
 .sprout-link {
-  color: #a7f3c8;
+  color: var(--ink, #1B2A20);
 }
 .sprout-link:hover {
-  color: #6ee7b7;
+  color: var(--moss, #3E7A52);
 }
 
 /* Heroエリアのラベル（FEATURED タグ / マイガーデン） */

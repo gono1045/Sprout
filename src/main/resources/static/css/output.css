@@ -1242,10 +1242,10 @@ html.dark {
   color: #a7f3c8;
 }
 .sprout-link {
-  color: #a7f3c8;
+  color: var(--ink, #1B2A20);
 }
 .sprout-link:hover {
-  color: #6ee7b7;
+  color: var(--moss, #3E7A52);
 }
 .hero-label {
   color: var(--text-secondary);
