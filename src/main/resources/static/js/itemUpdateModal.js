@@ -14,7 +14,6 @@ var itemUpdateModal = (function () {
    */
   function init($modalEl, options) {
     options = options || {};
-    console.log('itemUpdateModal.init called', $modalEl?.[0]);
 
     if (!$modalEl || !$modalEl.length) {
       console.error('itemUpdateModal.init: $modalEl が不正です');
