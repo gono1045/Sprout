@@ -151,3 +151,10 @@ npm run watch:css
 ---
 
 _最終更新: 2026-05-31_
+
+---
+
+## Claude Context
+
+作業を開始する前に、Notionの「Claude Context」ページ(https://app.notion.com/p/36371d05abfe81999527cf52682911b0)を参照してください。Gonoのプロフィール・現在進行中のプロジェクト一覧・行動指針・成長ログがまとまっています。
+作業終了時、重要な決定・状態変化があればClaude Contextページのセッション引き継ぎログに追記すること。
