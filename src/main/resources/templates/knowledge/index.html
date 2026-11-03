@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja" class="text-[80%]">
+<head>
+  <meta charset="UTF-8" />
+  <title>知識の実 - Sprout</title>
+  <link href="https://fonts.googleapis.com/css2?family=Merienda&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/css/output.css}">
+  <link rel="icon" type="image/png" th:href="@{/img/favicon.ico}">
+  <script src="https://unpkg.com/lucide@latest" defer></script>
+  <script th:src="@{/js/sprout-util.js}" defer></script>
+  <script th:src="@{/js/sprout-message.js}" defer></script>
+
+  <!-- ダークモード即時適用（FOUC防止） -->
+  <script>
+    (function(){
+      var t = localStorage.getItem('sprout-theme') || 'light';
+      if (t === 'dark') document.documentElement.classList.add('dark');
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+
+  <style>
+    /* ===== Knowledge card grid ===== */
+    .knowledge-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .knowledge-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border, #d1d5db);
+      border-radius: 18px;
+      padding: 20px 16px 16px;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 10px; cursor: pointer; text-align: center;
+      transition: box-shadow .15s, transform .12s, border-color .15s;
+    }
+    .knowledge-card:hover {
+      box-shadow: 0 6px 24px rgba(27,67,50,.14);
+      transform: translateY(-3px);
+      border-color: rgba(62,122,82,.5);
+    }
+    .knowledge-card:active { transform: translateY(-1px); }
+    html.dark .knowledge-card { border-color: rgba(255,255,255,.15); }
+    html.dark .knowledge-card:hover { border-color: rgba(62,122,82,.6); }
+
+    .kn-card-icon {
+      width: 72px; height: 72px; border-radius: 18px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .kn-card-title {
+      font-size: 13px; font-weight: 700; line-height: 1.45;
+      color: var(--text-primary);
+      overflow: hidden; display: -webkit-box;
+      -webkit-line-clamp: 2; -webkit-box-orient: vertical; width: 100%;
+    }
+    .kn-card-tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; min-height: 18px; width: 100%; }
+    .kn-tag-chip { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 600; color: #fff; }
+    .kn-card-date { font-size: 10px; color: var(--text-tertiary, #aaa); }
+
+    /* ===== 削除確認ダイアログ ===== */
+    .kn-confirm-overlay {
+      position: fixed; inset: 0; z-index: 300;
+      background: rgba(0,0,0,.55);
+      display: flex; align-items: center; justify-content: center;
+      animation: knFadeIn .12s ease;
+    }
+    .kn-confirm-dialog {
+      background: var(--surface, #fff); border: 1px solid var(--border, #e5e7eb);
+      border-radius: 16px; padding: 28px 28px 22px; width: 320px;
+      box-shadow: 0 12px 40px rgba(0,0,0,.22);
+      animation: knSlideUp .15s cubic-bezier(.34,1.2,.64,1);
+      text-align: center;
+    }
+    .kn-confirm-dialog p { font-size: 14px; font-weight: 600; color: var(--text-primary); margin: 0 0 6px; }
+    .kn-confirm-dialog small { font-size: 12px; color: var(--text-tertiary, #aaa); }
+    .kn-confirm-btns { display: flex; gap: 10px; margin-top: 20px; justify-content: center; }
+    .kn-confirm-cancel { flex: 1; padding: 9px; border-radius: 10px; border: 1.5px solid var(--border, #e5e7eb); background: transparent; color: var(--text-secondary, #555); font-size: 13px; font-weight: 600; cursor: pointer; }
+    .kn-confirm-cancel:hover { background: var(--hover, rgba(0,0,0,.04)); }
+    .kn-confirm-delete { flex: 1; padding: 9px; border-radius: 10px; border: none; background: #ef4444; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .kn-confirm-delete:hover { background: #dc2626; }
+
+    /* ===== Modal ===== */
+    .kn-modal-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,.6);
+      display: flex; align-items: center; justify-content: center; padding: 16px;
+      animation: knFadeIn .15s ease;
+    }
+    @keyframes knFadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .kn-modal {
+      background: var(--surface, #fff); border: 1px solid var(--border, #e5e7eb);
+      border-radius: 20px; width: 100%; max-width: 520px;
+      max-height: 92dvh; max-height: 92vh;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 16px 48px rgba(0,0,0,.22);
+      animation: knSlideUp .18s cubic-bezier(.34,1.2,.64,1);
+    }
+    @keyframes knSlideUp { from { transform: translateY(14px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    .kn-modal-hdr {
+      background: linear-gradient(160deg, #091a0f 0%, #1B4332 55%, #2d6647 100%);
+      padding: 16px 20px 18px; border-radius: 20px 20px 0 0;
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+      flex-shrink: 0;
+    }
+    .kn-modal-hdr-label { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: rgba(167,243,200,.6); margin-bottom: 4px; display: flex; align-items: center; gap: 5px; }
+    .kn-modal-task { font-size: 13px; font-weight: 600; color: rgba(255,255,255,.75); word-break: break-word; }
+    .kn-modal-close-btn { width: 28px; height: 28px; border-radius: 8px; background: rgba(255,255,255,.1); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,.6); flex-shrink: 0; transition: background .12s; }
+    .kn-modal-close-btn:hover { background: rgba(255,255,255,.2); color: #fff; }
+
+    .kn-modal-body { padding: 18px 20px 4px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; flex: 1; }
+    .kn-modal-section-label { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text-tertiary, #888); margin-bottom: 5px; }
+    .kn-modal-title-input {
+      width: 100%; background: var(--paper, #faf7ef); border: 1.5px solid var(--border, #e5e7eb);
+      border-radius: 9px; font-size: 14px; font-weight: 700; color: var(--text-primary);
+      outline: none; padding: 9px 12px; box-sizing: border-box; transition: border-color .15s;
+    }
+    .kn-modal-title-input:focus { border-color: #3E7A52; box-shadow: 0 0 0 3px rgba(62,122,82,.12); }
+    .kn-modal-summary-textarea {
+      width: 100%; background: var(--paper, #faf7ef); border: 1.5px solid var(--border, #e5e7eb);
+      border-radius: 9px; font-size: 13px; color: var(--text-primary); outline: none;
+      padding: 9px 12px; resize: vertical; min-height: 80px; line-height: 1.7;
+      font-family: inherit; box-sizing: border-box; transition: border-color .15s;
+    }
+    .kn-modal-summary-textarea:focus { border-color: #3E7A52; box-shadow: 0 0 0 3px rgba(62,122,82,.12); }
+    .kn-modal-tags { display: flex; flex-wrap: wrap; gap: 6px; min-height: 20px; }
+    .kn-modal-meta { font-size: 11px; color: var(--text-tertiary, #888); display: flex; align-items: center; gap: 5px; }
+
+    .kn-modal-footer { padding: 12px 20px 18px; border-top: 1px solid var(--border, #e5e7eb); display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; flex-shrink: 0; }
+    .kn-btn-delete { display: inline-flex; align-items: center; gap: 5px; padding: 7px 14px; border-radius: 9px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1.5px solid var(--border, #e5e7eb); background: transparent; color: var(--text-tertiary, #888); transition: background .15s, color .15s, border-color .15s; }
+    .kn-btn-delete:hover { background: rgba(239,68,68,.08); color: #dc2626; border-color: rgba(239,68,68,.3); }
+    .kn-btn-save { display: inline-flex; align-items: center; gap: 5px; padding: 7px 16px; border-radius: 9px; font-size: 12px; font-weight: 700; cursor: pointer; border: none; background: linear-gradient(135deg, #1B4332, #3E7A52); color: #fff; transition: filter .15s; }
+    .kn-btn-save:hover:not(:disabled) { filter: brightness(1.1); }
+    .kn-btn-save:disabled { opacity: .5; cursor: not-allowed; }
+    .kn-btn-close { display: inline-flex; align-items: center; gap: 5px; padding: 7px 16px; border-radius: 9px; font-size: 12px; font-weight: 600; cursor: pointer; background: rgba(142,154,142,.12); color: var(--text-secondary, #555); border: 1.5px solid var(--border, #e5e7eb); transition: background .15s; }
+    .kn-btn-close:hover { background: rgba(142,154,142,.22); }
+
+    /* ===== タグフィルター ドロップダウン ===== */
+    .kn-filter-wrap { position: relative; }
+    .kn-filter-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 12px; border-radius: 9px; font-size: 12px; font-weight: 600;
+      cursor: pointer; background: transparent;
+      border: 1.5px solid var(--border, #e5e7eb);
+      color: var(--text-secondary, #555); transition: background .12s, border-color .12s;
+      white-space: nowrap;
+    }
+    .kn-filter-btn:hover { background: var(--hover, rgba(0,0,0,.04)); }
+    .kn-filter-btn.active { border-color: #3E7A52; color: #3E7A52; }
+    .kn-filter-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: #3E7A52; color: #fff; font-size: 10px; font-weight: 700;
+    }
+    .kn-filter-dropdown {
+      position: absolute; top: calc(100% + 6px); left: 0; z-index: 150;
+      background: var(--surface, #fff); border: 1.5px solid var(--border, #e5e7eb);
+      border-radius: 12px; padding: 6px 0; min-width: 180px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.12);
+      animation: knSlideUp .12s cubic-bezier(.34,1.2,.64,1);
+    }
+    .kn-filter-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 14px; cursor: pointer; font-size: 13px;
+      color: var(--text-primary); transition: background .1s;
+    }
+    .kn-filter-item:hover { background: var(--hover, rgba(0,0,0,.04)); }
+    .kn-filter-item input[type="checkbox"] { accent-color: #3E7A52; width: 14px; height: 14px; cursor: pointer; }
+    .kn-filter-divider { border: none; border-top: 1px solid var(--border, #e5e7eb); margin: 4px 0; }
+    .kn-filter-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ===== Back link ===== */
+    .kn-back-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--text-secondary, #555); padding: 6px 12px; border-radius: 9px; border: 1.5px solid var(--border, #e5e7eb); text-decoration: none; transition: background .12s, border-color .12s; }
+    .kn-back-link:hover { background: var(--surface); border-color: rgba(62,122,82,.4); color: var(--text-primary); }
+
+    /* ===== 選択モード ===== */
+    .knowledge-card.kn-selectable { cursor: pointer; }
+    .knowledge-card.kn-selected {
+      border-color: #3E7A52;
+      box-shadow: 0 0 0 3px rgba(62,122,82,.25);
+      transform: none;
+    }
+    .kn-select-check {
+      position: absolute; top: 10px; right: 10px;
+      width: 20px; height: 20px; border-radius: 6px;
+      border: 2px solid var(--border, #d1d5db);
+      background: var(--surface); display: none;
+      align-items: center; justify-content: center;
+      transition: background .12s, border-color .12s;
+    }
+    .kn-selectable .kn-select-check { display: flex; }
+    .kn-selected .kn-select-check {
+      background: #3E7A52; border-color: #3E7A52;
+    }
+    .knowledge-card { position: relative; }
+
+    /* 選択モードバー */
+    .kn-select-bar {
+      position: sticky; bottom: 0; z-index: 100;
+      background: var(--surface); border-top: 1.5px solid var(--border, #e5e7eb);
+      padding: 12px 24px; display: none;
+      align-items: center; justify-content: space-between; gap: 12px;
+      box-shadow: 0 -4px 16px rgba(0,0,0,.08);
+    }
+    .kn-select-bar.active { display: flex; }
+    .kn-select-bar-info { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+    .kn-select-bar-info span { color: #3E7A52; }
+    .kn-select-bar-btns { display: flex; gap: 8px; align-items: center; }
+    .kn-sel-cancel { padding: 7px 14px; border-radius: 9px; font-size: 12px; font-weight: 600; cursor: pointer; background: transparent; border: 1.5px solid var(--border, #e5e7eb); color: var(--text-secondary); transition: background .12s; }
+    .kn-sel-cancel:hover { background: var(--hover, rgba(0,0,0,.04)); }
+    .kn-sel-merge { padding: 7px 16px; border-radius: 9px; font-size: 12px; font-weight: 700; cursor: pointer; border: none; background: linear-gradient(135deg, #1B4332, #3E7A52); color: #fff; transition: filter .12s; }
+    .kn-sel-merge:disabled { opacity: .4; cursor: not-allowed; }
+    .kn-sel-merge:not(:disabled):hover { filter: brightness(1.1); }
+    .kn-sel-delete { padding: 7px 14px; border-radius: 9px; font-size: 12px; font-weight: 600; cursor: pointer; background: transparent; border: 1.5px solid rgba(239,68,68,.35); color: #dc2626; transition: background .12s; }
+    .kn-sel-delete:disabled { opacity: .4; cursor: not-allowed; }
+    .kn-sel-delete:not(:disabled):hover { background: rgba(239,68,68,.08); }
+
+    /* ===== マージモーダル ===== */
+    .kn-merge-modal { max-width: 560px; }
+    .kn-merge-hdr-label { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: rgba(167,243,200,.6); margin-bottom: 4px; }
+    .kn-merge-hdr-title { font-size: 16px; font-weight: 700; color: #fff; }
+    .kn-merge-sources { display: flex; flex-direction: column; gap: 6px; padding: 14px 20px 0; }
+    .kn-merge-source-item {
+      background: var(--paper, #faf7ef); border: 1px solid var(--border, #e5e7eb);
+      border-radius: 8px; padding: 8px 12px;
+      font-size: 12px; color: var(--text-secondary); line-height: 1.5;
+    }
+    .kn-merge-source-item strong { color: var(--text-primary); font-size: 13px; }
+    .kn-merge-hint-wrap { padding: 14px 20px 0; }
+    .kn-merge-hint-input {
+      width: 100%; background: var(--paper, #faf7ef); border: 1.5px solid var(--border, #e5e7eb);
+      border-radius: 9px; font-size: 13px; color: var(--text-primary);
+      outline: none; padding: 9px 12px; box-sizing: border-box; transition: border-color .15s;
+      font-family: inherit;
+    }
+    .kn-merge-hint-input:focus { border-color: #3E7A52; box-shadow: 0 0 0 3px rgba(62,122,82,.12); }
+    .kn-merge-hint-input::placeholder { color: var(--text-tertiary, #bbb); }
+    .kn-btn-suggest {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: 9px; font-size: 12px; font-weight: 700;
+      cursor: pointer; border: 1.5px solid #3E7A52; background: transparent;
+      color: #3E7A52; transition: background .12s;
+    }
+    .kn-btn-suggest:hover:not(:disabled) { background: rgba(62,122,82,.08); }
+    .kn-btn-suggest:disabled { opacity: .4; cursor: not-allowed; }
+    .kn-suggest-spinner {
+      width: 12px; height: 12px; border: 2px solid rgba(62,122,82,.3);
+      border-top-color: #3E7A52; border-radius: 50%;
+      animation: knSpin .7s linear infinite; display: none;
+    }
+    @keyframes knSpin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="font-body min-h-screen" style="background-color: var(--paper); color: var(--text-primary);">
+
+  <!-- ヘッダー -->
+  <header class="header sticky top-0 z-50 h-20 border-b bg-[var(--paper)]">
+    <div class="header-inner h-full max-w-12xl mx-auto px-8 flex items-center justify-between">
+      <a class="text-4xl font-bold sprout-logo-text" style="font-family: 'Merriweather', serif;" href="/">Sprout</a>
+      <nav class="header-nav items-center gap-3 flex">
+        <a href="/" class="kn-back-link">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          タスク一覧
+        </a>
+        <button class="btn-icon p-1 cursor-pointer" id="themeToggle" type="button" aria-label="テーマ切替" style="background:none;border:none;color:var(--text-secondary,#555);display:flex;align-items:center;">
+          <!-- JS で moon / sun SVG を切り替える。lucide CDN 不要 -->
+          <svg id="themeToggleIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <a th:href="@{/account/profile}" class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold border border-transparent hover:border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors duration-150">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          <span th:text="${loginId}">ユーザー</span>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-6 py-10">
+
+    <!-- ページタイトル -->
+    <div class="flex items-center gap-3" style="margin-top: 2.5rem; margin-bottom: 2.5rem;">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:#3E7A52;flex-shrink:0;">
+        <path d="M12 20c-4.4 0-8-3.6-8-8 0-3.5 2-6.5 5-7.7"/>
+        <path d="M12 20c4.4 0 8-3.6 8-8 0-3.5-2-6.5-5-7.7"/>
+        <path d="M12 4 C12 4 13.5 2 16 2"/>
+        <path d="M9 7 C10 5.5 11.5 4.5 12 4"/>
+      </svg>
+      <h1 class="text-2xl font-bold">知識の実</h1>
+    </div>
+
+    <!-- 成功メッセージ -->
+    <div th:if="${successMessage}" class="mb-5 px-4 py-3 rounded-lg text-sm font-medium"
+         style="background:rgba(62,122,82,.12); color: #3E7A52; border:1px solid rgba(62,122,82,.25);">
+      <span th:text="${successMessage}"></span>
+    </div>
+
+    <!-- 並べ替えコントロール -->
+    <div class="flex items-center gap-3" style="margin-top: 1rem; margin-bottom: 2rem;">
+      <span class="text-sm font-medium" style="color: var(--text-secondary);">並べ替え</span>
+      <div class="flex gap-2">
+        <a th:href="@{/knowledge(sort='new')}" th:classappend="${currentSort == 'new'} ? 'btn-primary' : 'btn-secondary'" class="text-sm px-4 py-1.5 rounded-lg">新しい順</a>
+        <a th:href="@{/knowledge(sort='old')}" th:classappend="${currentSort == 'old'} ? 'btn-primary' : 'btn-secondary'" class="text-sm px-4 py-1.5 rounded-lg">古い順</a>
+        <a th:href="@{/knowledge(sort='tag')}" th:classappend="${currentSort == 'tag'} ? 'btn-primary' : 'btn-secondary'" class="text-sm px-4 py-1.5 rounded-lg">タグ別</a>
+      </div>
+      <span id="knVisibleCount" class="ml-auto text-sm" style="color: var(--text-tertiary);" th:text="${#lists.size(knowledgeList)} + ' 件'"></span>
+      <!-- タグフィルター -->
+      <div class="kn-filter-wrap" id="knFilterWrap" th:if="${!#lists.isEmpty(knowledgeList)}">
+        <button class="kn-filter-btn" id="knFilterBtn" type="button">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          タグ
+          <span class="kn-filter-badge" id="knFilterBadge" style="display:none;"></span>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="kn-filter-dropdown" id="knFilterDropdown" style="display:none;"></div>
+      </div>
+      <button id="knSelectModeBtn" class="kn-btn-close" type="button" style="font-size:12px;padding:5px 12px;"
+              th:if="${!#lists.isEmpty(knowledgeList)}">選択</button>
+    </div>
+
+    <!-- 空状態 -->
+    <div th:if="${#lists.isEmpty(knowledgeList)}" class="flex flex-col items-center gap-4 py-24 rounded-2xl border" style="border-color: var(--border); background: var(--surface);">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-tertiary); opacity:.4;">
+        <path d="M12 20c-4.4 0-8-3.6-8-8 0-3.5 2-6.5 5-7.7"/>
+        <path d="M12 20c4.4 0 8-3.6 8-8 0-3.5-2-6.5-5-7.7"/>
+        <path d="M12 4 C12 4 13.5 2 16 2"/>
+        <path d="M9 7 C10 5.5 11.5 4.5 12 4"/>
+      </svg>
+      <p class="text-sm" style="color: var(--text-tertiary);">まだ知識の実がありません。タイマーで作業を記録して、気づきをメモしてみましょう。</p>
+    </div>
+
+    <!-- カードグリッド -->
+    <div th:if="${!#lists.isEmpty(knowledgeList)}" class="knowledge-grid">
+      <article th:each="item : ${knowledgeList}"
+               class="knowledge-card"
+               th:attr="data-kn-id=${item.id}">
+
+        <!-- 選択モード用チェックマーク -->
+        <div class="kn-select-check" aria-hidden="true">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+
+        <!-- アイコン（木の実 / タグ1色目に対応、JSで種類と色を決定） -->
+        <div class="kn-card-icon" style="background:rgba(74,222,128,.15)"
+             th:attr="data-tag-color=${item.tags != null and !#lists.isEmpty(item.tags) ? item.tags[0].tagColor : ''}">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="3" x2="12" y2="7.5"/>
+            <path d="M8 11 Q8 7.5 12 7.5 Q16 7.5 16 11 Z"/>
+            <ellipse cx="12" cy="15.5" rx="4.5" ry="5"/>
+          </svg>
+        </div>
+
+        <!-- タイトル -->
+        <p class="kn-card-title"
+           th:text="${item.title != null and !#strings.isEmpty(item.title)} ? ${item.title} : ${item.aiSummary}"></p>
+
+        <!-- タグ（hidden data + JS描画） -->
+        <div class="kn-card-tags">
+          <th:block th:if="${item.tags != null and !#lists.isEmpty(item.tags)}">
+            <span th:each="tag : ${item.tags}" class="kn-tag-data" style="display:none;"
+                  th:attr="data-name=${tag.tagName}, data-color=${tag.tagColor}"></span>
+          </th:block>
+        </div>
+
+        <!-- 日付 -->
+        <span class="kn-card-date" th:text="${#temporals.format(item.createdAt, 'yyyy/MM/dd')}"></span>
+
+      </article>
+    </div>
+
+  </main>
+
+  <!-- 選択モードバー -->
+  <div class="kn-select-bar" id="knSelectBar">
+    <div class="kn-select-bar-info"><span id="knSelCount">0</span> 件選択中</div>
+    <div class="kn-select-bar-btns">
+      <button class="kn-sel-cancel" id="knSelCancelBtn" type="button">キャンセル</button>
+      <button class="kn-sel-delete" id="knSelDeleteBtn" type="button" disabled>削除</button>
+      <button class="kn-sel-merge"  id="knSelMergeBtn"  type="button" disabled>マージ</button>
+    </div>
+  </div>
+
+  <!-- 削除フォーム（単体） -->
+  <form id="knDeleteForm" th:action="@{/knowledge/delete}" method="post" style="display:none;">
+    <input type="hidden" id="knDeleteId" name="id">
+    <input type="hidden" id="knDeleteSort" name="sort">
+  </form>
+
+  <!-- 一括削除フォーム -->
+  <form id="knDeleteBulkForm" th:action="@{/knowledge/delete-bulk}" method="post" style="display:none;">
+    <div id="knDeleteBulkIds"></div>
+    <input type="hidden" id="knDeleteBulkSort" name="sort">
+  </form>
+
+  <!-- マージフォーム -->
+  <form id="knMergeForm" th:action="@{/knowledge/merge}" method="post" style="display:none;">
+    <div id="knMergeIds"></div>
+    <input type="hidden" id="knMergeTitle"   name="title">
+    <input type="hidden" id="knMergeAiSummary" name="aiSummary">
+    <input type="hidden" id="knMergeSort"    name="sort">
+  </form>
+
+  <!-- マージ後EXPフラッシュ（th:inline禁止のためhidden inputsで渡す） -->
+  <input type="hidden" id="knFlashExpGained"
+         th:if="${knExpGained != null}" th:value="${knExpGained}">
+  <th:block th:if="${knLevelUps != null}">
+    <input type="hidden" class="kn-flash-lvup"
+           th:each="name : ${knLevelUps}" th:value="${name}">
+  </th:block>
+
+  <!--
+    JSON データを textarea に隠し保持。
+    th:text でHTMLエスケープして出力し、JS では .value で読み取る（ブラウザが自動デコード）。
+    th:inline="javascript" は ERR_INCOMPLETE_CHUNKED_ENCODING を引き起こすため使用禁止。
+  -->
+  <textarea id="knDataRaw" hidden th:text="${knItemsJson}"></textarea>
+  <textarea id="knCurrentSort" hidden th:text="${currentSort}"></textarea>
+
+  <script>
+    /* ===== ダークモード ===== */
+    var SVG_MOON = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+    var SVG_SUN  = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+
+    function applyTheme(theme) {
+      document.documentElement.classList.toggle('dark', theme === 'dark');
+      document.documentElement.setAttribute('data-theme', theme);
+      var toggle = document.getElementById('themeToggle');
+      if (toggle) {
+        toggle.innerHTML = theme === 'dark' ? SVG_SUN : SVG_MOON;
+      }
+      localStorage.setItem('sprout-theme', theme);
+    }
+
+    /* ===== データ初期化 ===== */
+    var KN_ITEMS_MAP = {};
+    var KN_CURRENT_SORT = 'new';
+    try {
+      var rawEl   = document.getElementById('knDataRaw');
+      var sortEl  = document.getElementById('knCurrentSort');
+      var jsonStr = rawEl ? rawEl.value.trim() : '';
+      if (jsonStr) {
+        var arr = JSON.parse(jsonStr);
+        arr.forEach(function(item) { KN_ITEMS_MAP[String(item.id)] = item; });
+        console.log('[KN] loaded', arr.length, 'items');
+      }
+      if (sortEl) KN_CURRENT_SORT = sortEl.value.trim();
+    } catch(e) { console.warn('[KN] parse error', e); }
+
+    /* ===== カラーマップ（Tailwindクラス名 → HEX） ===== */
+    var KN_COLOR_MAP = {
+      'bg-red-400':     '#f87171',
+      'bg-orange-400':  '#fb923c',
+      'bg-amber-400':   '#fbbf24',
+      'bg-yellow-400':  '#facc15',
+      'bg-lime-400':    '#a3e635',
+      'bg-green-400':   '#4ade80',
+      'bg-emerald-400': '#34d399',
+      'bg-teal-400':    '#2dd4bf',
+      'bg-cyan-400':    '#22d3ee',
+      'bg-sky-400':     '#38bdf8',
+      'bg-blue-400':    '#60a5fa',
+      'bg-purple-400':  '#c084fc'
+    };
+    function knColor(name) { return KN_COLOR_MAP[name] || '#6B7280'; }
+
+    /* ===== 木の実アイコン（4種 / 同じタグ色 → 同じアイコン） ===== */
+    var KN_ICONS = [
+      // 0: ドングリ（red/orange/amber系）
+      '<line x1="12" y1="3" x2="12" y2="7.5"/><path d="M8 11 Q8 7.5 12 7.5 Q16 7.5 16 11 Z"/><ellipse cx="12" cy="15.5" rx="4.5" ry="5"/>',
+      // 1: 丸い実+葉（yellow/lime/green系）
+      '<circle cx="12" cy="15" r="5.5"/><path d="M12 9.5 C13 7.5 17 7.5 16.5 11 C14.5 10.5 12 9.5 12 9.5Z"/><line x1="12" y1="9.5" x2="12" y2="12"/>',
+      // 2: 洋梨型（emerald/teal/cyan系）
+      '<path d="M12 8 C12 8 7 11 7 15 C7 18.5 9.5 21 12 21 C14.5 21 17 18.5 17 15 C17 11 12 8 12 8Z"/><line x1="12" y1="4" x2="12" y2="8"/><path d="M12 5.5 C13 4 15 4 15.5 5.5"/>',
+      // 3: 桃型の実+葉（sky/blue/purple系 ― 1粒の丸い実に茎と葉）
+      '<path d="M8.5 15.5 Q8.5 9.5 12 9 Q15.5 9.5 15.5 15.5 Q15.5 20.5 12 21.5 Q8.5 20.5 8.5 15.5Z"/><line x1="12" y1="4" x2="12" y2="9"/><path d="M12 6.5 C13.5 4.5 16.5 5 16 7.5 C14.5 7.5 12 6.5 12 6.5Z"/>'
+    ];
+    var TAG_COLOR_TO_ICON = {
+      'bg-red-400':0,'bg-orange-400':0,'bg-amber-400':0,
+      'bg-yellow-400':1,'bg-lime-400':1,'bg-green-400':1,
+      'bg-emerald-400':2,'bg-teal-400':2,'bg-cyan-400':2,
+      'bg-sky-400':3,'bg-blue-400':3,'bg-purple-400':3
+    };
+
+    /* ===== タグ描画 ===== */
+    function renderTags(tagsArr, containerEl) {
+      containerEl.innerHTML = '';
+      (tagsArr || []).forEach(function(tag) {
+        // tagId または tagName が null/空の行（LEFT JOIN の null 行）はスキップ
+        if (!tag.tagId && !tag.tagName) return;
+        var chip = document.createElement('span');
+        chip.className = 'kn-tag-chip';
+        chip.style.background = knColor(tag.tagColor || '');
+        chip.textContent = tag.tagName || '';
+        containerEl.appendChild(chip);
+      });
+    }
+
+    /* ===== モーダル ===== */
+    function openKnModal(id) {
+      var item = KN_ITEMS_MAP[String(id)];
+      if (!item) {
+        console.warn('KN item not found, id=', id, 'map keys=', Object.keys(KN_ITEMS_MAP));
+        return;
+      }
+
+      var overlay = document.createElement('div');
+      overlay.className = 'kn-modal-overlay';
+      overlay.innerHTML =
+        '<div class="kn-modal" role="dialog" aria-modal="true">' +
+          '<div class="kn-modal-hdr">' +
+            '<div style="flex:1;min-width:0;">' +
+              '<div class="kn-modal-hdr-label">知識の実</div>' +
+              '<div class="kn-modal-task">' + esc(item.itemTitle || (item.itemId ? '（タスク削除済み）' : '（マージ済み）')) + '</div>' +
+            '</div>' +
+            '<button class="kn-modal-close-btn" id="knMClose" aria-label="閉じる">' +
+              '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+            '</button>' +
+          '</div>' +
+          '<div class="kn-modal-body">' +
+            '<div><div class="kn-modal-section-label">タイトル</div>' +
+              '<input class="kn-modal-title-input" id="knMTitle" type="text" maxlength="20" value="' + esc(item.title || '') + '" placeholder="タイトルを入力（任意）">' +
+            '</div>' +
+            '<div><div class="kn-modal-section-label">要約</div>' +
+              '<textarea class="kn-modal-summary-textarea" id="knMSummary">' + esc(item.aiSummary || '') + '</textarea>' +
+            '</div>' +
+            '<div><div class="kn-modal-section-label">タグ</div>' +
+              '<div class="kn-modal-tags" id="knMTags"></div>' +
+            '</div>' +
+            '<div class="kn-modal-meta">' +
+              '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' +
+              esc(fmtDate(item.createdAt)) +
+            '</div>' +
+          '</div>' +
+          '<div class="kn-modal-footer">' +
+            '<button class="kn-btn-delete" id="knMDelete"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>削除</button>' +
+            '<div style="display:flex;gap:8px;">' +
+              '<button class="kn-btn-close" id="knMCloseFooter">キャンセル</button>' +
+              '<button class="kn-btn-save" id="knMSave">更新</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+
+      document.body.appendChild(overlay);
+      document.body.style.overflow = 'hidden';
+
+      renderTags(item.tags || [], document.getElementById('knMTags'));
+
+      function closeModal() {
+        overlay.remove();
+        document.body.style.overflow = '';
+        document.removeEventListener('keydown', onKey);
+      }
+      function onKey(e) { if (e.key === 'Escape') closeModal(); }
+      document.getElementById('knMClose').addEventListener('click', closeModal);
+      document.getElementById('knMCloseFooter').addEventListener('click', closeModal);
+      overlay.addEventListener('click', function(e) { if (e.target === overlay) closeModal(); });
+      document.addEventListener('keydown', onKey);
+
+      document.getElementById('knMDelete').addEventListener('click', function() {
+        // カスタム削除確認ダイアログ
+        var title = (document.getElementById('knMTitle').value.trim() || '（無題）');
+        var overlay = document.createElement('div');
+        overlay.className = 'kn-confirm-overlay';
+        overlay.innerHTML =
+          '<div class="kn-confirm-dialog">' +
+            '<p>この知識の実を削除しますか？</p>' +
+            '<small>「' + title.slice(0,20) + (title.length > 20 ? '…' : '') + '」は元に戻せません</small>' +
+            '<div class="kn-confirm-btns">' +
+              '<button class="kn-confirm-cancel">キャンセル</button>' +
+              '<button class="kn-confirm-delete">削除する</button>' +
+            '</div>' +
+          '</div>';
+        document.body.appendChild(overlay);
+        overlay.querySelector('.kn-confirm-cancel').addEventListener('click', function() {
+          overlay.remove();
+        });
+        overlay.querySelector('.kn-confirm-delete').addEventListener('click', function() {
+          overlay.remove();
+          document.getElementById('knDeleteId').value   = id;
+          document.getElementById('knDeleteSort').value = KN_CURRENT_SORT;
+          document.getElementById('knDeleteForm').submit();
+        });
+        overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+      });
+
+      var saveBtn = document.getElementById('knMSave');
+      saveBtn.addEventListener('click', function() {
+        var newTitle   = document.getElementById('knMTitle').value.trim();
+        var newSummary = document.getElementById('knMSummary').value.trim();
+        saveBtn.disabled = true; saveBtn.textContent = '更新中…';
+        fetch('/knowledge/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: id, title: newTitle || null, aiSummary: newSummary })
+        })
+        .then(function(res) {
+          console.log('[KN update] status=' + res.status + ' ok=' + res.ok);
+          if (!res.ok) throw new Error('server error: ' + res.status);
+          return res.json().catch(function(e) {
+            console.log('[KN update] json parse failed, continuing without EXP data', e);
+            return {};
+          });
+        })
+        .then(function(data) {
+          console.log('[KN update] data=', data);
+          if (KN_ITEMS_MAP[String(id)]) {
+            KN_ITEMS_MAP[String(id)].title     = newTitle;
+            KN_ITEMS_MAP[String(id)].aiSummary = newSummary;
+          }
+          var cardTitle = document.querySelector('[data-kn-id="' + id + '"] .kn-card-title');
+          if (cardTitle) cardTitle.textContent = newTitle || newSummary;
+          closeModal();
+          knShowExpToasts(data);
+        })
+        .catch(function(e) {
+          console.error('[KN update] catch:', e);
+          saveBtn.disabled = false; saveBtn.textContent = '更新';
+        });
+      });
+    }
+
+    /* ===== ユーティリティ ===== */
+    function fmtDate(iso) {
+      if (!iso) return '';
+      try {
+        var d = new Date(iso);
+        return d.getFullYear() + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' +
+               String(d.getDate()).padStart(2,'0') + ' ' +
+               String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+      } catch(e) { return String(iso); }
+    }
+    function esc(s) {
+      return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+             .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+    }
+
+    /* ===== 初期化（DOM ready後に実行） ===== */
+    document.addEventListener('DOMContentLoaded', function() {
+      // ダークモード初期化
+      var savedTheme = localStorage.getItem('sprout-theme') || 'light';
+      applyTheme(savedTheme);
+
+      // ダークモードクリックイベント登録
+      var toggleBtn = document.getElementById('themeToggle');
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', function() {
+          var next = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+          applyTheme(next);
+        });
+      }
+
+      // カードアイコン：タグ色に対応した種類・色・サイズを適用
+      document.querySelectorAll('.knowledge-card').forEach(function(card) {
+        var iconEl = card.querySelector('.kn-card-icon');
+        if (!iconEl) return;
+        var tagColor = iconEl.getAttribute('data-tag-color') || '';
+        var hex = (tagColor && knColor(tagColor) !== '#6B7280') ? knColor(tagColor) : '#4ade80';
+        var iconIdx = (tagColor && TAG_COLOR_TO_ICON[tagColor] !== undefined) ? TAG_COLOR_TO_ICON[tagColor] : 0;
+        // 背景色更新
+        var r = parseInt(hex.slice(1,3), 16);
+        var g = parseInt(hex.slice(3,5), 16);
+        var b = parseInt(hex.slice(5,7), 16);
+        iconEl.style.background = 'rgba(' + r + ',' + g + ',' + b + ',0.15)';
+        // SVGの種類・色・サイズを更新
+        var svgEl = iconEl.querySelector('svg');
+        if (svgEl) {
+          svgEl.setAttribute('stroke', hex);
+          svgEl.setAttribute('width', '52');
+          svgEl.setAttribute('height', '52');
+          svgEl.innerHTML = KN_ICONS[iconIdx];
+        }
+      });
+
+      // カードのタグチップ描画（Thymeleaf の kn-tag-data スパンから描画）
+      document.querySelectorAll('.knowledge-card').forEach(function(card) {
+        var spans  = Array.from(card.querySelectorAll('.kn-tag-data'));
+        var tagsEl = card.querySelector('.kn-card-tags');
+        if (!tagsEl) return;
+        spans.forEach(function(span) {
+          if (!span.dataset.name) return;
+          var chip = document.createElement('span');
+          chip.className = 'kn-tag-chip';
+          chip.style.background = knColor(span.dataset.color || '');
+          chip.textContent = span.dataset.name;
+          tagsEl.appendChild(chip);
+        });
+      });
+
+      // カードクリック → モーダル（選択モード中は除く）
+      document.querySelectorAll('.knowledge-card').forEach(function(card) {
+        card.addEventListener('click', function() {
+          if (KN_SELECT_MODE) {
+            toggleCardSelect(card);
+          } else {
+            openKnModal(card.getAttribute('data-kn-id'));
+          }
+        });
+      });
+
+      // ===== タグフィルター =====
+      var KN_FILTER_TAGS = new Set(); // 選択中のtagId（文字列）
+
+      (function initFilter() {
+        var filterBtn      = document.getElementById('knFilterBtn');
+        var filterDropdown = document.getElementById('knFilterDropdown');
+        var filterBadge    = document.getElementById('knFilterBadge');
+        if (!filterBtn || !filterDropdown) return;
+
+        // KN_ITEMS_MAPから全タグを収集（tagId→{name,color}）
+        var tagMap = {}; // tagId -> {name, color}
+        Object.values(KN_ITEMS_MAP).forEach(function(item) {
+          (item.tags || []).forEach(function(tag) {
+            if (tag.tagId && !tagMap[tag.tagId]) {
+              tagMap[tag.tagId] = { name: tag.tagName || '', color: tag.tagColor || '' };
+            }
+          });
+        });
+
+        // タグがない場合はフィルターを非表示
+        var tagIds = Object.keys(tagMap);
+        if (tagIds.length === 0) {
+          var wrap = document.getElementById('knFilterWrap');
+          if (wrap) wrap.style.display = 'none';
+          return;
+        }
+
+        // ドロップダウンの中身を構築
+        function buildDropdown() {
+          filterDropdown.innerHTML = '';
+
+          // 「すべて」チェック
+          var allItem = document.createElement('label');
+          allItem.className = 'kn-filter-item';
+          var allChecked = KN_FILTER_TAGS.size === 0;
+          allItem.innerHTML =
+            '<input type="checkbox"' + (allChecked ? ' checked' : '') + '>' +
+            '<span style="font-weight:700;">すべて</span>';
+          allItem.querySelector('input').addEventListener('change', function() {
+            KN_FILTER_TAGS.clear();
+            applyFilter();
+            buildDropdown();
+          });
+          filterDropdown.appendChild(allItem);
+
+          var hr = document.createElement('hr');
+          hr.className = 'kn-filter-divider';
+          filterDropdown.appendChild(hr);
+
+          // 各タグ
+          tagIds.forEach(function(id) {
+            var t = tagMap[id];
+            var item = document.createElement('label');
+            item.className = 'kn-filter-item';
+            var checked = KN_FILTER_TAGS.has(id);
+            var hex = knColor(t.color);
+            item.innerHTML =
+              '<input type="checkbox"' + (checked ? ' checked' : '') + '>' +
+              '<span class="kn-filter-dot" style="background:' + hex + ';"></span>' +
+              '<span>' + (t.name || '（名称なし）') + '</span>';
+            item.querySelector('input').addEventListener('change', function(e) {
+              if (e.target.checked) { KN_FILTER_TAGS.add(id); }
+              else                  { KN_FILTER_TAGS.delete(id); }
+              applyFilter();
+              buildDropdown();
+            });
+            filterDropdown.appendChild(item);
+          });
+        }
+
+        // フィルター適用：OR一致
+        function applyFilter() {
+          var total = 0;
+          document.querySelectorAll('.knowledge-card').forEach(function(card) {
+            if (KN_FILTER_TAGS.size === 0) {
+              card.style.display = '';
+              total++;
+              return;
+            }
+            var id = card.getAttribute('data-kn-id');
+            var item = KN_ITEMS_MAP[String(id)];
+            var tags = (item && item.tags) ? item.tags : [];
+            var hit = tags.some(function(t) { return KN_FILTER_TAGS.has(String(t.tagId)); });
+            card.style.display = hit ? '' : 'none';
+            if (hit) total++;
+          });
+          // 件数更新
+          var countEl = document.getElementById('knVisibleCount');
+          if (countEl) countEl.textContent = total + ' 件';
+          // バッジ更新
+          var cnt = KN_FILTER_TAGS.size;
+          filterBadge.style.display = cnt > 0 ? 'inline-flex' : 'none';
+          filterBadge.textContent = cnt;
+          filterBtn.classList.toggle('active', cnt > 0);
+        }
+
+        // ドロップダウン開閉
+        filterBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var isOpen = filterDropdown.style.display !== 'none';
+          if (isOpen) {
+            filterDropdown.style.display = 'none';
+          } else {
+            buildDropdown();
+            filterDropdown.style.display = 'block';
+          }
+        });
+
+        // 外クリックで閉じる
+        document.addEventListener('click', function(e) {
+          if (!document.getElementById('knFilterWrap').contains(e.target)) {
+            filterDropdown.style.display = 'none';
+          }
+        });
+      })();
+
+      // ===== 選択モード =====
+      var KN_SELECT_MODE = false;
+      var KN_SELECTED_IDS = [];
+
+      // ===== Escキー: 最前面のモーダル/モードを閉じる =====
+      document.addEventListener('keydown', function(e) {
+        if (e.key !== 'Escape') return;
+        // 1. 確認ダイアログ（最前面）
+        var confirmEl = document.querySelector('.kn-confirm-overlay');
+        if (confirmEl) { confirmEl.remove(); return; }
+        // 2. マージモーダル
+        var mergeOverlay = document.getElementById('knMergeOverlay');
+        if (mergeOverlay) { mergeOverlay.remove(); return; }
+        // 3. 詳細モーダル
+        var modal = document.querySelector('.kn-modal-overlay');
+        if (modal) { closeModal(); return; }
+        // 4. 選択モード
+        if (KN_SELECT_MODE) { exitSelectMode(); return; }
+      });
+
+      var selectModeBtn = document.getElementById('knSelectModeBtn');
+      var selectBar     = document.getElementById('knSelectBar');
+      var selCancelBtn  = document.getElementById('knSelCancelBtn');
+      var selDeleteBtn  = document.getElementById('knSelDeleteBtn');
+      var selMergeBtn   = document.getElementById('knSelMergeBtn');
+      var selCountEl    = document.getElementById('knSelCount');
+
+      if (selectModeBtn) {
+        selectModeBtn.addEventListener('click', function() { enterSelectMode(); });
+      }
+      if (selCancelBtn) {
+        selCancelBtn.addEventListener('click', function() { exitSelectMode(); });
+      }
+
+      function enterSelectMode() {
+        KN_SELECT_MODE = true;
+        KN_SELECTED_IDS = [];
+        document.querySelectorAll('.knowledge-card').forEach(function(c) {
+          c.classList.add('kn-selectable');
+          c.classList.remove('kn-selected');
+        });
+        if (selectBar) selectBar.classList.add('active');
+        updateSelectBar();
+      }
+
+      function exitSelectMode() {
+        KN_SELECT_MODE = false;
+        KN_SELECTED_IDS = [];
+        document.querySelectorAll('.knowledge-card').forEach(function(c) {
+          c.classList.remove('kn-selectable', 'kn-selected');
+        });
+        if (selectBar) selectBar.classList.remove('active');
+      }
+
+      function toggleCardSelect(card) {
+        var id = card.getAttribute('data-kn-id');
+        var idx = KN_SELECTED_IDS.indexOf(id);
+        if (idx === -1) {
+          KN_SELECTED_IDS.push(id);
+          card.classList.add('kn-selected');
+        } else {
+          KN_SELECTED_IDS.splice(idx, 1);
+          card.classList.remove('kn-selected');
+        }
+        updateSelectBar();
+      }
+
+      function updateSelectBar() {
+        var cnt = KN_SELECTED_IDS.length;
+        if (selCountEl) selCountEl.textContent = cnt;
+        if (selDeleteBtn) selDeleteBtn.disabled = cnt < 1;
+        if (selMergeBtn)  selMergeBtn.disabled  = cnt < 2;
+      }
+
+      // ===== 一括削除 =====
+      if (selDeleteBtn) {
+        selDeleteBtn.addEventListener('click', function() {
+          var cnt = KN_SELECTED_IDS.length;
+          var overlay = document.createElement('div');
+          overlay.className = 'kn-confirm-overlay';
+          overlay.innerHTML =
+            '<div class="kn-confirm-dialog">' +
+              '<p>' + cnt + '件の木の実を削除しますか？</p>' +
+              '<small>この操作は元に戻せません</small>' +
+              '<div class="kn-confirm-btns">' +
+                '<button class="kn-confirm-cancel">キャンセル</button>' +
+                '<button class="kn-confirm-delete">削除する</button>' +
+              '</div>' +
+            '</div>';
+          document.body.appendChild(overlay);
+          overlay.querySelector('.kn-confirm-cancel').addEventListener('click', function() { overlay.remove(); });
+          overlay.querySelector('.kn-confirm-delete').addEventListener('click', function() {
+            overlay.remove();
+            var idsContainer = document.getElementById('knDeleteBulkIds');
+            idsContainer.innerHTML = '';
+            KN_SELECTED_IDS.forEach(function(id) {
+              var inp = document.createElement('input');
+              inp.type = 'hidden'; inp.name = 'ids'; inp.value = id;
+              idsContainer.appendChild(inp);
+            });
+            document.getElementById('knDeleteBulkSort').value = KN_CURRENT_SORT;
+            document.getElementById('knDeleteBulkForm').submit();
+          });
+          overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+        });
+      }
+
+      // ===== マージモーダル =====
+      if (selMergeBtn) {
+        selMergeBtn.addEventListener('click', function() { openMergeModal(); });
+      }
+
+      function openMergeModal() {
+        var overlay = document.createElement('div');
+        overlay.className = 'kn-modal-overlay';
+        overlay.id = 'knMergeOverlay';
+
+        // 選択済みアイテムのデータを収集
+        var sourceItems = KN_SELECTED_IDS.map(function(id) {
+          return KN_ITEMS_MAP[String(id)] || { id: id, title: '', aiSummary: '' };
+        });
+
+        var sourcesHtml = sourceItems.map(function(item) {
+          var t = esc(item.title || item.aiSummary || '（無題）');
+          var s = esc(item.aiSummary || '');
+          return '<div class="kn-merge-source-item"><strong>' + t + '</strong>' +
+                 (s ? '<br>' + s.slice(0, 40) + (s.length > 40 ? '…' : '') : '') + '</div>';
+        }).join('');
+
+        overlay.innerHTML =
+          '<div class="kn-modal kn-merge-modal" role="dialog" aria-modal="true">' +
+            '<div class="kn-modal-hdr">' +
+              '<div style="flex:1;min-width:0;">' +
+                '<div class="kn-merge-hdr-label">マージ</div>' +
+                '<div class="kn-merge-hdr-title">知識の実を統合する</div>' +
+              '</div>' +
+              '<button class="kn-modal-close-btn" id="knMergeClose" aria-label="閉じる">' +
+                '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+              '</button>' +
+            '</div>' +
+            '<div class="kn-modal-body">' +
+              '<div><div class="kn-modal-section-label">統合する実（' + sourceItems.length + '件）</div>' +
+                '<div class="kn-merge-sources">' + sourcesHtml + '</div>' +
+              '</div>' +
+              '<div class="kn-merge-hint-wrap">' +
+                '<div class="kn-modal-section-label" style="margin-bottom:6px;">統合の観点ヒント（任意）</div>' +
+                '<input class="kn-merge-hint-input" id="knMergeHint" type="text" maxlength="100"' +
+                       ' placeholder="例：どちらも課題解決の手法に関するメモなので原則ベースで統合">' +
+              '</div>' +
+              '<div style="padding:0 0 0 0;">' +
+                '<button class="kn-btn-suggest" id="knMergeSuggestBtn" type="button">' +
+                  '<div class="kn-suggest-spinner" id="knSuggestSpinner"></div>' +
+                  '<svg id="knSuggestIcon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>' +
+                  '<span id="knSuggestBtnText">AI提案を生成</span>' +
+                '</button>' +
+              '</div>' +
+              '<div><div class="kn-modal-section-label">タイトル</div>' +
+                '<input class="kn-modal-title-input" id="knMergeTitleInput" type="text" maxlength="20" placeholder="タイトルを入力">' +
+              '</div>' +
+              '<div><div class="kn-modal-section-label">要約</div>' +
+                '<textarea class="kn-modal-summary-textarea" id="knMergeSummaryInput" style="min-height:90px;"></textarea>' +
+              '</div>' +
+            '</div>' +
+            '<div class="kn-modal-footer">' +
+              '<button class="kn-btn-close" id="knMergeCancelBtn" type="button">キャンセル</button>' +
+              '<button class="kn-btn-save" id="knMergeExecBtn" type="button" disabled style="opacity:.4;cursor:not-allowed;">マージを実行</button>' +
+            '</div>' +
+          '</div>';
+
+        document.body.appendChild(overlay);
+
+        // クローズ
+        function closeMerge() { overlay.remove(); }
+        document.getElementById('knMergeClose').addEventListener('click', closeMerge);
+        document.getElementById('knMergeCancelBtn').addEventListener('click', closeMerge);
+        overlay.addEventListener('click', function(e) { if (e.target === overlay) closeMerge(); });
+
+        // AI提案
+        document.getElementById('knMergeSuggestBtn').addEventListener('click', function() {
+          var btn     = this;
+          var spinner = document.getElementById('knSuggestSpinner');
+          var icon    = document.getElementById('knSuggestIcon');
+          var btnText = document.getElementById('knSuggestBtnText');
+          btn.disabled = true;
+          spinner.style.display = 'block';
+          icon.style.display = 'none';
+          btnText.textContent = '生成中…';
+
+          var titles    = sourceItems.map(function(i) { return i.title || i.aiSummary || ''; });
+          var summaries = sourceItems.map(function(i) { return i.aiSummary || ''; });
+          var hint      = document.getElementById('knMergeHint').value.trim();
+
+          fetch('/knowledge/merge-suggest', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids: KN_SELECTED_IDS.map(Number), hint: hint, titles: titles, summaries: summaries })
+          })
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            document.getElementById('knMergeTitleInput').value   = data.title   || '';
+            document.getElementById('knMergeSummaryInput').value = data.aiSummary || '';
+            updateMergeExecBtn();
+          })
+          .catch(function() { alert('AI提案の生成に失敗しました'); })
+          .finally(function() {
+            btn.disabled = false;
+            spinner.style.display = 'none';
+            icon.style.display = 'block';
+            btnText.textContent = 'AI提案を生成';
+          });
+        });
+
+        // タイトル・要約の入力監視 → ボタン活性制御
+        function updateMergeExecBtn() {
+          var title   = document.getElementById('knMergeTitleInput').value.trim();
+          var summary = document.getElementById('knMergeSummaryInput').value.trim();
+          var btn = document.getElementById('knMergeExecBtn');
+          if (!btn) return;
+          var ok = title.length > 0 && summary.length > 0;
+          btn.disabled = !ok;
+          btn.style.opacity = ok ? '1' : '.4';
+          btn.style.cursor  = ok ? 'pointer' : 'not-allowed';
+        }
+        document.getElementById('knMergeTitleInput').addEventListener('input', updateMergeExecBtn);
+        document.getElementById('knMergeSummaryInput').addEventListener('input', updateMergeExecBtn);
+
+        // マージ実行
+        document.getElementById('knMergeExecBtn').addEventListener('click', function() {
+          var title   = document.getElementById('knMergeTitleInput').value.trim();
+          var summary = document.getElementById('knMergeSummaryInput').value.trim();
+
+          // 確認ダイアログ
+          var confirmOverlay = document.createElement('div');
+          confirmOverlay.className = 'kn-confirm-overlay';
+          confirmOverlay.style.zIndex = '400';
+          confirmOverlay.innerHTML =
+            '<div class="kn-confirm-dialog">' +
+              '<p>' + KN_SELECTED_IDS.length + '件の実をマージしますか？</p>' +
+              '<small>元の実は削除されます（元に戻せません）</small>' +
+              '<div class="kn-confirm-btns">' +
+                '<button class="kn-confirm-cancel">キャンセル</button>' +
+                '<button class="kn-confirm-delete" style="background:#3E7A52;">マージする</button>' +
+              '</div>' +
+            '</div>';
+          document.body.appendChild(confirmOverlay);
+          confirmOverlay.querySelector('.kn-confirm-cancel').addEventListener('click', function() { confirmOverlay.remove(); });
+          confirmOverlay.querySelector('.kn-confirm-delete').addEventListener('click', function() {
+            confirmOverlay.remove();
+            closeMerge();
+            var idsContainer = document.getElementById('knMergeIds');
+            idsContainer.innerHTML = '';
+            KN_SELECTED_IDS.forEach(function(id) {
+              var inp = document.createElement('input');
+              inp.type = 'hidden'; inp.name = 'ids'; inp.value = id;
+              idsContainer.appendChild(inp);
+            });
+            document.getElementById('knMergeTitle').value     = title;
+            document.getElementById('knMergeAiSummary').value = summary;
+            document.getElementById('knMergeSort').value      = KN_CURRENT_SORT;
+            document.getElementById('knMergeForm').submit();
+          });
+          confirmOverlay.addEventListener('click', function(e) { if (e.target === confirmOverlay) confirmOverlay.remove(); });
+        });
+      }
+
+      // ===== EXP トースト =====
+      /**
+       * EXP獲得・レベルアップをトーストで通知する
+       * @param {{ expGained: number, levelUps: string[] }} data
+       */
+      function knShowExpToasts(data) {
+        if (!data) return;
+        var gained = data.expGained || 0;
+        var levelUps = data.levelUps || [];
+        if (gained > 0 && typeof sprout !== 'undefined' && sprout.message) {
+          sprout.message.toast({ message: '+' + gained + ' EXP 獲得！', type: 'success' });
+        }
+        if (levelUps.length > 0 && typeof sprout !== 'undefined' && sprout.message) {
+          // 複数タグのレベルアップは少し間をおいて順番に表示
+          levelUps.forEach(function(name, i) {
+            setTimeout(function() {
+              sprout.message.toast({ message: '🌿 ' + name + ' がレベルアップ！', type: 'info' });
+            }, 600 + i * 800);
+          });
+        }
+      }
+
+      // マージ後のフラッシュからトースト表示（hidden inputsから読み取り）
+      (function() {
+        var expEl = document.getElementById('knFlashExpGained');
+        if (!expEl) return;
+        var expGained = parseInt(expEl.value, 10) || 0;
+        var levelUps = Array.from(document.querySelectorAll('.kn-flash-lvup'))
+          .map(function(el) { return el.value; });
+        setTimeout(function() { knShowExpToasts({ expGained: expGained, levelUps: levelUps }); }, 300);
+      })();
+
+    });
+  </script>
+
+</body>
+</html>

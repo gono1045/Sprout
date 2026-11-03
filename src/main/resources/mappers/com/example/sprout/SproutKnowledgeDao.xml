@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.sprout.dao.SproutKnowledgeDao">
+
+  <!-- 木の実一覧（タスク名・タグリスト付き） -->
+  <resultMap id="knowledgeListItemMap" type="KnowledgeListItem">
+    <id     property="id"         column="k_id" />
+    <result property="userId"     column="user_id" />
+    <result property="workLogId"  column="work_log_id" />
+    <result property="itemId"     column="item_id" />
+    <result property="itemTitle"  column="item_title" />
+    <result property="title"      column="title" />
+    <result property="aiSummary"  column="ai_summary" />
+    <result property="createdAt"  column="created_at" />
+    <collection property="tags" ofType="SproutTagList">
+      <id     property="tagId"    column="tag_id" />
+      <result property="tagName"  column="tag_name" />
+      <result property="tagColor" column="tag_color" />
+    </collection>
+  </resultMap>
+
+  <select id="selectListByUserId" resultMap="knowledgeListItemMap">
+    SELECT
+        k.id          AS k_id
+      , k.user_id
+      , k.work_log_id
+      , k.item_id
+      , i.title       AS item_title
+      , k.title
+      , k.ai_summary
+      , k.created_at
+      , t.tag_id
+      , t.tag_name
+      , t.tag_color
+    FROM sprout_knowledge k
+    LEFT JOIN sprout_item         i  ON k.item_id = i.id
+    LEFT JOIN sprout_knowledge_tag kt ON k.id = kt.knowledge_id
+                                     AND kt.user_id = #{userId}
+    LEFT JOIN sprout_tag           t  ON kt.tag_id = t.tag_id
+    WHERE k.user_id = #{userId}
+    ORDER BY
+      <choose>
+        <when test="sortKey == 'old'">k.created_at ASC</when>
+        <when test="sortKey == 'tag'">t.tag_name ASC NULLS LAST, k.created_at DESC</when>
+        <otherwise>k.created_at DESC</otherwise>
+      </choose>
+  </select>
+
+  <insert id="insert" parameterType="SproutKnowledge"
+          useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO sprout_knowledge (
+        user_id
+      , work_log_id
+      , item_id
+      , title
+      , ai_summary
+      , created_at
+      , task_exp_given
+      , last_edited_exp_at
+    ) VALUES (
+        #{userId}
+      , #{workLogId,        jdbcType=BIGINT}
+      , #{itemId,           jdbcType=BIGINT}
+      , #{title,            jdbcType=VARCHAR}
+      , #{aiSummary,        jdbcType=VARCHAR}
+      , #{createdAt}
+      , #{taskExpGiven}
+      , #{lastEditedExpAt,  jdbcType=DATE}
+    )
+  </insert>
+
+  <update id="update">
+    UPDATE sprout_knowledge
+    SET title      = #{title}
+      , ai_summary = #{aiSummary}
+    WHERE id      = #{id}
+      AND user_id = #{userId}
+  </update>
+
+  <select id="selectByUserId" parameterType="long"
+          resultType="SproutKnowledge">
+    SELECT
+        id
+      , user_id
+      , work_log_id
+      , item_id
+      , ai_summary
+      , created_at
+    FROM sprout_knowledge
+    WHERE user_id = #{userId}
+    ORDER BY created_at DESC
+  </select>
+
+  <delete id="deleteById">
+    DELETE FROM sprout_knowledge
+    WHERE id      = #{id}
+      AND user_id = #{userId}
+  </delete>
+
+  <delete id="deleteByIds">
+    DELETE FROM sprout_knowledge
+    WHERE id IN
+    <foreach collection="ids" item="id" open="(" separator="," close=")">
+      #{id}
+    </foreach>
+      AND user_id = #{userId}
+  </delete>
+
+  <select id="selectById" resultType="SproutKnowledge">
+    SELECT
+        id
+      , user_id
+      , work_log_id
+      , item_id
+      , title
+      , ai_summary
+      , created_at
+      , task_exp_given
+      , last_edited_exp_at
+    FROM sprout_knowledge
+    WHERE id      = #{id}
+      AND user_id = #{userId}
+  </select>
+
+  <select id="existsTaskExpGivenByItemId" resultType="boolean">
+    SELECT EXISTS(
+      SELECT 1
+      FROM sprout_knowledge
+      WHERE item_id        = #{itemId}
+        AND user_id        = #{userId}
+        AND task_exp_given = TRUE
+    )
+  </select>
+
+  <update id="markTaskExpGiven">
+    UPDATE sprout_knowledge
+    SET task_exp_given = TRUE
+    WHERE id      = #{id}
+      AND user_id = #{userId}
+  </update>
+
+  <update id="updateLastEditedExpAt">
+    UPDATE sprout_knowledge
+    SET last_edited_exp_at = #{lastEditedExpAt}
+    WHERE id      = #{id}
+      AND user_id = #{userId}
+  </update>
+
+</mapper>

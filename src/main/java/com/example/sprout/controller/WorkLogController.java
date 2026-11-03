@@ -1,5 +1,7 @@
 package com.example.sprout.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +22,8 @@ import com.example.sprout.service.WorkLogService;
 @Controller
 @RequestMapping("/work-log")
 public class WorkLogController {
+
+  private static final Logger log = LoggerFactory.getLogger(WorkLogController.class);
 
   @Autowired
   private WorkLogService workLogService;
@@ -42,6 +46,12 @@ public class WorkLogController {
   @PostMapping("/save")
   @ResponseBody
   public WorkLogResult save(@RequestBody WorkLogForm form) {
-    return workLogService.save(form);
+    log.info("[WorkLog] POST /work-log/save itemId={} durationMin={} hasMemo={}",
+        form.getItemId(), form.getDurationMin(),
+        form.getMemo() != null && !form.getMemo().isBlank());
+    WorkLogResult result = workLogService.save(form);
+    log.info("[WorkLog] 保存完了 workLogId={} expTotal={} hasAiSummary={}",
+        result.getWorkLogId(), result.getExpTotal(), result.getAiSummary() != null);
+    return result;
   }
 }

@@ -60,3 +60,10 @@ logging:
   level:
     org.mybatis: WARN
     org.mybatis.spring: WARN
+
+# AI要約設定（本番: Gemini API）
+# APIキーは環境変数 GEMINI_API_KEY で管理（.gitignore対象の.envまたはRenderの環境変数設定）
+ai:
+  gemini:
+    api-key: ${GEMINI_API_KEY}
+    model: gemini-1.5-flash
