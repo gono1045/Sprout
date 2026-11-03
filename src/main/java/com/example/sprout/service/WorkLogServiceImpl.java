@@ -11,16 +11,22 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.sprout.dao.WorkLogDao;
 import com.example.sprout.form.WorkLogForm;
+import com.example.sprout.model.AiSummaryResult;
 import com.example.sprout.model.SproutWorkLog;
 import com.example.sprout.model.TagExpResult;
 import com.example.sprout.model.WorkLogResult;
 import com.example.sprout.security.AccessControlService;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 工数記録サービス実装
  */
 @Service
 public class WorkLogServiceImpl implements WorkLogService {
+
+  private static final Logger logger = LoggerFactory.getLogger(WorkLogServiceImpl.class);
 
   private static final DateTimeFormatter ISO_FORMATTER =
       DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
@@ -37,6 +43,9 @@ public class WorkLogServiceImpl implements WorkLogService {
 
   @Autowired
   private AccessControlService accessControlService;
+
+  @Autowired
+  private AiSummaryService aiSummaryService;
 
   @Override
   @Transactional
@@ -69,11 +78,34 @@ public class WorkLogServiceImpl implements WorkLogService {
 
     workLogDao.insert(log);
 
+    // AI要約生成（memoが空でない場合のみ）
+    String aiTitle   = null;
+    String aiSummary = null;
+    String memo = form.getMemo();
+    if (memo != null && !memo.isBlank()) {
+      try {
+        AiSummaryResult aiResult = aiSummaryService.summarize(memo);
+        if (aiResult != null) {
+          aiTitle   = aiResult.getTitle();
+          aiSummary = aiResult.getSummary();
+          // 空文字はnullに統一（スキップ扱い）
+          if (aiSummary != null && aiSummary.isBlank()) aiSummary = null;
+          if (aiTitle   != null && aiTitle.isBlank())   aiTitle   = null;
+        }
+      } catch (Exception e) {
+        logger.warn("AI要約生成に失敗しました（フォールバック: スキップ）", e);
+      }
+    }
+
     // レスポンス構築
     WorkLogResult result = new WorkLogResult();
     result.setExpTotal(totalExp);
     result.setDurationMin(form.getDurationMin());
     result.setTagResults(tagResults);
+    result.setWorkLogId(log.getId());
+    result.setItemId(form.getItemId());
+    result.setAiTitle(aiTitle);
+    result.setAiSummary(aiSummary);
     return result;
   }
 
