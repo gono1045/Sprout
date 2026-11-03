@@ -29,6 +29,9 @@ var timerModal = (function () {
     _$modal = $modalEl;
     _satisfaction = 0;
 
+    // モーダル表示中は背景スクロールをロック
+    $('body').css('overflow', 'hidden');
+
     if (typeof lucide !== 'undefined') lucide.createIcons();
 
     _bindEvents();
@@ -50,6 +53,9 @@ var timerModal = (function () {
     // 実際の ID は "timerModal_<id>" になっている
     return _$modal.find('[id$="_' + id + '"], #' + id);
   }
+
+  // ===== private: result state（AI要約フェーズで使用） =====
+  var _pendingResult = null; // AI要約フェーズ中に保持する WorkLogResult
 
   // ===== private: state =====
 
@@ -280,6 +286,10 @@ var timerModal = (function () {
     var $btn = _$id('timerBtnRegister');
     $btn.prop('disabled', true).text('保存中…');
 
+    // ローディングフェーズへ切替
+    _$id('timerPhaseComplete').hide();
+    _$id('timerPhaseLoading').show();
+
     $.ajax({
       url: '/work-log/save',
       method: 'POST',
@@ -295,14 +305,48 @@ var timerModal = (function () {
     })
     .done(function(result) {
       _clearStorage();
-      _showResultPhase(result);
+      _$id('timerPhaseLoading').hide();
+      // AI要約がある場合は要約確認フェーズへ、ない場合は直接結果フェーズへ
+      if (result.aiSummary) {
+        _showAiSummaryPhase(result);
+      } else {
+        _showResultPhase(result);
+      }
     })
     .fail(function() {
+      _$id('timerPhaseLoading').hide();
+      _$id('timerPhaseComplete').show();
       $btn.prop('disabled', false).html(
         '<i data-lucide="check" style="width:15px;height:15px;display:inline-block;vertical-align:middle;"></i>&nbsp; 記録する'
       );
       sprout.message.toast({ message: '保存に失敗しました', type: 'error' });
     });
+  }
+
+  // ===== private: AI summary phase =====
+
+  /**
+   * AI要約確認フェーズを表示する。
+   * @param {Object} result  WorkLogResult JSON（aiSummary を含む）
+   */
+  function _showAiSummaryPhase(result) {
+    _pendingResult = result;
+
+    _$id('timerPhaseComplete').hide();
+    _$id('timerPhaseTimer').hide();
+    _$id('timerPhaseResult').hide();
+    _$id('timerCloseBtn').hide();
+
+    // タイトル・要約を編集欄にセット
+    _$id('timerAiTitleInput').val(result.aiTitle || '');
+    _$id('timerAiSummaryTextarea').val(result.aiSummary || '');
+
+    _$id('timerBtnSaveKnowledge').prop('disabled', false).html(
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;"><path d="M12 2a7 7 0 0 1 7 7c0 4.5-7 13-7 13S5 13.5 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5" fill="currentColor" stroke="none"/></svg>&nbsp; 知識の実として保存'
+    );
+    _$id('timerPhaseAiSummary').show();
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   }
 
   // ===== private: result phase =====
@@ -336,15 +380,24 @@ var timerModal = (function () {
 
   /**
    * 結果フェーズを表示する。
-   * @param {Object} result  WorkLogResult JSON
-   *   { expTotal: number, durationMin: number, tagResults: [...] }
+   * @param {Object}  result          WorkLogResult JSON
+   * @param {boolean} knowledgeSaved  知識の実を保存した場合 true
    */
-  function _showResultPhase(result) {
+  function _showResultPhase(result, knowledgeSaved) {
     // フェーズ切替
     _$id('timerPhaseComplete').hide();
     _$id('timerPhaseTimer').hide();
+    _$id('timerPhaseAiSummary').hide();
     _$id('timerCloseBtn').hide();
+    _pendingResult = null;
     _$id('timerPhaseResult').show();
+
+    // 知識の実バナー
+    if (knowledgeSaved) {
+      _$id('timerResultKnowledgeBanner').show();
+    } else {
+      _$id('timerResultKnowledgeBanner').hide();
+    }
 
     if (typeof lucide !== 'undefined') lucide.createIcons();
 
@@ -436,6 +489,8 @@ var timerModal = (function () {
     _stopTick();
     _$modal && _$modal.remove();
     $(document).off('keydown.modal');
+    // 背景スクロールロック解除
+    $('body').css('overflow', '');
   }
 
   // ===== private: util =====
