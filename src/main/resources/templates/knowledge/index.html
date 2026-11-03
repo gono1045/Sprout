@@ -639,8 +639,39 @@
              .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
     }
 
+    /**
+     * EXP獲得・レベルアップ・同日EXP制限をトーストで通知する
+     * グローバルスコープに配置（openKnModal から呼ばれるため）
+     * @param {{ expGained: number, levelUps: string[], expLimited?: boolean }} data
+     */
+    function knShowExpToasts(data) {
+      if (!data) return;
+      var gained = data.expGained || 0;
+      var levelUps = data.levelUps || [];
+      var hasSprout = typeof sprout !== 'undefined' && sprout.message;
+      // C: 同日EXP制限に達した場合の通知
+      if (data.expLimited && hasSprout) {
+        sprout.message.toast({ message: '本日の編集 EXP はすでに取得済みです', type: 'info' });
+      // タグなし: EXP が付与されない場合の通知（制限ではなくタグ未設定が原因）
+      } else if (!data.expLimited && gained === 0 && hasSprout && data.hasOwnProperty('expGained')) {
+        sprout.message.toast({ message: 'この木の実にタグが設定されていないため EXP は付与されません', type: 'info' });
+      }
+      if (gained > 0 && hasSprout) {
+        sprout.message.toast({ message: '+' + gained + ' EXP 獲得！', type: 'success' });
+      }
+      if (levelUps.length > 0 && hasSprout) {
+        // 複数タグのレベルアップは少し間をおいて順番に表示
+        levelUps.forEach(function(name, i) {
+          setTimeout(function() {
+            sprout.message.toast({ message: '🌿 ' + name + ' がレベルアップ！', type: 'info' });
+          }, 600 + i * 800);
+        });
+      }
+    }
+
     /* ===== 初期化（DOM ready後に実行） ===== */
     document.addEventListener('DOMContentLoaded', function() {
+      console.log('[KN] DOMContentLoaded fired');
       // ダークモード初期化
       var savedTheme = localStorage.getItem('sprout-theme') || 'light';
       applyTheme(savedTheme);
@@ -692,7 +723,9 @@
       });
 
       // カードクリック → モーダル（選択モード中は除く）
-      document.querySelectorAll('.knowledge-card').forEach(function(card) {
+      var knCards = document.querySelectorAll('.knowledge-card');
+      console.log('[KN] cards registered:', knCards.length);
+      knCards.forEach(function(card) {
         card.addEventListener('click', function() {
           if (KN_SELECT_MODE) {
             toggleCardSelect(card);
@@ -1084,35 +1117,6 @@
       }
 
       // ===== EXP トースト =====
-      /**
-       * EXP獲得・レベルアップ・同日EXP制限をトーストで通知する
-       * @param {{ expGained: number, levelUps: string[], expLimited?: boolean }} data
-       */
-      function knShowExpToasts(data) {
-        if (!data) return;
-        var gained = data.expGained || 0;
-        var levelUps = data.levelUps || [];
-        var hasSprout = typeof sprout !== 'undefined' && sprout.message;
-        // C: 同日EXP制限に達した場合の通知
-        if (data.expLimited && hasSprout) {
-          sprout.message.toast({ message: '本日の編集 EXP はすでに取得済みです', type: 'info' });
-        // タグなし: EXP が付与されない場合の通知（制限ではなくタグ未設定が原因）
-        } else if (!data.expLimited && gained === 0 && hasSprout && data.hasOwnProperty('expGained')) {
-          sprout.message.toast({ message: 'この木の実にタグが設定されていないため EXP は付与されません', type: 'info' });
-        }
-        if (gained > 0 && hasSprout) {
-          sprout.message.toast({ message: '+' + gained + ' EXP 獲得！', type: 'success' });
-        }
-        if (levelUps.length > 0 && hasSprout) {
-          // 複数タグのレベルアップは少し間をおいて順番に表示
-          levelUps.forEach(function(name, i) {
-            setTimeout(function() {
-              sprout.message.toast({ message: '🌿 ' + name + ' がレベルアップ！', type: 'info' });
-            }, 600 + i * 800);
-          });
-        }
-      }
-
       // マージ後のフラッシュからトースト表示（hidden inputsから読み取り）
       (function() {
         var expEl = document.getElementById('knFlashExpGained');
