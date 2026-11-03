@@ -24,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.example.sprout.dao.SproutKnowledgeDao;
 import com.example.sprout.dao.SproutKnowledgeTagDao;
+import com.example.sprout.model.KnowledgeUpdateResult;
 import com.example.sprout.model.SproutKnowledge;
 import com.example.sprout.model.SproutKnowledgeTag;
 import com.example.sprout.model.SproutTagList;
@@ -131,32 +132,34 @@ class KnowledgeServiceImplTest {
     when(expCalculatorService.distributeExp(USER_ID, List.of(TAG_ID_1), 8))
         .thenReturn(List.of(expResult));
 
-    List<TagExpResult> results = sut.update(knowledgeId, "新タイトル", "新要約");
+    KnowledgeUpdateResult result = sut.update(knowledgeId, "新タイトル", "新要約");
 
-    assertThat(results).hasSize(1);
-    assertThat(results.get(0).getExpGained()).isEqualTo(8);
+    assertThat(result.getExpResults()).hasSize(1);
+    assertThat(result.getExpResults().get(0).getExpGained()).isEqualTo(8);
+    assertThat(result.isExpLimited()).isFalse();
     verify(knowledgeDao).update(knowledgeId, "新タイトル", "新要約", USER_ID);
     verify(knowledgeDao).updateLastEditedExpAt(eq(knowledgeId), eq(LocalDate.now()), eq(USER_ID));
   }
 
   @Test
-  @DisplayName("update — 同日に編集EXP付与済みの場合、EXPは付与されず空リストが返る")
-  void update_expAlreadyGivenToday_returnsEmpty() {
+  @DisplayName("update — 同日に編集EXP付与済みの場合、expLimited=true が返り EXP は付与されない")
+  void update_expAlreadyGivenToday_returnsLimited() {
     Long knowledgeId = 5L;
     SproutKnowledge knowledge = buildKnowledge(knowledgeId, LocalDate.now());
 
     when(accessControlService.getLoginUserId()).thenReturn(USER_ID);
     when(knowledgeDao.selectById(knowledgeId, USER_ID)).thenReturn(knowledge);
 
-    List<TagExpResult> results = sut.update(knowledgeId, "タイトル", "要約");
+    KnowledgeUpdateResult result = sut.update(knowledgeId, "タイトル", "要約");
 
-    assertThat(results).isEmpty();
+    assertThat(result.getExpResults()).isEmpty();
+    assertThat(result.isExpLimited()).isTrue();
     verify(expCalculatorService, never()).distributeExp(any(), anyList(), anyInt());
     verify(knowledgeDao, never()).updateLastEditedExpAt(any(), any(), any());
   }
 
   @Test
-  @DisplayName("update — タグが空の場合、EXPは付与されず空リストが返る")
+  @DisplayName("update — タグが空の場合、EXPは付与されず expLimited=false が返る")
   void update_noTags_returnsEmpty() {
     Long knowledgeId = 5L;
     SproutKnowledge knowledge = buildKnowledge(knowledgeId, LocalDate.now().minusDays(1));
@@ -165,9 +168,10 @@ class KnowledgeServiceImplTest {
     when(knowledgeDao.selectById(knowledgeId, USER_ID)).thenReturn(knowledge);
     when(knowledgeTagDao.selectByKnowledgeId(knowledgeId, USER_ID)).thenReturn(List.of());
 
-    List<TagExpResult> results = sut.update(knowledgeId, "タイトル", "要約");
+    KnowledgeUpdateResult result = sut.update(knowledgeId, "タイトル", "要約");
 
-    assertThat(results).isEmpty();
+    assertThat(result.getExpResults()).isEmpty();
+    assertThat(result.isExpLimited()).isFalse();
     verify(expCalculatorService, never()).distributeExp(any(), anyList(), anyInt());
   }
 

@@ -3,6 +3,7 @@ package com.example.sprout.service;
 import java.util.List;
 
 import com.example.sprout.model.KnowledgeListItem;
+import com.example.sprout.model.KnowledgeUpdateResult;
 import com.example.sprout.model.TagExpResult;
 
 /**
@@ -40,8 +41,9 @@ public interface KnowledgeService {
    * @param id        木の実ID
    * @param title     新しいタイトル
    * @param aiSummary 新しい要約テキスト
+   * @return 更新結果（EXP付与結果 + 同日制限フラグ）
    */
-  List<TagExpResult> update(Long id, String title, String aiSummary);
+  KnowledgeUpdateResult update(Long id, String title, String aiSummary);
 
   /**
    * 複数の知識の実を1つにマージする。

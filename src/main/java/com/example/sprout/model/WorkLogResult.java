@@ -21,6 +21,8 @@ public class WorkLogResult {
   private String aiTitle;
   /** AI要約テキスト（メモなし or 要約失敗の場合は null） */
   private String aiSummary;
+  /** AI要約生成に失敗した場合 true（LM Studio 未起動等） */
+  private boolean aiSummaryFailed;
 
   public int getExpTotal()   { return expTotal; }
   public void setExpTotal(int v) { this.expTotal = v; }
@@ -42,4 +44,7 @@ public class WorkLogResult {
 
   public String getAiSummary() { return aiSummary; }
   public void setAiSummary(String v) { this.aiSummary = v; }
+
+  public boolean isAiSummaryFailed() { return aiSummaryFailed; }
+  public void setAiSummaryFailed(boolean v) { this.aiSummaryFailed = v; }
 }

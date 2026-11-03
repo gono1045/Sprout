@@ -167,6 +167,7 @@ public class AiSummaryServiceLocalImpl implements AiSummaryService {
 
   private AiSummaryResult fallback(String memo) {
     String s = memo != null ? memo.trim() : "";
-    return new AiSummaryResult(null, s.length() > 50 ? s.substring(0, 50) : s);
+    // fallback=true を設定して呼び出し元が AI 失敗を検知できるようにする
+    return new AiSummaryResult(null, s.length() > 50 ? s.substring(0, 50) : s, true);
   }
 }

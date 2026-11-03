@@ -79,8 +79,9 @@ public class WorkLogServiceImpl implements WorkLogService {
     workLogDao.insert(log);
 
     // AI要約生成（memoが空でない場合のみ）
-    String aiTitle   = null;
-    String aiSummary = null;
+    String aiTitle        = null;
+    String aiSummary      = null;
+    boolean aiSummaryFailed = false;
     String memo = form.getMemo();
     if (memo != null && !memo.isBlank()) {
       try {
@@ -91,9 +92,14 @@ public class WorkLogServiceImpl implements WorkLogService {
           // 空文字はnullに統一（スキップ扱い）
           if (aiSummary != null && aiSummary.isBlank()) aiSummary = null;
           if (aiTitle   != null && aiTitle.isBlank())   aiTitle   = null;
+          // AiSummaryService 内部でフォールバックした場合（LM Studio 未起動等）
+          if (aiResult.isFallback()) {
+            aiSummaryFailed = true;
+          }
         }
       } catch (Exception e) {
         logger.warn("AI要約生成に失敗しました（フォールバック: スキップ）", e);
+        aiSummaryFailed = true;
       }
     }
 
@@ -106,6 +112,7 @@ public class WorkLogServiceImpl implements WorkLogService {
     result.setItemId(form.getItemId());
     result.setAiTitle(aiTitle);
     result.setAiSummary(aiSummary);
+    result.setAiSummaryFailed(aiSummaryFailed);
     return result;
   }
 
