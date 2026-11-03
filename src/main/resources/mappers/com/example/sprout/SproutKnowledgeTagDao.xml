@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.sprout.dao.SproutKnowledgeTagDao">
+
+  <insert id="insertBatch" parameterType="list">
+    INSERT INTO sprout_knowledge_tag (
+        knowledge_id
+      , tag_id
+      , user_id
+    ) VALUES
+    <foreach collection="tags" item="t" separator=",">
+      (#{t.knowledgeId}, #{t.tagId}, #{t.userId})
+    </foreach>
+  </insert>
+
+  <delete id="deleteByKnowledgeId">
+    DELETE FROM sprout_knowledge_tag
+    WHERE knowledge_id = #{knowledgeId}
+      AND user_id      = #{userId}
+  </delete>
+
+  <delete id="deleteByKnowledgeIds">
+    DELETE FROM sprout_knowledge_tag
+    WHERE knowledge_id IN
+    <foreach collection="ids" item="id" open="(" separator="," close=")">
+      #{id}
+    </foreach>
+      AND user_id = #{userId}
+  </delete>
+
+  <select id="selectByKnowledgeId" resultType="SproutKnowledgeTag">
+    SELECT
+        id
+      , knowledge_id
+      , tag_id
+      , user_id
+    FROM sprout_knowledge_tag
+    WHERE knowledge_id = #{knowledgeId}
+      AND user_id      = #{userId}
+  </select>
+
+</mapper>

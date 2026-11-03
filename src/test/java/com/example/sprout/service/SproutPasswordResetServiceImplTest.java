@@ -67,7 +67,7 @@ class SproutPasswordResetServiceImplTest {
   @Test
   @DisplayName("sendResetMail — メールアドレスに一致するユーザーが存在しない場合は何もしない")
   void sendResetMail_userNotFound_doesNothing() {
-    when(sproutUserDao.findByEmailAndProvider("unknown@example.com", "LOCAL")).thenReturn(null);
+    when(sproutUserDao.findByEmailAndProvider("unknown@example.com", "LOCAL")).thenReturn(Optional.empty());
 
     sut.sendResetMail("unknown@example.com");
 
@@ -80,7 +80,7 @@ class SproutPasswordResetServiceImplTest {
   @DisplayName("sendResetMail — ユーザーが存在する場合: 既存トークン無効化→新トークン保存→メール送信")
   void sendResetMail_userExists_invalidatesOldTokenAndSendsNewToken() {
     SproutUser user = buildUser(1L, "testuser");
-    when(sproutUserDao.findByEmailAndProvider("test@example.com", "LOCAL")).thenReturn(user);
+    when(sproutUserDao.findByEmailAndProvider("test@example.com", "LOCAL")).thenReturn(Optional.of(user));
 
     sut.sendResetMail("test@example.com");
 
@@ -110,7 +110,7 @@ class SproutPasswordResetServiceImplTest {
   @DisplayName("sendResetMail — メール送信失敗時に例外が外へ漏れない（トークンは保存済み）")
   void sendResetMail_mailSendFails_doesNotThrow() {
     SproutUser user = buildUser(2L, "user2");
-    when(sproutUserDao.findByEmailAndProvider("user2@example.com", "LOCAL")).thenReturn(user);
+    when(sproutUserDao.findByEmailAndProvider("user2@example.com", "LOCAL")).thenReturn(Optional.of(user));
     doThrow(new MailSendException("SMTP error")).when(mailSender).send(any(SimpleMailMessage.class));
 
     assertThatCode(() -> sut.sendResetMail("user2@example.com")).doesNotThrowAnyException();

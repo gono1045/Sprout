@@ -215,6 +215,56 @@ var timerModal = (function () {
       $(document).trigger('sprout:task-updated');
       _closeModal();
     });
+
+    // 知識の実として保存（AI要約フェーズ）
+    _$id('timerBtnSaveKnowledge').off('click.timer').on('click.timer', function() {
+      if (!_pendingResult) return;
+      var $btn   = _$id('timerBtnSaveKnowledge');
+      var title   = _$id('timerAiTitleInput').val().trim();
+      var summary = _$id('timerAiSummaryTextarea').val().trim();
+
+      $btn.prop('disabled', true).text('保存中…');
+
+      $.ajax({
+        url: '/knowledge/save',
+        method: 'POST',
+        contentType: 'application/json',
+        dataType: 'json',
+        data: JSON.stringify({
+          workLogId:  _pendingResult.workLogId,
+          itemId:     _pendingResult.itemId || parseInt(localStorage.getItem(LS_ITEM_ID) || '0', 10),
+          title:      title   || null,
+          aiSummary:  summary || _pendingResult.aiSummary
+        })
+      })
+      .done(function(saveResp) {
+        // 知識保存EXPをワークログEXPに加算してまとめて表示
+        var resultWithKnExp = $.extend(true, {}, _pendingResult);
+        if (saveResp && saveResp.expGained > 0) {
+          resultWithKnExp.expTotal = (resultWithKnExp.expTotal || 0) + saveResp.expGained;
+        }
+        _showResultPhase(resultWithKnExp, true);
+        // レベルアップ通知
+        if (saveResp && saveResp.levelUps && saveResp.levelUps.length > 0) {
+          saveResp.levelUps.forEach(function(name, i) {
+            setTimeout(function() {
+              sprout.message.toast({ message: '🌿 ' + name + ' がレベルアップ！', type: 'info' });
+            }, 800 + i * 800);
+          });
+        }
+      })
+      .fail(function() {
+        $btn.prop('disabled', false).html(
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;"><path d="M12 2a7 7 0 0 1 7 7c0 4.5-7 13-7 13S5 13.5 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5" fill="currentColor" stroke="none"/></svg>&nbsp; 知識の実として保存'
+        );
+        sprout.message.toast({ message: '保存に失敗しました', type: 'error' });
+      });
+    });
+
+    // スキップ（AI要約フェーズ）
+    _$id('timerBtnSkipKnowledge').off('click.timer').on('click.timer', function() {
+      _showResultPhase(_pendingResult, false);
+    });
   }
 
   // ===== private: register =====
