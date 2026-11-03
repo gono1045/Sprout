@@ -498,6 +498,7 @@
 
     /* ===== モーダル ===== */
     function openKnModal(id) {
+      console.log('[KN] openKnModal called id=', id);
       var item = KN_ITEMS_MAP[String(id)];
       if (!item) {
         console.warn('KN item not found, id=', id, 'map keys=', Object.keys(KN_ITEMS_MAP));
@@ -585,7 +586,10 @@
       });
 
       var saveBtn = document.getElementById('knMSave');
-      saveBtn.addEventListener('click', function() {
+      console.log('[KN] saveBtn bound:', saveBtn);
+      saveBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        console.log('[KN] saveBtn clicked id=', id);
         var newTitle   = document.getElementById('knMTitle').value.trim();
         var newSummary = document.getElementById('knMSummary').value.trim();
         saveBtn.disabled = true; saveBtn.textContent = '更新中…';
