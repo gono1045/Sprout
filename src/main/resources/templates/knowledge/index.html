@@ -1081,13 +1081,17 @@
 
       // ===== EXP トースト =====
       /**
-       * EXP獲得・レベルアップをトーストで通知する
-       * @param {{ expGained: number, levelUps: string[] }} data
+       * EXP獲得・レベルアップ・同日EXP制限をトーストで通知する
+       * @param {{ expGained: number, levelUps: string[], expLimited?: boolean }} data
        */
       function knShowExpToasts(data) {
         if (!data) return;
         var gained = data.expGained || 0;
         var levelUps = data.levelUps || [];
+        // C: 同日EXP制限に達した場合の通知
+        if (data.expLimited && typeof sprout !== 'undefined' && sprout.message) {
+          sprout.message.toast({ message: '本日の編集 EXP はすでに取得済みです', type: 'info' });
+        }
         if (gained > 0 && typeof sprout !== 'undefined' && sprout.message) {
           sprout.message.toast({ message: '+' + gained + ' EXP 獲得！', type: 'success' });
         }

@@ -306,6 +306,13 @@ var timerModal = (function () {
     .done(function(result) {
       _clearStorage();
       _$id('timerPhaseLoading').hide();
+      // A: LM Studio 未起動等でAI要約に失敗した場合はトースト通知
+      if (result.aiSummaryFailed) {
+        sprout.message.toast({
+          message: 'AI要約サーバーに接続できませんでした。メモの内容をそのまま保存します。',
+          type: 'warning'
+        });
+      }
       // AI要約がある場合は要約確認フェーズへ、ない場合は直接結果フェーズへ
       if (result.aiSummary) {
         _showAiSummaryPhase(result);

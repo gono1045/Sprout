@@ -79,8 +79,9 @@ public class WorkLogServiceImpl implements WorkLogService {
     workLogDao.insert(log);
 
     // AI要約生成（memoが空でない場合のみ）
-    String aiTitle   = null;
-    String aiSummary = null;
+    String aiTitle        = null;
+    String aiSummary      = null;
+    boolean aiSummaryFailed = false;
     String memo = form.getMemo();
     if (memo != null && !memo.isBlank()) {
       try {
@@ -94,6 +95,7 @@ public class WorkLogServiceImpl implements WorkLogService {
         }
       } catch (Exception e) {
         logger.warn("AI要約生成に失敗しました（フォールバック: スキップ）", e);
+        aiSummaryFailed = true;
       }
     }
 
@@ -106,6 +108,7 @@ public class WorkLogServiceImpl implements WorkLogService {
     result.setItemId(form.getItemId());
     result.setAiTitle(aiTitle);
     result.setAiSummary(aiSummary);
+    result.setAiSummaryFailed(aiSummaryFailed);
     return result;
   }
 

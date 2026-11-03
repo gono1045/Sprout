@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.sprout.dao.SproutKnowledgeDao;
 import com.example.sprout.dao.SproutKnowledgeTagDao;
 import com.example.sprout.model.KnowledgeListItem;
+import com.example.sprout.model.KnowledgeUpdateResult;
 import com.example.sprout.model.SproutKnowledge;
 import com.example.sprout.model.SproutKnowledgeTag;
 import com.example.sprout.model.TagExpResult;
@@ -114,7 +115,7 @@ public class KnowledgeServiceImpl implements KnowledgeService {
 
   @Override
   @Transactional
-  public List<TagExpResult> update(Long id, String title, String aiSummary) {
+  public KnowledgeUpdateResult update(Long id, String title, String aiSummary) {
     Long userId = accessControlService.getLoginUserId();
     knowledgeDao.update(id, title, aiSummary, userId);
 
@@ -123,21 +124,23 @@ public class KnowledgeServiceImpl implements KnowledgeService {
       SproutKnowledge knowledge = knowledgeDao.selectById(id, userId);
       if (knowledge != null) {
         LocalDate today = LocalDate.now();
-        if (!today.equals(knowledge.getLastEditedExpAt())) {
-          List<Long> tagIds = knowledgeTagDao.selectByKnowledgeId(id, userId)
-              .stream().map(SproutKnowledgeTag::getTagId).collect(Collectors.toList());
-          if (!tagIds.isEmpty()) {
-            List<TagExpResult> expResults = expCalculatorService.distributeExp(userId, tagIds, EXP_EDIT);
-            knowledgeDao.updateLastEditedExpAt(id, today, userId);
-            return expResults;
-          }
+        if (today.equals(knowledge.getLastEditedExpAt())) {
+          // C: 同日制限に達している
+          return new KnowledgeUpdateResult(Collections.emptyList(), true);
+        }
+        List<Long> tagIds = knowledgeTagDao.selectByKnowledgeId(id, userId)
+            .stream().map(SproutKnowledgeTag::getTagId).collect(Collectors.toList());
+        if (!tagIds.isEmpty()) {
+          List<TagExpResult> expResults = expCalculatorService.distributeExp(userId, tagIds, EXP_EDIT);
+          knowledgeDao.updateLastEditedExpAt(id, today, userId);
+          return new KnowledgeUpdateResult(expResults, false);
         }
       }
     } catch (Exception e) {
       // EXP付与に失敗しても更新自体は成功とする
       org.slf4j.LoggerFactory.getLogger(getClass()).error("編集EXP付与に失敗しました id={}", id, e);
     }
-    return Collections.emptyList();
+    return new KnowledgeUpdateResult(Collections.emptyList(), false);
   }
 
   @Override

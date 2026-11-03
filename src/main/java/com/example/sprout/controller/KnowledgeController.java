@@ -33,6 +33,7 @@ import com.example.sprout.form.MergeSuggestForm;
 import com.example.sprout.form.SaveKnowledgeForm;
 import com.example.sprout.form.UpdateKnowledgeForm;
 import com.example.sprout.model.AiSummaryResult;
+import com.example.sprout.model.KnowledgeUpdateResult;
 import com.example.sprout.model.TagExpResult;
 import com.example.sprout.service.AiSummaryService;
 import com.example.sprout.security.SproutUserDetails;
@@ -123,13 +124,15 @@ public class KnowledgeController {
   @PostMapping("/update")
   @ResponseBody
   public ResponseEntity<Map<String, Object>> update(@RequestBody UpdateKnowledgeForm form) {
-    List<TagExpResult> expResults = knowledgeService.update(form.getId(), form.getTitle(), form.getAiSummary());
+    KnowledgeUpdateResult updateResult = knowledgeService.update(form.getId(), form.getTitle(), form.getAiSummary());
+    List<TagExpResult> expResults = updateResult.getExpResults();
     Map<String, Object> resp = new java.util.HashMap<>();
-    resp.put("expGained", expResults.stream().mapToInt(TagExpResult::getExpGained).sum());
-    resp.put("levelUps",  expResults.stream()
+    resp.put("expGained",  expResults.stream().mapToInt(TagExpResult::getExpGained).sum());
+    resp.put("levelUps",   expResults.stream()
         .filter(TagExpResult::isLeveledUp)
         .map(t -> t.getTagName() + " (Lv." + t.getNewLv() + ")")
         .collect(Collectors.toList()));
+    resp.put("expLimited", updateResult.isExpLimited());
     return ResponseEntity.ok(resp);
   }
 
