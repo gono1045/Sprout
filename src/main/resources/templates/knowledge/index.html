@@ -1088,14 +1088,18 @@
         if (!data) return;
         var gained = data.expGained || 0;
         var levelUps = data.levelUps || [];
+        var hasSprout = typeof sprout !== 'undefined' && sprout.message;
         // C: 同日EXP制限に達した場合の通知
-        if (data.expLimited && typeof sprout !== 'undefined' && sprout.message) {
+        if (data.expLimited && hasSprout) {
           sprout.message.toast({ message: '本日の編集 EXP はすでに取得済みです', type: 'info' });
+        // タグなし: EXP が付与されない場合の通知（制限ではなくタグ未設定が原因）
+        } else if (!data.expLimited && gained === 0 && hasSprout && data.hasOwnProperty('expGained')) {
+          sprout.message.toast({ message: 'この木の実にタグが設定されていないため EXP は付与されません', type: 'info' });
         }
-        if (gained > 0 && typeof sprout !== 'undefined' && sprout.message) {
+        if (gained > 0 && hasSprout) {
           sprout.message.toast({ message: '+' + gained + ' EXP 獲得！', type: 'success' });
         }
-        if (levelUps.length > 0 && typeof sprout !== 'undefined' && sprout.message) {
+        if (levelUps.length > 0 && hasSprout) {
           // 複数タグのレベルアップは少し間をおいて順番に表示
           levelUps.forEach(function(name, i) {
             setTimeout(function() {

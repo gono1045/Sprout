@@ -38,6 +38,8 @@ import com.example.sprout.model.TagExpResult;
 import com.example.sprout.service.AiSummaryService;
 import com.example.sprout.security.SproutUserDetails;
 import com.example.sprout.service.KnowledgeService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 知識の木の実一覧画面コントローラー
@@ -45,6 +47,8 @@ import com.example.sprout.service.KnowledgeService;
 @Controller
 @RequestMapping("/knowledge")
 public class KnowledgeController {
+
+  private static final Logger log = LoggerFactory.getLogger(KnowledgeController.class);
 
   @Autowired
   private KnowledgeService knowledgeService;
@@ -126,13 +130,16 @@ public class KnowledgeController {
   public ResponseEntity<Map<String, Object>> update(@RequestBody UpdateKnowledgeForm form) {
     KnowledgeUpdateResult updateResult = knowledgeService.update(form.getId(), form.getTitle(), form.getAiSummary());
     List<TagExpResult> expResults = updateResult.getExpResults();
+    int expGained = expResults.stream().mapToInt(TagExpResult::getExpGained).sum();
+    boolean expLimited = updateResult.isExpLimited();
+    log.info("[Knowledge update] id={} expGained={} expLimited={}", form.getId(), expGained, expLimited);
     Map<String, Object> resp = new java.util.HashMap<>();
-    resp.put("expGained",  expResults.stream().mapToInt(TagExpResult::getExpGained).sum());
+    resp.put("expGained",  expGained);
     resp.put("levelUps",   expResults.stream()
         .filter(TagExpResult::isLeveledUp)
         .map(t -> t.getTagName() + " (Lv." + t.getNewLv() + ")")
         .collect(Collectors.toList()));
-    resp.put("expLimited", updateResult.isExpLimited());
+    resp.put("expLimited", expLimited);
     return ResponseEntity.ok(resp);
   }
 
