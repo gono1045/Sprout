@@ -1,0 +1,5 @@
+# デフォルトプロファイル設定（ローカル開発用）
+# 本番環境では spring.profiles.active=prod を環境変数または起動引数で上書きすること
+spring:
+  profiles:
+    active: local
